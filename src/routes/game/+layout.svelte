@@ -73,26 +73,42 @@
     </div>
 
     <!-- Bottom Navigation Bar (Dock) -->
-    <nav class="h-16 bg-gray-800 border-t border-gray-700 flex items-center justify-around px-2 z-20">
-        <a href="/game" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition w-16">
+    <nav class="h-16 bg-gray-800 border-t border-gray-700 flex items-center overflow-x-auto px-2 z-20 no-scrollbar">
+        <a href="/game" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem]">
             <span class="text-xl mb-1">🪐</span>
-            <span class="text-[10px] uppercase tracking-wide">Planet</span>
+            <span class="text-[10px] uppercase tracking-wide">Base</span>
         </a>
-        <a href="/game/system" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition w-16">
-            <span class="text-xl mb-1">☀️</span>
-            <span class="text-[10px] uppercase tracking-wide">System</span>
+        <a href="/game/facilities" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem]">
+            <span class="text-xl mb-1">🏭</span>
+            <span class="text-[10px] uppercase tracking-wide">Facilities</span>
         </a>
-        <a href="/game/fleet" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition w-16">
-            <span class="text-xl mb-1">🚀</span>
-            <span class="text-[10px] uppercase tracking-wide">Fleet</span>
+        <a href="/game/research" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem]">
+            <span class="text-xl mb-1">🔬</span>
+            <span class="text-[10px] uppercase tracking-wide">Research</span>
         </a>
-        <a href="/game/shipyard" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition w-16">
+        <a href="/game/shipyard" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem]">
             <span class="text-xl mb-1">🛠️</span>
             <span class="text-[10px] uppercase tracking-wide">Shipyard</span>
         </a>
-        <button class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition w-16">
-            <span class="text-xl mb-1">☰</span>
-            <span class="text-[10px] uppercase tracking-wide">More</span>
-        </button>
+        <a href="/game/defenses" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem]">
+            <span class="text-xl mb-1">🛡️</span>
+            <span class="text-[10px] uppercase tracking-wide">Defense</span>
+        </a>
+        <a href="/game/fleet" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem]">
+            <span class="text-xl mb-1">🚀</span>
+            <span class="text-[10px] uppercase tracking-wide">Fleet</span>
+        </a>
+        <a href="/game/system" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem]">
+            <span class="text-xl mb-1">☀️</span>
+            <span class="text-[10px] uppercase tracking-wide">Galaxy</span>
+        </a>
+        <a href="/game/alliance" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem]">
+            <span class="text-xl mb-1">🤝</span>
+            <span class="text-[10px] uppercase tracking-wide">Alliance</span>
+        </a>
+        <a href="/game/highscore" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem]">
+            <span class="text-xl mb-1">🏆</span>
+            <span class="text-[10px] uppercase tracking-wide">Rank</span>
+        </a>
     </nav>
 </div>

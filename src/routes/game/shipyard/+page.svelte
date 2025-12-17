@@ -12,7 +12,7 @@
 
     {#if data.shipyardLevel === 0}
         <div class="bg-red-900/50 border border-red-500 p-4 rounded text-center text-red-200">
-            You need a Shipyard to build ships. Build one in the Buildings menu.
+            You need a Shipyard to build ships. Build one in the Facilities menu.
         </div>
     {:else}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

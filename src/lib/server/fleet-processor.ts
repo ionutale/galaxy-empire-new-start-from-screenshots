@@ -1,5 +1,6 @@
 import { pool } from './db';
 import { SHIPS } from '$lib/game-config';
+import { simulateCombat } from './combat-engine';
 
 export async function processFleets() {
     const client = await pool.connect();
@@ -116,50 +117,84 @@ async function processArrivingFleet(client: any, fleet: any) {
             await returnFleet(client, fleet);
         }
     } else if (fleet.mission === 'attack') {
-        // Simple combat logic
         if (targetPlanet && targetPlanet.user_id) {
-             // Calculate attacker power
-             let attackPower = 0;
-             const ships = fleet.ships;
-             for (const [type, count] of Object.entries(ships)) {
-                 const shipStats = SHIPS[type as keyof typeof SHIPS];
-                 if (shipStats) {
-                     attackPower += (shipStats.attack * (count as number));
-                 }
-             }
-             
-             // Simplified: Defender has no ships/defense in this demo yet, so attacker wins
-             // In real game: fetch defender ships/defense, simulate rounds
-             
-             // Steal resources (50%)
-             const resUpdate = await client.query(
-                 `UPDATE planet_resources 
-                  SET metal = metal / 2, crystal = crystal / 2, gas = gas / 2
-                  WHERE planet_id = $1
-                  RETURNING metal, crystal, gas`,
-                 [targetPlanet.id]
-             );
-             
-             const stolen = resUpdate.rows[0]; // This is what remains, so stolen is equal to this amount
-             
-             // Add stolen resources to fleet (simplified: just give it to user on return)
-             // For now, just message
-             
-             await client.query(
+            // Fetch defender ships and defenses
+            const defShipsRes = await client.query('SELECT * FROM planet_ships WHERE planet_id = $1', [targetPlanet.id]);
+            const defDefensesRes = await client.query('SELECT * FROM planet_defenses WHERE planet_id = $1', [targetPlanet.id]);
+            
+            const defenderShips = defShipsRes.rows[0] || {};
+            const defenderDefenses = defDefensesRes.rows[0] || {};
+            
+            // Clean up DB objects (remove id, planet_id etc)
+            delete defenderShips.id; delete defenderShips.planet_id;
+            delete defenderDefenses.id; delete defenderDefenses.planet_id;
+
+            const result = simulateCombat(fleet.ships, defenderShips, defenderDefenses);
+
+            // Apply losses to Attacker (Fleet)
+            const remainingFleet = { ...fleet.ships };
+            let fleetDestroyed = true;
+            
+            for (const [type, count] of Object.entries(result.attackerLosses)) {
+                remainingFleet[type] -= (count as number);
+                if (remainingFleet[type] < 0) remainingFleet[type] = 0;
+            }
+            
+            // Check if fleet still exists
+            for (const count of Object.values(remainingFleet)) {
+                if ((count as number) > 0) fleetDestroyed = false;
+            }
+
+            if (fleetDestroyed) {
+                await client.query(`UPDATE fleets SET status = 'destroyed' WHERE id = $1`, [fleet.id]);
+            } else {
+                // Update fleet ships
+                await client.query(`UPDATE fleets SET ships = $1 WHERE id = $2`, [remainingFleet, fleet.id]);
+            }
+
+            // Apply losses to Defender (Planet)
+            for (const [type, count] of Object.entries(result.defenderLosses)) {
+                if (SHIPS[type as keyof typeof SHIPS]) {
+                    await client.query(`UPDATE planet_ships SET ${type} = ${type} - $1 WHERE planet_id = $2`, [count, targetPlanet.id]);
+                } else {
+                    await client.query(`UPDATE planet_defenses SET ${type} = ${type} - $1 WHERE planet_id = $2`, [count, targetPlanet.id]);
+                }
+            }
+
+            // Looting (if attacker won)
+            let lootMsg = '';
+            if (result.winner === 'attacker' && !fleetDestroyed) {
+                 const resUpdate = await client.query(
+                     `UPDATE planet_resources 
+                      SET metal = metal / 2, crystal = crystal / 2, gas = gas / 2
+                      WHERE planet_id = $1
+                      RETURNING metal, crystal, gas`,
+                     [targetPlanet.id]
+                 );
+                 const stolen = resUpdate.rows[0];
+                 lootMsg = `Stolen: Metal ${Math.floor(stolen.metal)}, Crystal ${Math.floor(stolen.crystal)}, Gas ${Math.floor(stolen.gas)}.`;
+            }
+
+            // Send Reports
+            const attackerReport = `Combat Result: ${result.winner.toUpperCase()}\n\nAttacker Losses: ${JSON.stringify(result.attackerLosses)}\nDefender Losses: ${JSON.stringify(result.defenderLosses)}\n\n${lootMsg}`;
+            
+            await client.query(
                 `INSERT INTO messages (user_id, type, title, content)
-                 VALUES ($1, 'combat', 'Attack Successful', 'You attacked [${fleet.target_galaxy}:${fleet.target_system}:${fleet.target_planet}]. You won! Stolen: Metal ${Math.floor(stolen.metal)}, Crystal ${Math.floor(stolen.crystal)}.')`,
-                [fleet.user_id]
+                 VALUES ($1, 'combat', 'Combat Report: ' || $2, $3)`,
+                [fleet.user_id, result.winner, attackerReport]
             );
             
             if (targetPlanet.user_id !== fleet.user_id) {
                  await client.query(
                     `INSERT INTO messages (user_id, type, title, content)
-                     VALUES ($1, 'combat', 'Planet Attacked', 'Your planet [${fleet.target_galaxy}:${fleet.target_system}:${fleet.target_planet}] was attacked! Resources lost.')`,
-                    [targetPlanet.user_id]
+                     VALUES ($1, 'combat', 'You were attacked!', $2)`,
+                    [targetPlanet.user_id, attackerReport]
                 );
             }
 
-             await returnFleet(client, fleet);
+            if (!fleetDestroyed) {
+                await returnFleet(client, fleet);
+            }
         } else {
              await client.query(
                 `INSERT INTO messages (user_id, type, title, content)

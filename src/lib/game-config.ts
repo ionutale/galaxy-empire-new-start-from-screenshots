@@ -46,6 +46,22 @@ export const BUILDINGS = {
         productionBase: 0,
         productionFactor: 0,
         energyFactor: 0
+    },
+    robotics_factory: {
+        name: 'Robotics Factory',
+        baseCost: { metal: 400, crystal: 120, gas: 200 },
+        costFactor: 2.0,
+        productionBase: 0,
+        productionFactor: 0,
+        energyFactor: 0
+    },
+    nanite_factory: {
+        name: 'Nanite Factory',
+        baseCost: { metal: 1000000, crystal: 500000, gas: 100000 },
+        costFactor: 2.0,
+        productionBase: 0,
+        productionFactor: 0,
+        energyFactor: 0
     }
 };
 
@@ -196,6 +212,67 @@ export const SHIPS = {
         defense: 100,
         speed: 2500,
         capacity: 7500
+    }
+};
+
+export const DEFENSES = {
+    rocket_launcher: {
+        name: 'Rocket Launcher',
+        cost: { metal: 2000, crystal: 0, gas: 0 },
+        attack: 80,
+        defense: 20,
+        shield: 20
+    },
+    light_laser: {
+        name: 'Light Laser',
+        cost: { metal: 1500, crystal: 500, gas: 0 },
+        attack: 100,
+        defense: 25,
+        shield: 25
+    },
+    heavy_laser: {
+        name: 'Heavy Laser',
+        cost: { metal: 6000, crystal: 2000, gas: 0 },
+        attack: 250,
+        defense: 100,
+        shield: 100
+    },
+    gauss_cannon: {
+        name: 'Gauss Cannon',
+        cost: { metal: 20000, crystal: 15000, gas: 2000 },
+        attack: 1100,
+        defense: 200,
+        shield: 200
+    },
+    ion_cannon: {
+        name: 'Ion Cannon',
+        cost: { metal: 2000, crystal: 6000, gas: 0 },
+        attack: 150,
+        defense: 500,
+        shield: 500
+    },
+    plasma_turret: {
+        name: 'Plasma Turret',
+        cost: { metal: 50000, crystal: 50000, gas: 30000 },
+        attack: 3000,
+        defense: 300,
+        shield: 300
+    },
+    small_shield_dome: {
+        name: 'Small Shield Dome',
+        cost: { metal: 10000, crystal: 10000, gas: 0 },
+        attack: 0,
+        defense: 2000,
+        shield: 2000,
+        max: 1
+    },
+    large_shield_dome: {
+        name: 'Large Shield Dome',
+        cost: { metal: 50000, crystal: 50000, gas: 0 },
+        attack: 0,
+        defense: 10000,
+        shield: 10000,
+        max: 1
     }
 };
 
