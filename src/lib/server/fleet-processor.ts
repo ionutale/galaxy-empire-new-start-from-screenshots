@@ -1,9 +1,12 @@
 import { pool } from './db';
 import { SHIPS } from '$lib/game-config';
 import { simulateCombat } from './combat-engine';
+import { updateUserPoints } from './points-calculator';
 
 export async function processFleets() {
     const client = await pool.connect();
+    const usersToUpdate = new Set<number>();
+
     try {
         await client.query('BEGIN');
 
@@ -16,10 +19,12 @@ export async function processFleets() {
         );
 
         for (const fleet of fleetsRes.rows) {
+            usersToUpdate.add(fleet.user_id);
             if (fleet.status === 'returning') {
                 await processReturningFleet(client, fleet);
             } else {
-                await processArrivingFleet(client, fleet);
+                const targetUserId = await processArrivingFleet(client, fleet);
+                if (targetUserId) usersToUpdate.add(targetUserId);
             }
         }
 
@@ -29,6 +34,11 @@ export async function processFleets() {
         console.error('Error processing fleets:', e);
     } finally {
         client.release();
+    }
+
+    // Update points for affected users
+    for (const userId of usersToUpdate) {
+        await updateUserPoints(userId);
     }
 }
 
@@ -77,6 +87,7 @@ async function processArrivingFleet(client: any, fleet: any) {
     );
     
     const targetPlanet = targetRes.rows[0];
+    let affectedUserId = targetPlanet?.user_id || null;
 
     if (fleet.mission === 'transport') {
         // Logic for transport (not fully implemented in UI yet, but structure is here)
@@ -267,6 +278,8 @@ async function processArrivingFleet(client: any, fleet: any) {
         // Default return
         await returnFleet(client, fleet);
     }
+    
+    return affectedUserId;
 }
 
 async function returnFleet(client: any, fleet: any) {

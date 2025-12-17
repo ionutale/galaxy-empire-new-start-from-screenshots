@@ -1,6 +1,7 @@
 import { pool } from '$lib/server/db';
 import { RESEARCH, getResearchCost } from '$lib/game-config';
 import { updatePlanetResources } from '$lib/server/game';
+import { updateUserPoints } from '$lib/server/points-calculator';
 import type { PageServerLoad, Actions } from './$types';
 import { fail } from '@sveltejs/kit';
 
@@ -87,6 +88,10 @@ export const actions: Actions = {
             );
 
             await client.query('COMMIT');
+            
+            // Update points
+            await updateUserPoints(locals.user.id);
+
             return { success: true, message: `Researched ${RESEARCH[techId as keyof typeof RESEARCH].name} level ${nextLevel}` };
 
         } catch (e) {

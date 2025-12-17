@@ -2,6 +2,7 @@ import { pool } from '$lib/server/db';
 import { fail } from '@sveltejs/kit';
 import { DEFENSES } from '$lib/game-config';
 import { updatePlanetResources } from '$lib/server/game';
+import { updateUserPoints } from '$lib/server/points-calculator';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ parent }) => {
@@ -113,6 +114,10 @@ export const actions: Actions = {
             );
 
             await client.query('COMMIT');
+            
+            // Update points
+            await updateUserPoints(locals.user.id);
+
             return { success: true, message: `Built ${amount} ${defenseConfig.name}` };
 
         } catch (e) {

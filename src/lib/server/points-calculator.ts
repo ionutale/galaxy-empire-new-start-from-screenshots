@@ -38,73 +38,85 @@ function calculateResearchPoints(type: string, level: number): number {
     return (totalMetal + totalCrystal + totalGas) / 1000;
 }
 
+export async function updateUserPoints(userId: number) {
+    const client = await pool.connect();
+    try {
+        let points = 0;
+
+        // 1. Buildings & Defenses & Ships (on planets)
+        const planets = await client.query('SELECT id FROM planets WHERE user_id = $1', [userId]);
+        
+        for (const planet of planets.rows) {
+            // Buildings
+            const bRes = await client.query('SELECT * FROM planet_buildings WHERE planet_id = $1', [planet.id]);
+            const buildings = bRes.rows[0] || {};
+            for (const [key, level] of Object.entries(buildings)) {
+                if (key === 'planet_id') continue;
+                points += calculateBuildingPoints(key, level as number);
+            }
+
+            // Ships (Stationed)
+            const sRes = await client.query('SELECT * FROM planet_ships WHERE planet_id = $1', [planet.id]);
+            const ships = sRes.rows[0] || {};
+            for (const [key, count] of Object.entries(ships)) {
+                if (key === 'planet_id') continue;
+                const ship = SHIPS[key as keyof typeof SHIPS];
+                if (ship) {
+                    const cost = ship.cost.metal + ship.cost.crystal + ship.cost.gas;
+                    points += (cost * (count as number)) / 1000;
+                }
+            }
+
+            // Defenses
+            const dRes = await client.query('SELECT * FROM planet_defenses WHERE planet_id = $1', [planet.id]);
+            const defenses = dRes.rows[0] || {};
+            for (const [key, count] of Object.entries(defenses)) {
+                if (key === 'planet_id') continue;
+                const def = DEFENSES[key as keyof typeof DEFENSES];
+                if (def) {
+                    const cost = def.cost.metal + def.cost.crystal + def.cost.gas;
+                    points += (cost * (count as number)) / 1000;
+                }
+            }
+        }
+
+        // 2. Research
+        const rRes = await client.query('SELECT * FROM user_research WHERE user_id = $1', [userId]);
+        const research = rRes.rows[0] || {};
+        for (const [key, level] of Object.entries(research)) {
+            if (key === 'user_id') continue;
+            points += calculateResearchPoints(key, level as number);
+        }
+
+        // 3. Fleets (Flying)
+        const fRes = await client.query('SELECT ships FROM fleets WHERE user_id = $1', [userId]);
+        for (const fleet of fRes.rows) {
+            for (const [key, count] of Object.entries(fleet.ships)) {
+                const ship = SHIPS[key as keyof typeof SHIPS];
+                if (ship) {
+                    const cost = ship.cost.metal + ship.cost.crystal + ship.cost.gas;
+                    points += (cost * (count as number)) / 1000;
+                }
+            }
+        }
+
+        // Update User
+        await client.query('UPDATE users SET points = $1 WHERE id = $2', [Math.floor(points), userId]);
+
+    } catch (e) {
+        console.error(`Error updating points for user ${userId}:`, e);
+    } finally {
+        client.release();
+    }
+}
+
 export async function updateAllUserPoints() {
     const client = await pool.connect();
     try {
         const users = await client.query('SELECT id FROM users');
         
         for (const user of users.rows) {
-            let points = 0;
-
-            // 1. Buildings & Defenses & Ships (on planets)
-            const planets = await client.query('SELECT id FROM planets WHERE user_id = $1', [user.id]);
-            
-            for (const planet of planets.rows) {
-                // Buildings
-                const bRes = await client.query('SELECT * FROM planet_buildings WHERE planet_id = $1', [planet.id]);
-                const buildings = bRes.rows[0] || {};
-                for (const [key, level] of Object.entries(buildings)) {
-                    if (key === 'planet_id') continue;
-                    points += calculateBuildingPoints(key, level as number);
-                }
-
-                // Ships (Stationed)
-                const sRes = await client.query('SELECT * FROM planet_ships WHERE planet_id = $1', [planet.id]);
-                const ships = sRes.rows[0] || {};
-                for (const [key, count] of Object.entries(ships)) {
-                    if (key === 'planet_id') continue;
-                    const ship = SHIPS[key as keyof typeof SHIPS];
-                    if (ship) {
-                        const cost = ship.cost.metal + ship.cost.crystal + ship.cost.gas;
-                        points += (cost * (count as number)) / 1000;
-                    }
-                }
-
-                // Defenses
-                const dRes = await client.query('SELECT * FROM planet_defenses WHERE planet_id = $1', [planet.id]);
-                const defenses = dRes.rows[0] || {};
-                for (const [key, count] of Object.entries(defenses)) {
-                    if (key === 'planet_id') continue;
-                    const def = DEFENSES[key as keyof typeof DEFENSES];
-                    if (def) {
-                        const cost = def.cost.metal + def.cost.crystal + def.cost.gas;
-                        points += (cost * (count as number)) / 1000;
-                    }
-                }
-            }
-
-            // 2. Research
-            const rRes = await client.query('SELECT * FROM user_research WHERE user_id = $1', [user.id]);
-            const research = rRes.rows[0] || {};
-            for (const [key, level] of Object.entries(research)) {
-                if (key === 'user_id') continue;
-                points += calculateResearchPoints(key, level as number);
-            }
-
-            // 3. Fleets (Flying)
-            const fRes = await client.query('SELECT ships FROM fleets WHERE user_id = $1', [user.id]);
-            for (const fleet of fRes.rows) {
-                for (const [key, count] of Object.entries(fleet.ships)) {
-                    const ship = SHIPS[key as keyof typeof SHIPS];
-                    if (ship) {
-                        const cost = ship.cost.metal + ship.cost.crystal + ship.cost.gas;
-                        points += (cost * (count as number)) / 1000;
-                    }
-                }
-            }
-
-            // Update User
-            await client.query('UPDATE users SET points = $1 WHERE id = $2', [Math.floor(points), user.id]);
+            await updateUserPoints(user.id);
         }
         console.log('Updated points for all users.');
 

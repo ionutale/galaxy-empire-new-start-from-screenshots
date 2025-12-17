@@ -2,6 +2,7 @@ import { pool } from '$lib/server/db';
 import { fail } from '@sveltejs/kit';
 import { SHIPS } from '$lib/game-config';
 import { updatePlanetResources } from '$lib/server/game';
+import { updateUserPoints } from '$lib/server/points-calculator';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ parent }) => {
@@ -106,6 +107,9 @@ export const actions = {
             );
 
             await client.query('COMMIT');
+            
+            // Update points
+            await updateUserPoints(locals.user.id);
         } catch (e) {
             await client.query('ROLLBACK');
             throw e;
