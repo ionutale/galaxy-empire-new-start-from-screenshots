@@ -28,6 +28,9 @@
                     </span>
                 {/if}
             </a>
+            <a href="/game/settings" class="text-2xl hover:text-gray-300 transition">
+                ⚙️
+            </a>
         </div>
     </header>
 
