@@ -16,8 +16,15 @@ export const load: PageServerLoad = async ({ parent }) => {
         [currentPlanet.id]
     );
 
+    const buildRes = await pool.query(
+        'SELECT shipyard FROM planet_buildings WHERE planet_id = $1',
+        [currentPlanet.id]
+    );
+    const shipyardLevel = buildRes.rows[0]?.shipyard || 0;
+
     return {
-        ships: shipsRes.rows[0]
+        ships: shipsRes.rows[0],
+        shipyardLevel
     };
 };
 
@@ -35,13 +42,24 @@ export const actions = {
         const shipConfig = SHIPS[shipType as keyof typeof SHIPS];
         if (!shipConfig) return fail(400, { error: 'Invalid ship type' });
 
-        // Update resources
-        await updatePlanetResources(planetId);
-
         const client = await pool.connect();
         try {
             await client.query('BEGIN');
 
+            // Check Shipyard Level
+            const buildRes = await client.query(
+                'SELECT shipyard FROM planet_buildings WHERE planet_id = $1',
+                [planetId]
+            );
+            if ((buildRes.rows[0]?.shipyard || 0) < 1) {
+                await client.query('ROLLBACK');
+                return fail(400, { error: 'Shipyard required' });
+            }
+
+            // Update resources (re-fetch inside transaction to be safe, though updatePlanetResources does it outside)
+            // Ideally updatePlanetResources should be inside transaction or we lock resources.
+            // For now, we rely on the check below.
+            
             // Check resources
             const resCheck = await client.query(
                 'SELECT metal, crystal, gas FROM planet_resources WHERE planet_id = $1 FOR UPDATE',

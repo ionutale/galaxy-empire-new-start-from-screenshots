@@ -50,31 +50,31 @@ export const BUILDINGS = {
 };
 
 export const RESEARCH = {
-    energy_technology: {
+    energy_tech: {
         name: 'Energy Technology',
         baseCost: { metal: 0, crystal: 800, gas: 400 },
         costFactor: 2.0,
         description: 'Essential for other technologies.'
     },
-    laser_technology: {
+    laser_tech: {
         name: 'Laser Technology',
         baseCost: { metal: 200, crystal: 100, gas: 0 },
         costFactor: 2.0,
         description: 'Focuses light into a beam.'
     },
-    ion_technology: {
+    ion_tech: {
         name: 'Ion Technology',
         baseCost: { metal: 1000, crystal: 300, gas: 100 },
         costFactor: 2.0,
         description: 'Accelerates ions for propulsion and weapons.'
     },
-    hyperspace_technology: {
+    hyperspace_tech: {
         name: 'Hyperspace Technology',
         baseCost: { metal: 0, crystal: 4000, gas: 2000 },
         costFactor: 2.0,
         description: 'Allows travel through higher dimensions.'
     },
-    plasma_technology: {
+    plasma_tech: {
         name: 'Plasma Technology',
         baseCost: { metal: 2000, crystal: 4000, gas: 1000 },
         costFactor: 2.0,
@@ -98,13 +98,13 @@ export const RESEARCH = {
         costFactor: 2.0,
         description: 'Warp speed propulsion.'
     },
-    espionage_technology: {
+    espionage_tech: {
         name: 'Espionage Technology',
         baseCost: { metal: 200, crystal: 1000, gas: 200 },
         costFactor: 2.0,
         description: 'Gather intelligence on other players.'
     },
-    computer_technology: {
+    computer_tech: {
         name: 'Computer Technology',
         baseCost: { metal: 0, crystal: 400, gas: 600 },
         costFactor: 2.0,
@@ -122,25 +122,25 @@ export const RESEARCH = {
         costFactor: 2.0,
         description: 'Connects research labs.'
     },
-    graviton_technology: {
+    graviton_tech: {
         name: 'Graviton Technology',
         baseCost: { metal: 0, crystal: 0, gas: 0 }, // Special reqs usually
         costFactor: 3.0,
         description: 'Manipulate gravity.'
     },
-    weapons_technology: {
+    weapons_tech: {
         name: 'Weapons Technology',
         baseCost: { metal: 800, crystal: 200, gas: 0 },
         costFactor: 2.0,
         description: 'Increases ship attack power.'
     },
-    shielding_technology: {
+    shielding_tech: {
         name: 'Shielding Technology',
         baseCost: { metal: 200, crystal: 600, gas: 0 },
         costFactor: 2.0,
         description: 'Increases ship shield strength.'
     },
-    armor_technology: {
+    armor_tech: {
         name: 'Armor Technology',
         baseCost: { metal: 1000, crystal: 0, gas: 0 },
         costFactor: 2.0,
