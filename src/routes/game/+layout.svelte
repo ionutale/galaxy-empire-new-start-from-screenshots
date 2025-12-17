@@ -1,5 +1,51 @@
 <script lang="ts">
+    import { onMount, onDestroy } from 'svelte';
     let { children, data } = $props();
+
+    // Chat Logic
+    let isChatOpen = $state(false);
+    let chatMessages = $state<any[]>([]);
+    let newMessage = $state('');
+    let chatInterval: any;
+
+    async function fetchChat() {
+        try {
+            const res = await fetch('/api/chat');
+            if (res.ok) {
+                chatMessages = await res.json();
+            }
+        } catch (e) {
+            console.error('Failed to fetch chat', e);
+        }
+    }
+
+    async function sendChat() {
+        if (!newMessage.trim()) return;
+        
+        try {
+            const res = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: newMessage })
+            });
+            
+            if (res.ok) {
+                newMessage = '';
+                await fetchChat();
+            }
+        } catch (e) {
+            console.error('Failed to send message', e);
+        }
+    }
+
+    onMount(() => {
+        fetchChat();
+        chatInterval = setInterval(fetchChat, 5000); // Poll every 5s
+    });
+
+    onDestroy(() => {
+        if (chatInterval) clearInterval(chatInterval);
+    });
 </script>
 
 <div class="flex flex-col h-screen bg-gray-900 text-white overflow-hidden font-sans">
@@ -70,10 +116,50 @@
         </div>
     </main>
 
-    <!-- Chat Overlay (Collapsed) -->
-    <div class="bg-black/60 backdrop-blur-sm border-t border-gray-700 p-2 text-sm text-gray-300 truncate cursor-pointer hover:bg-black/80 transition">
-        <span class="text-blue-400 font-bold">[Global]</span> <span class="text-yellow-500">EmperorX:</span> Anyone want to trade metal for crystal?
-    </div>
+    <!-- Chat Overlay -->
+    {#if isChatOpen}
+        <div class="absolute bottom-16 left-0 right-0 h-64 bg-black/90 backdrop-blur-md border-t border-gray-700 z-30 flex flex-col">
+            <div class="flex justify-between items-center p-2 bg-gray-800 border-b border-gray-700">
+                <span class="font-bold text-blue-300">Global Chat</span>
+                <button onclick={() => isChatOpen = false} class="text-gray-400 hover:text-white">▼</button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-2 space-y-1 flex flex-col-reverse">
+                {#each chatMessages as msg}
+                    <div class="text-sm">
+                        <span class="text-gray-500 text-xs">[{new Date(msg.created_at).toLocaleTimeString()}]</span>
+                        {#if msg.alliance_tag}
+                            <span class="text-blue-400 font-bold">[{msg.alliance_tag}]</span>
+                        {/if}
+                        <span class="text-yellow-500 font-bold">{msg.username}:</span>
+                        <span class="text-gray-300">{msg.content}</span>
+                    </div>
+                {/each}
+            </div>
+
+            <div class="p-2 bg-gray-800 border-t border-gray-700 flex">
+                <input 
+                    type="text" 
+                    bind:value={newMessage} 
+                    onkeydown={(e) => e.key === 'Enter' && sendChat()}
+                    placeholder="Type a message..." 
+                    class="flex-1 bg-gray-700 border border-gray-600 rounded-l px-2 py-1 text-white focus:outline-none focus:border-blue-500"
+                >
+                <button onclick={sendChat} class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-1 rounded-r font-bold">Send</button>
+            </div>
+        </div>
+    {:else}
+        <div onclick={() => isChatOpen = true} class="bg-black/60 backdrop-blur-sm border-t border-gray-700 p-2 text-sm text-gray-300 truncate cursor-pointer hover:bg-black/80 transition z-30">
+            {#if chatMessages.length > 0}
+                {@const lastMsg = chatMessages[0]}
+                <span class="text-blue-400 font-bold">[Global]</span> 
+                <span class="text-yellow-500">{lastMsg.username}:</span> 
+                {lastMsg.content}
+            {:else}
+                <span class="text-gray-500 italic">Click to open chat...</span>
+            {/if}
+        </div>
+    {/if}
 
     <!-- Bottom Navigation Bar (Dock) -->
     <nav class="h-16 bg-gray-800 border-t border-gray-700 flex items-center overflow-x-auto px-2 z-20 no-scrollbar">
