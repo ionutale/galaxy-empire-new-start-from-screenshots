@@ -21,10 +21,14 @@
                 <div class="w-6 h-6 bg-gray-700 rounded-full border border-gray-600"></div>
                 <div class="w-6 h-6 bg-gray-700 rounded-full border border-gray-600"></div>
             </div>
-            <button class="relative">
+            <a href="/game/messages" class="relative">
                 <span class="text-2xl">✉️</span>
-                <span class="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full w-4 h-4 flex items-center justify-center">1</span>
-            </button>
+                {#if data.unreadMessages > 0}
+                    <span class="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                        {data.unreadMessages}
+                    </span>
+                {/if}
+            </a>
         </div>
     </header>
 
