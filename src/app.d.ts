@@ -7,6 +7,7 @@ declare global {
 			user?: {
 				id: number;
 				username: string;
+				darkMatter: number;
 			};
 		}
 		// interface PageData {}

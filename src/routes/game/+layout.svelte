@@ -1,8 +1,6 @@
 <script lang="ts">
     import '../../app.css';
     let { children, data } = $props();
-    
-    const { user, resources, currentPlanet } = data;
 </script>
 
 <div class="flex flex-col h-screen bg-gray-900 text-white overflow-hidden font-sans">
@@ -14,7 +12,7 @@
         </div>
         
         <div class="font-bold text-lg tracking-wider text-blue-300">
-            {user.username}
+            {data.user.username}
         </div>
         
         <div class="flex items-center space-x-4">
@@ -32,26 +30,26 @@
 
     <!-- Resource Bar -->
     <div class="h-14 bg-gray-800/90 border-b border-gray-700 flex items-center justify-around px-2 text-xs sm:text-sm z-20 shadow-lg">
-        {#if resources}
+        {#if data.resources}
             <div class="flex flex-col items-center">
                 <span class="text-gray-400 mb-1">Metal</span>
-                <span class="font-mono font-bold text-gray-200">{Math.floor(resources.metal).toLocaleString()}</span>
+                <span class="font-mono font-bold text-gray-200">{Math.floor(data.resources.metal).toLocaleString()}</span>
             </div>
             <div class="flex flex-col items-center">
                 <span class="text-blue-400 mb-1">Crystal</span>
-                <span class="font-mono font-bold text-blue-200">{Math.floor(resources.crystal).toLocaleString()}</span>
+                <span class="font-mono font-bold text-blue-200">{Math.floor(data.resources.crystal).toLocaleString()}</span>
             </div>
             <div class="flex flex-col items-center">
                 <span class="text-purple-400 mb-1">Gas</span>
-                <span class="font-mono font-bold text-purple-200">{Math.floor(resources.gas).toLocaleString()}</span>
+                <span class="font-mono font-bold text-purple-200">{Math.floor(data.resources.gas).toLocaleString()}</span>
             </div>
             <div class="flex flex-col items-center">
                 <span class="text-yellow-400 mb-1">Energy</span>
-                <span class="font-mono font-bold text-yellow-200">{resources.energy}</span>
+                <span class="font-mono font-bold text-yellow-200">{data.resources.energy}</span>
             </div>
             <div class="flex flex-col items-center">
                 <span class="text-purple-600 mb-1">Dark Matter</span>
-                <span class="font-mono font-bold text-purple-300">{user.darkMatter.toLocaleString()}</span>
+                <span class="font-mono font-bold text-purple-300">{data.user.darkMatter.toLocaleString()}</span>
             </div>
         {/if}
     </div>

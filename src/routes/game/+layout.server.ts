@@ -27,7 +27,7 @@ export const load: LayoutServerLoad = async ({ locals }) => {
     // Update and fetch resources for current planet
     const resources = await updatePlanetResources(currentPlanet.id);
 
-    // Fetch user's premium currency
+    // Fetch user's premium currency (already in locals now, but let's refresh it)
     const userRes = await pool.query('SELECT dark_matter FROM users WHERE id = $1', [locals.user.id]);
     const darkMatter = userRes.rows[0].dark_matter;
 

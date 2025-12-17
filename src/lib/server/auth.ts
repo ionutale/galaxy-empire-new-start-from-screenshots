@@ -25,7 +25,7 @@ export const createSession = async (userId: number) => {
 
 export const getSession = async (sessionId: string) => {
     const result = await pool.query(
-        `SELECT s.*, u.username, u.id as user_id 
+        `SELECT s.*, u.username, u.dark_matter, u.id as user_id 
          FROM sessions s 
          JOIN users u ON s.user_id = u.id 
          WHERE s.id = $1 AND s.expires_at > NOW()`,
