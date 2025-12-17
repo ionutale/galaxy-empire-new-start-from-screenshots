@@ -42,6 +42,9 @@ export const actions = {
         const shipConfig = SHIPS[shipType as keyof typeof SHIPS];
         if (!shipConfig) return fail(400, { error: 'Invalid ship type' });
 
+        // Update resources first
+        await updatePlanetResources(planetId);
+
         const client = await pool.connect();
         try {
             await client.query('BEGIN');

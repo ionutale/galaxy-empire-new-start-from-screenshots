@@ -50,8 +50,13 @@ export const actions: Actions = {
             if (!cost) return fail(500, { error: 'Cost calculation failed' });
 
             // Check resources
-            const { resources } = await updatePlanetResources(parseInt(planetId));
+            const resources = await updatePlanetResources(parseInt(planetId));
             
+            if (!resources) {
+                await client.query('ROLLBACK');
+                return fail(404, { error: 'Planet not found' });
+            }
+
             if (resources.metal < cost.metal || resources.crystal < cost.crystal || resources.gas < cost.gas) {
                 await client.query('ROLLBACK');
                 return fail(400, { error: 'Not enough resources' });

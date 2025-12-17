@@ -42,6 +42,9 @@ export const actions: Actions = {
         const defenseConfig = DEFENSES[defenseType as keyof typeof DEFENSES];
         if (!defenseConfig) return fail(400, { error: 'Invalid defense type' });
 
+        // Update resources first
+        await updatePlanetResources(planetId);
+
         const client = await pool.connect();
         try {
             await client.query('BEGIN');
