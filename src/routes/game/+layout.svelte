@@ -83,9 +83,9 @@
             <span class="text-xl mb-1">🚀</span>
             <span class="text-[10px] uppercase tracking-wide">Fleet</span>
         </a>
-        <a href="/game/store" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition w-16">
-            <span class="text-xl mb-1">💎</span>
-            <span class="text-[10px] uppercase tracking-wide">Store</span>
+        <a href="/game/shipyard" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition w-16">
+            <span class="text-xl mb-1">🛠️</span>
+            <span class="text-[10px] uppercase tracking-wide">Shipyard</span>
         </a>
         <button class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition w-16">
             <span class="text-xl mb-1">☰</span>

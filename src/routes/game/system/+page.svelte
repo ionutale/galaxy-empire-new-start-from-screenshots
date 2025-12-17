@@ -2,15 +2,14 @@
     import { page } from '$app/stores';
     
     let { data } = $props();
-    const { galaxy, system, slots } = data;
 
     function prevSystem() {
-        if (system > 1) return `/game/system?galaxy=${galaxy}&system=${system - 1}`;
+        if (data.system > 1) return `/game/system?galaxy=${data.galaxy}&system=${data.system - 1}`;
         return '#';
     }
 
     function nextSystem() {
-        if (system < 499) return `/game/system?galaxy=${galaxy}&system=${system + 1}`;
+        if (data.system < 499) return `/game/system?galaxy=${data.galaxy}&system=${data.system + 1}`;
         return '#';
     }
 </script>
@@ -18,14 +17,14 @@
 <div class="p-4 pb-20">
     <!-- Navigation Header -->
     <div class="flex items-center justify-between bg-gray-800 p-4 rounded-lg mb-4 border border-gray-700">
-        <a href={prevSystem()} class="p-2 bg-gray-700 rounded hover:bg-gray-600 transition {system <= 1 ? 'opacity-50 pointer-events-none' : ''}">
+        <a href={prevSystem()} class="p-2 bg-gray-700 rounded hover:bg-gray-600 transition {data.system <= 1 ? 'opacity-50 pointer-events-none' : ''}">
             ◀
         </a>
         <div class="text-center">
-            <h2 class="text-xl font-bold text-blue-300">Galaxy {galaxy}</h2>
-            <div class="text-2xl font-mono font-bold">System {system}</div>
+            <h2 class="text-xl font-bold text-blue-300">Galaxy {data.galaxy}</h2>
+            <div class="text-2xl font-mono font-bold">System {data.system}</div>
         </div>
-        <a href={nextSystem()} class="p-2 bg-gray-700 rounded hover:bg-gray-600 transition {system >= 499 ? 'opacity-50 pointer-events-none' : ''}">
+        <a href={nextSystem()} class="p-2 bg-gray-700 rounded hover:bg-gray-600 transition {data.system >= 499 ? 'opacity-50 pointer-events-none' : ''}">
             ▶
         </a>
     </div>
@@ -40,7 +39,7 @@
             <div class="col-span-2">Actions</div>
         </div>
 
-        {#each slots as slot}
+        {#each data.slots as slot}
             <div class="bg-gray-800/60 border border-gray-700 rounded p-2 flex items-center grid grid-cols-12 gap-2 hover:bg-gray-700/50 transition">
                 <div class="col-span-1 font-mono text-gray-500 flex items-center justify-center">
                     {slot.number}

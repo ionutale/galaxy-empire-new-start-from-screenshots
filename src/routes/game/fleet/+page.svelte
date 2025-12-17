@@ -2,7 +2,6 @@
     import { enhance } from '$app/forms';
     
     let { data } = $props();
-    const { ships, fleets, currentPlanet } = data;
 
     const shipTypes = [
         { id: 'light_fighter', name: 'Light Fighter' },
@@ -20,11 +19,11 @@
     <!-- Active Fleets -->
     <div class="mb-8">
         <h3 class="text-lg font-bold text-gray-300 mb-2">Fleet Movements</h3>
-        {#if fleets.length === 0}
+        {#if data.fleets.length === 0}
             <div class="p-4 bg-gray-800/50 rounded text-gray-500 text-center">No active fleets.</div>
         {:else}
             <div class="space-y-2">
-                {#each fleets as fleet}
+                {#each data.fleets as fleet}
                     <div class="bg-gray-800 border border-gray-700 p-3 rounded flex justify-between items-center">
                         <div>
                             <span class="text-yellow-400 font-bold uppercase text-xs">{fleet.mission}</span>
@@ -49,7 +48,7 @@
         <h3 class="text-lg font-bold text-gray-300 mb-4">Dispatch Fleet</h3>
         
         <form method="POST" action="?/dispatch" use:enhance>
-            <input type="hidden" name="planet_id" value={currentPlanet.id}>
+            <input type="hidden" name="planet_id" value={data.currentPlanet.id}>
             
             <!-- Ship Selection -->
             <div class="space-y-2 mb-6">
@@ -57,8 +56,8 @@
                     <div class="flex items-center justify-between bg-gray-900/50 p-2 rounded">
                         <span class="text-gray-300">{ship.name}</span>
                         <div class="flex items-center space-x-2">
-                            <span class="text-xs text-gray-500">Available: {ships ? ships[ship.id] : 0}</span>
-                            <input type="number" name={ship.id} min="0" max={ships ? ships[ship.id] : 0} class="w-16 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-right text-white" placeholder="0">
+                            <span class="text-xs text-gray-500">Available: {data.ships ? data.ships[ship.id] : 0}</span>
+                            <input type="number" name={ship.id} min="0" max={data.ships ? data.ships[ship.id] : 0} class="w-16 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-right text-white" placeholder="0">
                         </div>
                     </div>
                 {/each}
@@ -67,23 +66,23 @@
             <!-- Target Coordinates -->
             <div class="grid grid-cols-3 gap-2 mb-4">
                 <div>
-                    <label class="block text-xs text-gray-500 mb-1">Galaxy</label>
-                    <input type="number" name="galaxy" value={currentPlanet.galaxy_id} class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white">
+                    <label for="galaxy" class="block text-xs text-gray-500 mb-1">Galaxy</label>
+                    <input id="galaxy" type="number" name="galaxy" value={data.currentPlanet.galaxy_id} class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white">
                 </div>
                 <div>
-                    <label class="block text-xs text-gray-500 mb-1">System</label>
-                    <input type="number" name="system" value={currentPlanet.system_id} class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white">
+                    <label for="system" class="block text-xs text-gray-500 mb-1">System</label>
+                    <input id="system" type="number" name="system" value={data.currentPlanet.system_id} class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white">
                 </div>
                 <div>
-                    <label class="block text-xs text-gray-500 mb-1">Planet</label>
-                    <input type="number" name="planet" class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white" placeholder="1-15">
+                    <label for="planet" class="block text-xs text-gray-500 mb-1">Planet</label>
+                    <input id="planet" type="number" name="planet" class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white" placeholder="1-15">
                 </div>
             </div>
 
             <!-- Mission -->
             <div class="mb-6">
-                <label class="block text-xs text-gray-500 mb-1">Mission</label>
-                <select name="mission" class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-2 text-white">
+                <label for="mission" class="block text-xs text-gray-500 mb-1">Mission</label>
+                <select id="mission" name="mission" class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-2 text-white">
                     <option value="attack">Attack</option>
                     <option value="transport">Transport</option>
                     <option value="espionage">Espionage</option>
