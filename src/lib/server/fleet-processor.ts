@@ -43,6 +43,17 @@ async function processReturningFleet(client: any, fleet: any) {
         );
     }
 
+    // Add resources back to origin planet
+    if (fleet.resources) {
+        const resources = fleet.resources;
+        await client.query(
+            `UPDATE planet_resources 
+             SET metal = metal + $1, crystal = crystal + $2, gas = gas + $3
+             WHERE planet_id = $4`,
+            [resources.metal || 0, resources.crystal || 0, resources.gas || 0, fleet.origin_planet_id]
+        );
+    }
+
     // Mark fleet as completed
     await client.query(
         `UPDATE fleets SET status = 'completed' WHERE id = $1`,
@@ -201,6 +212,55 @@ async function processArrivingFleet(client: any, fleet: any) {
                  VALUES ($1, 'combat', 'Attack Failed', 'No target found at coordinates.')`,
                 [fleet.user_id]
             );
+            await returnFleet(client, fleet);
+        }
+    } else if (fleet.mission === 'expedition') {
+        const outcome = Math.random();
+        let message = '';
+        let title = 'Expedition Result';
+
+        if (outcome < 0.1) {
+            // 10% - Black Hole (Fleet Lost)
+            await client.query(`UPDATE fleets SET status = 'destroyed' WHERE id = $1`, [fleet.id]);
+            title = 'Expedition Lost';
+            message = 'Your fleet encountered a massive black hole and was pulled beyond the event horizon. All contact has been lost.';
+        } else {
+            // 90% - Fleet Returns
+            if (outcome < 0.4) {
+                // 30% - Find Resources
+                const metal = Math.floor(Math.random() * 5000) + 1000;
+                const crystal = Math.floor(Math.random() * 3000) + 500;
+                const gas = Math.floor(Math.random() * 1000) + 100;
+                
+                await client.query(
+                    `UPDATE fleets SET resources = $1 WHERE id = $2`,
+                    [{ metal, crystal, gas }, fleet.id]
+                );
+                message = `Your expedition found a resource cache! \nMetal: ${metal}\nCrystal: ${crystal}\nGas: ${gas}`;
+            
+            } else if (outcome < 0.7) {
+                // 30% - Find Ships
+                const foundShips = { 'light_fighter': Math.floor(Math.random() * 5) + 1, 'small_cargo': Math.floor(Math.random() * 2) + 1 };
+                const currentShips = fleet.ships;
+                
+                for (const [type, count] of Object.entries(foundShips)) {
+                    currentShips[type] = (currentShips[type] || 0) + count;
+                }
+                
+                await client.query(`UPDATE fleets SET ships = $1 WHERE id = $2`, [currentShips, fleet.id]);
+                message = `Your expedition encountered abandoned ships that joined your fleet: \n${JSON.stringify(foundShips)}`;
+
+            } else {
+                // 30% - Nothing
+                message = 'The expedition explored the sector but found nothing of interest. The vast emptiness of space is... empty.';
+            }
+
+            await client.query(
+                `INSERT INTO messages (user_id, type, title, content)
+                 VALUES ($1, 'expedition', $2, $3)`,
+                [fleet.user_id, title, message]
+            );
+
             await returnFleet(client, fleet);
         }
     } else {

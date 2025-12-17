@@ -29,13 +29,23 @@ export const load: PageServerLoad = async ({ url, parent }) => {
 
     const occupiedPlanets = planetsRes.rows;
     
-    // Create array of 15 slots
-    const slots = Array.from({ length: 15 }, (_, i) => {
+    // Create array of 16 slots (1-15 planets, 16 nebula)
+    const slots = Array.from({ length: 16 }, (_, i) => {
         const num = i + 1;
+        
+        if (num === 16) {
+            return {
+                number: num,
+                planet: null,
+                isNebula: true
+            };
+        }
+
         const planet = occupiedPlanets.find(p => p.planet_number === num);
         return {
             number: num,
-            planet: planet || null
+            planet: planet || null,
+            isNebula: false
         };
     });
 

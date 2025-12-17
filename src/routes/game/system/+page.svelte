@@ -46,11 +46,17 @@
                 </div>
                 
                 <div class="col-span-2 flex items-center justify-center">
-                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-600 shadow-lg {slot.planet ? '' : 'opacity-20 grayscale'}"></div>
+                    {#if slot.isNebula}
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 shadow-lg animate-pulse"></div>
+                    {:else}
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-600 shadow-lg {slot.planet ? '' : 'opacity-20 grayscale'}"></div>
+                    {/if}
                 </div>
                 
                 <div class="col-span-4 flex flex-col justify-center">
-                    {#if slot.planet}
+                    {#if slot.isNebula}
+                        <span class="font-bold text-purple-300">Mysterious Nebula</span>
+                    {:else if slot.planet}
                         <span class="font-bold text-blue-200">{slot.planet.name}</span>
                     {:else}
                         <span class="text-gray-500 italic">Empty Space</span>
@@ -58,7 +64,9 @@
                 </div>
                 
                 <div class="col-span-3 flex items-center">
-                    {#if slot.planet && slot.planet.username}
+                    {#if slot.isNebula}
+                        <span class="text-purple-400 italic">Unknown</span>
+                    {:else if slot.planet && slot.planet.username}
                         <span class="text-yellow-400">{slot.planet.username}</span>
                     {:else}
                         <span class="text-gray-600">-</span>
@@ -66,7 +74,9 @@
                 </div>
                 
                 <div class="col-span-2 flex items-center justify-end space-x-1">
-                    {#if slot.planet}
+                    {#if slot.isNebula}
+                        <a href="/game/fleet?galaxy={data.galaxy}&system={data.system}&planet=16&mission=expedition" class="p-1 bg-purple-900/50 text-purple-400 rounded hover:bg-purple-800 flex items-center justify-center" title="Expedition">🔭</a>
+                    {:else if slot.planet}
                         {#if slot.planet.user_id !== $page.data.user.id}
                             <button class="p-1 bg-red-900/50 text-red-400 rounded hover:bg-red-800" title="Attack">⚔️</button>
                             <button class="p-1 bg-blue-900/50 text-blue-400 rounded hover:bg-blue-800" title="Espionage">👁️</button>

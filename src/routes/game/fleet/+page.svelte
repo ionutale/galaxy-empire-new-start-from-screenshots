@@ -1,5 +1,6 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
+    import { page } from '$app/stores';
     
     let { data } = $props();
 
@@ -11,6 +12,12 @@
         { id: 'small_cargo', name: 'Small Cargo' },
         { id: 'colony_ship', name: 'Colony Ship' },
     ];
+
+    // Get query params for pre-filling
+    let targetGalaxy = $page.url.searchParams.get('galaxy') || data.currentPlanet.galaxy_id;
+    let targetSystem = $page.url.searchParams.get('system') || data.currentPlanet.system_id;
+    let targetPlanet = $page.url.searchParams.get('planet') || '';
+    let targetMission = $page.url.searchParams.get('mission') || 'attack';
 </script>
 
 <div class="p-4 pb-20">
@@ -67,26 +74,27 @@
             <div class="grid grid-cols-3 gap-2 mb-4">
                 <div>
                     <label for="galaxy" class="block text-xs text-gray-500 mb-1">Galaxy</label>
-                    <input id="galaxy" type="number" name="galaxy" value={data.currentPlanet.galaxy_id} class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white">
+                    <input id="galaxy" type="number" name="galaxy" value={targetGalaxy} class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white">
                 </div>
                 <div>
                     <label for="system" class="block text-xs text-gray-500 mb-1">System</label>
-                    <input id="system" type="number" name="system" value={data.currentPlanet.system_id} class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white">
+                    <input id="system" type="number" name="system" value={targetSystem} class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white">
                 </div>
                 <div>
                     <label for="planet" class="block text-xs text-gray-500 mb-1">Planet</label>
-                    <input id="planet" type="number" name="planet" class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white" placeholder="1-15">
+                    <input id="planet" type="number" name="planet" value={targetPlanet} class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white" placeholder="1-15">
                 </div>
             </div>
 
             <!-- Mission -->
             <div class="mb-6">
                 <label for="mission" class="block text-xs text-gray-500 mb-1">Mission</label>
-                <select id="mission" name="mission" class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-2 text-white">
+                <select id="mission" name="mission" value={targetMission} class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-2 text-white">
                     <option value="attack">Attack</option>
                     <option value="transport">Transport</option>
                     <option value="espionage">Espionage</option>
                     <option value="colonize">Colonize</option>
+                    <option value="expedition">Expedition</option>
                 </select>
             </div>
 
