@@ -91,6 +91,12 @@ export const actions = {
                 [totalCost.metal, totalCost.crystal, totalCost.gas, planetId]
             );
 
+            // Ensure planet_ships row exists
+            await client.query(
+                'INSERT INTO planet_ships (planet_id) VALUES ($1) ON CONFLICT (planet_id) DO NOTHING',
+                [planetId]
+            );
+
             // Add ships (Instant build for now)
             await client.query(
                 `UPDATE planet_ships 

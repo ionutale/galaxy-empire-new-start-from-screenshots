@@ -104,6 +104,18 @@ export const actions = {
                     [planetId]
                 );
 
+                // Initialize Planet Ships
+                await client.query(
+                    'INSERT INTO planet_ships (planet_id) VALUES ($1)',
+                    [planetId]
+                );
+
+                // Initialize Planet Defenses
+                await client.query(
+                    'INSERT INTO planet_defenses (planet_id) VALUES ($1)',
+                    [planetId]
+                );
+
                 await client.query('COMMIT');
 
                 // Create session

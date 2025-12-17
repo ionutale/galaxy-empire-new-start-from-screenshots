@@ -100,6 +100,12 @@ export const actions: Actions = {
                 [totalCost.metal, totalCost.crystal, totalCost.gas, planetId]
             );
 
+            // Ensure planet_defenses row exists
+            await client.query(
+                'INSERT INTO planet_defenses (planet_id) VALUES ($1) ON CONFLICT (planet_id) DO NOTHING',
+                [planetId]
+            );
+
             // Add defenses (Instant for now)
             await client.query(
                 `UPDATE planet_defenses SET ${defenseType} = ${defenseType} + $1 WHERE planet_id = $2`,
