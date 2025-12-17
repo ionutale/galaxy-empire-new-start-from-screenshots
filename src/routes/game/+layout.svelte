@@ -1,5 +1,4 @@
 <script lang="ts">
-    import '../../app.css';
     let { children, data } = $props();
 </script>
 
@@ -59,7 +58,7 @@
     </div>
 
     <!-- Main Viewport -->
-    <main class="flex-1 overflow-auto relative bg-[url('/bg-space.jpg')] bg-cover bg-center">
+    <main class="flex-1 overflow-auto relative bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-gray-900 to-black">
         <!-- Background overlay for better text readability if needed -->
         <div class="absolute inset-0 bg-black/30 pointer-events-none"></div>
         
