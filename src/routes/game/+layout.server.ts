@@ -31,7 +31,12 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 
     // Update and fetch resources for current planet
     const resources = await updatePlanetResources(currentPlanet.id);
-// Fetch unread messages count
+
+    // Fetch user's premium currency
+    const userRes = await pool.query('SELECT dark_matter FROM users WHERE id = $1', [locals.user.id]);
+    const darkMatter = userRes.rows[0].dark_matter;
+
+    // Fetch unread messages count
     const msgRes = await pool.query(
         'SELECT COUNT(*) as count FROM messages WHERE user_id = $1 AND is_read = FALSE',
         [locals.user.id]
@@ -43,11 +48,6 @@ export const load: LayoutServerLoad = async ({ locals }) => {
         planets,
         currentPlanet,
         resources,
-        unreadMessag
-    return {
-        user: { ...locals.user, darkMatter },
-        planets,
-        currentPlanet,
-        resources
+        unreadMessages
     };
 };
