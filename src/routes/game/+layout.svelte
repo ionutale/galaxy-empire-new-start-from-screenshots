@@ -48,9 +48,9 @@
     });
 </script>
 
-<div class="flex flex-col h-screen bg-gray-900 text-white overflow-hidden font-sans">
+<div class="flex flex-col h-screen h-[100dvh] bg-gray-900 text-white overflow-hidden font-sans">
     <!-- Top Bar (HUD) -->
-    <header class="h-12 bg-gray-800 border-b border-gray-700 flex items-center justify-between px-4 z-20">
+    <header class="h-12 shrink-0 bg-gray-800 border-b border-gray-700 flex items-center justify-between px-4 z-20">
         <div class="flex items-center space-x-2">
             <div class="text-yellow-500 font-bold">Rank 1</div>
             <span class="text-green-500 text-xs">▲</span>
@@ -81,7 +81,7 @@
     </header>
 
     <!-- Resource Bar -->
-    <div class="h-14 bg-gray-800/90 border-b border-gray-700 flex items-center justify-around px-2 text-xs sm:text-sm z-20 shadow-lg">
+    <div class="h-14 shrink-0 bg-gray-800/90 border-b border-gray-700 flex items-center justify-around px-2 text-xs sm:text-sm z-20 shadow-lg">
         {#if data.resources}
             <div class="flex flex-col items-center">
                 <span class="text-gray-400 mb-1">Metal</span>
@@ -149,7 +149,7 @@
             </div>
         </div>
     {:else}
-        <div onclick={() => isChatOpen = true} class="bg-black/60 backdrop-blur-sm border-t border-gray-700 p-2 text-sm text-gray-300 truncate cursor-pointer hover:bg-black/80 transition z-30">
+        <div onclick={() => isChatOpen = true} class="shrink-0 bg-black/60 backdrop-blur-sm border-t border-gray-700 p-2 text-sm text-gray-300 truncate cursor-pointer hover:bg-black/80 transition z-30">
             {#if chatMessages.length > 0}
                 {@const lastMsg = chatMessages[0]}
                 <span class="text-blue-400 font-bold">[Global]</span> 
@@ -162,7 +162,7 @@
     {/if}
 
     <!-- Bottom Navigation Bar (Dock) -->
-    <nav class="h-16 bg-gray-800 border-t border-gray-700 flex items-center overflow-x-auto px-2 z-20 no-scrollbar">
+    <nav class="shrink-0 bg-gray-800 border-t border-gray-700 flex items-center overflow-x-auto px-2 z-20 no-scrollbar pb-safe min-h-[4rem]">
         <a href="/game" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem]">
             <span class="text-xl mb-1">🪐</span>
             <span class="text-[10px] uppercase tracking-wide">Base</span>
