@@ -21,14 +21,26 @@ export const GET = async () => {
         description: "A space strategy MMO game.",
         icons: [
             {
-                "src": "icon-192.png",
+                "src": "/icons/icon_web_PWA192_192x192.png",
                 "sizes": "192x192",
                 "type": "image/png"
             },
             {
-                "src": "icon-512.png",
+                "src": "/icons/icon_web_PWA512_512x512.png",
                 "sizes": "512x512",
                 "type": "image/png"
+            },
+            {
+                "src": "/icons/icon_android_LauncherXXHDPI_192x192.png",
+                "sizes": "192x192",
+                "type": "image/png",
+                "purpose": "maskable"
+            },
+            {
+                "src": "/icons/icon_android_PlayStore_512x512.png",
+                "sizes": "512x512",
+                "type": "image/png",
+                "purpose": "maskable"
             }
         ]
     };
