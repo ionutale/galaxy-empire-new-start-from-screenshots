@@ -1,0 +1,37 @@
+import { json } from '@sveltejs/kit';
+import { env } from '$env/dynamic/private';
+
+export const GET = async () => {
+    const runEnv = env.RUN_ENV || 'development';
+    let name = "Galaxy Empire";
+    let short_name = "GalaxyEmpire";
+
+    if (runEnv !== 'production') {
+        name = `${name} (${runEnv})`;
+        short_name = `${short_name} (${runEnv})`;
+    }
+
+    const manifest = {
+        name,
+        short_name,
+        start_url: "/",
+        display: "standalone",
+        background_color: "#111827",
+        theme_color: "#1f2937",
+        description: "A space strategy MMO game.",
+        icons: [
+            {
+                "src": "icon-192.png",
+                "sizes": "192x192",
+                "type": "image/png"
+            },
+            {
+                "src": "icon-512.png",
+                "sizes": "512x512",
+                "type": "image/png"
+            }
+        ]
+    };
+
+    return json(manifest);
+};
