@@ -140,7 +140,7 @@ export const RESEARCH = {
     },
     graviton_tech: {
         name: 'Graviton Technology',
-        baseCost: { metal: 0, crystal: 0, gas: 0 }, // Special reqs usually
+        baseCost: { metal: 0, crystal: 0, gas: 0, energy: 0.0000000000000001 }, // Requires energy
         costFactor: 3.0,
         description: 'Manipulate gravity.'
     },
@@ -293,7 +293,8 @@ export function getResearchCost(type: string, level: number) {
     return {
         metal: Math.floor(tech.baseCost.metal * Math.pow(tech.costFactor, level)),
         crystal: Math.floor(tech.baseCost.crystal * Math.pow(tech.costFactor, level)),
-        gas: Math.floor(tech.baseCost.gas * Math.pow(tech.costFactor, level))
+        gas: Math.floor(tech.baseCost.gas * Math.pow(tech.costFactor, level)),
+        energy: tech.baseCost.energy ? Math.floor(tech.baseCost.energy * Math.pow(tech.costFactor, level)) : 0
     };
 }
 

@@ -58,7 +58,7 @@ export const actions: Actions = {
                 return fail(404, { error: 'Planet not found' });
             }
 
-            if (resources.metal < cost.metal || resources.crystal < cost.crystal || resources.gas < cost.gas) {
+            if (resources.metal < cost.metal || resources.crystal < cost.crystal || resources.gas < cost.gas || resources.energy < (cost.energy || 0)) {
                 await client.query('ROLLBACK');
                 return fail(400, { error: 'Not enough resources' });
             }
