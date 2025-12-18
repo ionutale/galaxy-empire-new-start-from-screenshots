@@ -21,39 +21,11 @@
 </script>
 
 <div class="p-4 pb-20">
-    <h2 class="text-2xl font-bold text-blue-300 mb-4">Fleet Command</h2>
-
-    <!-- Active Fleets -->
-    <div class="mb-8">
-        <h3 class="text-lg font-bold text-gray-300 mb-2">Fleet Movements</h3>
-        {#if data.fleets.length === 0}
-            <div class="p-4 bg-gray-800/50 rounded text-gray-500 text-center">No active fleets.</div>
-        {:else}
-            <div class="space-y-2">
-                {#each data.fleets as fleet}
-                    <div class="bg-gray-800 border border-gray-700 p-3 rounded flex justify-between items-center">
-                        <div>
-                            <span class="text-yellow-400 font-bold uppercase text-xs">
-                                {fleet.status === 'returning' ? `Returning (${fleet.mission})` : fleet.mission}
-                            </span>
-                            <div class="text-sm text-gray-300">
-                                {#if fleet.status === 'returning'}
-                                    Target: [{fleet.origin_galaxy}:{fleet.origin_system}:{fleet.origin_planet}]
-                                {:else}
-                                    Target: [{fleet.target_galaxy}:{fleet.target_system}:{fleet.target_planet}]
-                                {/if}
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-xs text-gray-400">Arrival</div>
-                            <div class="font-mono text-blue-300">
-                                {new Date(fleet.arrival_time).toLocaleTimeString()}
-                            </div>
-                        </div>
-                    </div>
-                {/each}
-            </div>
-        {/if}
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-2xl font-bold text-blue-300">Fleet Command</h2>
+        <a href="/game/fleet/movements" class="bg-blue-900/50 hover:bg-blue-800 border border-blue-700 text-blue-200 px-3 py-1 rounded text-sm transition flex items-center gap-2">
+            <span>📡</span> View Movements
+        </a>
     </div>
 
     <!-- Dispatch Fleet -->
