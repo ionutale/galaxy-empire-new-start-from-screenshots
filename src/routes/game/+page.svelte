@@ -1,6 +1,6 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
-    import { getBuildingCost } from '$lib/game-config';
+    import { getBuildingCost, getProduction } from '$lib/game-config';
     
     let { data } = $props();
 
@@ -22,6 +22,7 @@
         {#each buildingTypes as building}
             {@const level = data.buildings[building.id]}
             {@const cost = getBuildingCost(building.id, level)}
+            {@const production = getProduction(building.id, level)}
             
             <div class="bg-gray-800/80 border border-gray-700 rounded-lg p-4 flex flex-col shadow-lg backdrop-blur-sm">
                 <div class="flex items-center justify-between mb-2">
@@ -32,6 +33,12 @@
                             <span class="text-xs text-blue-400 font-mono">Level {level}</span>
                         </div>
                     </div>
+                    {#if production > 0}
+                        <div class="text-right">
+                            <div class="text-xs text-gray-400">Hourly Output</div>
+                            <div class="text-sm font-mono text-green-400">+{production.toLocaleString()}</div>
+                        </div>
+                    {/if}
                 </div>
                 
                 <div class="mt-auto">
