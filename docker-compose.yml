@@ -13,10 +13,10 @@ services:
   galaxy-empire:
     build: .
     ports:
-      - "3000:3000"
+      - "4000:3000"
     environment:
       DATABASE_URL: postgres://galaxy_user:galaxy_password@db:5432/galaxy_empire
-      ORIGIN: http://localhost:3000
+      ORIGIN: http://192.168.1.107:4000
     depends_on:
       - db
 
