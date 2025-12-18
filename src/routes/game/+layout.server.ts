@@ -4,10 +4,12 @@ import { updatePlanetResources } from '$lib/server/game';
 import { processFleets } from '$lib/server/fleet-processor';
 import type { LayoutServerLoad } from './$types';
 
-export const load: LayoutServerLoad = async ({ locals }) => {
+export const load: LayoutServerLoad = async ({ locals, depends }) => {
     if (!locals.user) {
         throw redirect(303, '/login');
     }
+
+    depends('app:unread-messages');
 
     // Trigger fleet processing on page load (Lazy approach for demo)
     // In production, use a separate worker/cron

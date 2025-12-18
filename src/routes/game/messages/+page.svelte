@@ -1,5 +1,12 @@
 <script lang="ts">
+    import { invalidate } from '$app/navigation';
+    import { onMount } from 'svelte';
+
     let { data } = $props();
+
+    onMount(() => {
+        invalidate('app:unread-messages');
+    });
 </script>
 
 <div class="p-4 pb-20">
