@@ -6,6 +6,7 @@ import schemaDefenses from './schema-defenses.sql?raw';
 import schemaFleets from './schema-fleets.sql?raw';
 import schemaMessages from './schema-messages.sql?raw';
 import schemaResearch from './schema-research.sql?raw';
+import schemaPasswordReset from './schema-password-reset.sql?raw';
 
 export async function initDb() {
     try {
@@ -21,6 +22,7 @@ export async function initDb() {
         await pool.query(schemaFleets);
         await pool.query(schemaMessages);
         await pool.query(schemaResearch);
+        await pool.query(schemaPasswordReset);
 
         // 3. Backfills
         // Research
