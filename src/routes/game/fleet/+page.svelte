@@ -54,7 +54,11 @@
     <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
         <h3 class="text-lg font-bold text-gray-300 mb-4">Dispatch Fleet</h3>
         
-        <form method="POST" action="?/dispatch" use:enhance>
+        <form method="POST" action="?/dispatch" use:enhance={() => {
+            return async ({ update }) => {
+                await update({ reset: false });
+            };
+        }}>
             <input type="hidden" name="planet_id" value={data.currentPlanet.id}>
             
             <!-- Ship Selection -->
