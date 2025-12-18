@@ -283,9 +283,11 @@ async function processArrivingFleet(client: any, fleet: any) {
 }
 
 async function returnFleet(client: any, fleet: any) {
-    // Calculate return time (same duration as travel)
-    // For demo: 30 seconds
-    const returnTime = new Date(Date.now() + 30 * 1000);
+    // Calculate duration based on original flight time
+    const duration = new Date(fleet.arrival_time).getTime() - new Date(fleet.departure_time).getTime();
+    const safeDuration = duration > 0 ? duration : 30000; // Fallback to 30s
+
+    const returnTime = new Date(Date.now() + safeDuration);
     
     await client.query(
         `UPDATE fleets 

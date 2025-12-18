@@ -84,9 +84,14 @@ export const actions = {
                 );
             }
 
-            // Calculate arrival time (simplified: 1 minute per system distance?)
-            // For demo: 30 seconds fixed
-            const arrivalTime = new Date(Date.now() + 30 * 1000);
+            // Calculate arrival time
+            let durationSeconds = 30; // Default 30 seconds for demo
+            
+            if (mission === 'expedition') {
+                durationSeconds = 3600; // 1 hour for expeditions
+            }
+
+            const arrivalTime = new Date(Date.now() + durationSeconds * 1000);
 
             // Create fleet
             await client.query(
