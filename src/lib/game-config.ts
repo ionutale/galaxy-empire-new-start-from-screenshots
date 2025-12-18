@@ -1,4 +1,21 @@
-export const BUILDINGS = {
+export interface Cost {
+    metal: number;
+    crystal: number;
+    gas?: number;
+    energy?: number;
+}
+
+export interface Building {
+    name: string;
+    baseCost: Cost;
+    costFactor: number;
+    productionBase: number;
+    productionFactor: number;
+    energyFactor: number;
+    icon?: string;
+}
+
+export const BUILDINGS: Record<string, Building> = {
     metal_mine: {
         name: 'Metal Mine',
         baseCost: { metal: 60, crystal: 15 },
@@ -65,7 +82,14 @@ export const BUILDINGS = {
     }
 };
 
-export const RESEARCH = {
+export interface Research {
+    name: string;
+    baseCost: Cost;
+    costFactor: number;
+    description: string;
+}
+
+export const RESEARCH: Record<string, Research> = {
     energy_tech: {
         name: 'Energy Technology',
         baseCost: { metal: 0, crystal: 800, gas: 400 },
@@ -164,7 +188,16 @@ export const RESEARCH = {
     }
 };
 
-export const SHIPS = {
+export interface Ship {
+    name: string;
+    cost: Cost;
+    attack: number;
+    defense: number;
+    speed: number;
+    capacity: number;
+}
+
+export const SHIPS: Record<string, Ship> = {
     light_fighter: {
         name: 'Light Fighter',
         cost: { metal: 3000, crystal: 1000, gas: 0 },
@@ -215,7 +248,16 @@ export const SHIPS = {
     }
 };
 
-export const DEFENSES = {
+export interface Defense {
+    name: string;
+    cost: Cost;
+    attack: number;
+    defense: number;
+    shield: number;
+    max?: number;
+}
+
+export const DEFENSES: Record<string, Defense> = {
     rocket_launcher: {
         name: 'Rocket Launcher',
         cost: { metal: 2000, crystal: 0, gas: 0 },
@@ -276,24 +318,26 @@ export const DEFENSES = {
     }
 };
 
-export function getBuildingCost(type: string, level: number) {
+export function getBuildingCost(type: string, level: number): Cost | null {
     const building = BUILDINGS[type as keyof typeof BUILDINGS];
     if (!building) return null;
 
     return {
         metal: Math.floor(building.baseCost.metal * Math.pow(building.costFactor, level)),
-        crystal: Math.floor(building.baseCost.crystal * Math.pow(building.costFactor, level))
+        crystal: Math.floor(building.baseCost.crystal * Math.pow(building.costFactor, level)),
+        gas: building.baseCost.gas ? Math.floor(building.baseCost.gas * Math.pow(building.costFactor, level)) : 0,
+        energy: building.baseCost.energy ? Math.floor(building.baseCost.energy * Math.pow(building.costFactor, level)) : 0
     };
 }
 
-export function getResearchCost(type: string, level: number) {
+export function getResearchCost(type: string, level: number): Cost | null {
     const tech = RESEARCH[type as keyof typeof RESEARCH];
     if (!tech) return null;
 
     return {
         metal: Math.floor(tech.baseCost.metal * Math.pow(tech.costFactor, level)),
         crystal: Math.floor(tech.baseCost.crystal * Math.pow(tech.costFactor, level)),
-        gas: Math.floor(tech.baseCost.gas * Math.pow(tech.costFactor, level)),
+        gas: tech.baseCost.gas ? Math.floor(tech.baseCost.gas * Math.pow(tech.costFactor, level)) : 0,
         energy: tech.baseCost.energy ? Math.floor(tech.baseCost.energy * Math.pow(tech.costFactor, level)) : 0
     };
 }

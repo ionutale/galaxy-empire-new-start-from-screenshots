@@ -162,14 +162,10 @@
     {/if}
 
     <!-- Bottom Navigation Bar (Dock) -->
-    <nav class="shrink-0 bg-gray-800 border-t border-gray-700 flex items-center overflow-x-auto px-2 z-20 no-scrollbar pb-6 md:pb-safe min-h-[4rem]">
+    <nav class="shrink-0 bg-gray-800 border-t border-gray-700 flex items-center overflow-x-auto px-2 z-20 no-scrollbar pb-8 md:pb-safe min-h-[4rem]">
         <a href="/game" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem]">
             <span class="text-xl mb-1">🪐</span>
             <span class="text-[10px] uppercase tracking-wide">Base</span>
-        </a>
-        <a href="/game/facilities" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem]">
-            <span class="text-xl mb-1">🏭</span>
-            <span class="text-[10px] uppercase tracking-wide">Facilities</span>
         </a>
         <a href="/game/research" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem]">
             <span class="text-xl mb-1">🔬</span>
@@ -178,10 +174,6 @@
         <a href="/game/shipyard" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem]">
             <span class="text-xl mb-1">🛠️</span>
             <span class="text-[10px] uppercase tracking-wide">Shipyard</span>
-        </a>
-        <a href="/game/defenses" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem]">
-            <span class="text-xl mb-1">🛡️</span>
-            <span class="text-[10px] uppercase tracking-wide">Defense</span>
         </a>
         <a href="/game/fleet" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem]">
             <span class="text-xl mb-1">🚀</span>
