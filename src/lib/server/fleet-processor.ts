@@ -291,7 +291,7 @@ async function returnFleet(client: any, fleet: any) {
     
     await client.query(
         `UPDATE fleets 
-         SET status = 'returning', arrival_time = $1, mission = 'return'
+         SET status = 'returning', arrival_time = $1
          WHERE id = $2`,
         [returnTime, fleet.id]
     );

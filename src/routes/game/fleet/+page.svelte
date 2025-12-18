@@ -33,9 +33,15 @@
                 {#each data.fleets as fleet}
                     <div class="bg-gray-800 border border-gray-700 p-3 rounded flex justify-between items-center">
                         <div>
-                            <span class="text-yellow-400 font-bold uppercase text-xs">{fleet.mission}</span>
+                            <span class="text-yellow-400 font-bold uppercase text-xs">
+                                {fleet.status === 'returning' ? `Returning (${fleet.mission})` : fleet.mission}
+                            </span>
                             <div class="text-sm text-gray-300">
-                                Target: [{fleet.target_galaxy}:{fleet.target_system}:{fleet.target_planet}]
+                                {#if fleet.status === 'returning'}
+                                    Target: [{fleet.origin_galaxy}:{fleet.origin_system}:{fleet.origin_planet}]
+                                {:else}
+                                    Target: [{fleet.target_galaxy}:{fleet.target_system}:{fleet.target_planet}]
+                                {/if}
                             </div>
                         </div>
                         <div class="text-right">
