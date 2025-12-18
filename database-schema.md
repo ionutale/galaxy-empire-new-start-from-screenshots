@@ -56,8 +56,8 @@ CREATE TABLE planets (
 ```sql
 CREATE TABLE planet_resources (
     planet_id INT PRIMARY KEY REFERENCES planets(id),
-    metal DOUBLE PRECISION DEFAULT 500,
-    crystal DOUBLE PRECISION DEFAULT 500,
+    metal DOUBLE PRECISION DEFAULT 25000,
+    crystal DOUBLE PRECISION DEFAULT 25000,
     gas DOUBLE PRECISION DEFAULT 0,
     energy INT DEFAULT 0,
     last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- For calculating production since last check
