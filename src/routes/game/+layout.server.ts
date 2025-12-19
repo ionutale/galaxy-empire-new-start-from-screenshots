@@ -4,7 +4,7 @@ import { updatePlanetResources } from '$lib/server/game';
 import { processFleets } from '$lib/server/fleet-processor';
 import type { LayoutServerLoad } from './$types';
 
-export const load: LayoutServerLoad = async ({ locals, depends }) => {
+export const load: LayoutServerLoad = async ({ locals, depends, url, cookies }) => {
     if (!locals.user) {
         throw redirect(303, '/login');
     }
@@ -28,8 +28,23 @@ export const load: LayoutServerLoad = async ({ locals, depends }) => {
         return { user: locals.user, planets: [], currentPlanet: null, resources: null };
     }
 
-    // Default to first planet for now, or use a query param/cookie in future
-    const currentPlanet = planets[0];
+    // Determine current planet
+    let currentPlanet = planets[0];
+    const queryPlanetId = url.searchParams.get('planet');
+    const cookiePlanetId = cookies.get('currentPlanetId');
+
+    if (queryPlanetId) {
+        const selected = planets.find(p => p.id === parseInt(queryPlanetId));
+        if (selected) {
+            currentPlanet = selected;
+            cookies.set('currentPlanetId', currentPlanet.id.toString(), { path: '/', httpOnly: true, sameSite: 'strict', maxAge: 60 * 60 * 24 * 30 });
+        }
+    } else if (cookiePlanetId) {
+        const selected = planets.find(p => p.id === parseInt(cookiePlanetId));
+        if (selected) {
+            currentPlanet = selected;
+        }
+    }
 
     // Update and fetch resources for current planet
     const resources = await updatePlanetResources(currentPlanet.id);

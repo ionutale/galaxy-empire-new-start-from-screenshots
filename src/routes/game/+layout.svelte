@@ -1,5 +1,7 @@
 <script lang="ts">
     import { onMount, onDestroy } from 'svelte';
+    import { goto } from '$app/navigation';
+    import { page } from '$app/stores';
     import { VAPID_PUBLIC_KEY } from '$lib/game-config';
     import { messaging } from '$lib/firebase.config';
     import { getToken, onMessage } from 'firebase/messaging';
@@ -149,12 +151,32 @@
 <div class="flex flex-col h-screen h-[100dvh] bg-gray-900 text-white overflow-hidden font-sans">
     <!-- Top Bar (HUD) -->
     <header class="h-12 shrink-0 bg-gray-800 border-b border-gray-700 flex items-center justify-between px-4 z-20">
-        <div class="flex items-center space-x-2">
-            <div class="text-yellow-500 font-bold">Rank 1</div>
-            <span class="text-green-500 text-xs">▲</span>
+        <div class="flex items-center space-x-4">
+            <div class="hidden sm:flex items-center space-x-2">
+                <div class="text-yellow-500 font-bold">Rank 1</div>
+                <span class="text-green-500 text-xs">▲</span>
+            </div>
+            
+            <!-- Planet Selector -->
+            <select 
+                class="bg-gray-700 text-white text-xs sm:text-sm rounded border border-gray-600 px-2 py-1 focus:outline-none focus:border-blue-500 max-w-[150px] sm:max-w-[200px]"
+                value={data.currentPlanet?.id}
+                onchange={(e) => {
+                    const newId = e.currentTarget.value;
+                    const url = new URL($page.url);
+                    url.searchParams.set('planet', newId);
+                    goto(url.toString());
+                }}
+            >
+                {#each data.planets as planet}
+                    <option value={planet.id}>
+                        {planet.name} [{planet.galaxy_id}:{planet.system_id}:{planet.planet_number}]
+                    </option>
+                {/each}
+            </select>
         </div>
         
-        <div class="font-bold text-lg tracking-wider text-blue-300">
+        <div class="font-bold text-lg tracking-wider text-blue-300 hidden md:block">
             {data.user.username}
         </div>
         
