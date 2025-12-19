@@ -17,7 +17,7 @@ export const load: PageServerLoad = async ({ parent }) => {
          FROM fleets f
          JOIN planets p ON f.origin_planet_id = p.id
          WHERE f.user_id = (SELECT user_id FROM planets WHERE id = $1) 
-         AND f.status != 'completed'
+         AND f.status NOT IN ('completed', 'destroyed')
          ORDER BY f.arrival_time ASC`,
         [currentPlanet.id]
     );

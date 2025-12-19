@@ -64,7 +64,7 @@
     {:else}
         <div class="space-y-3">
             {#each data.fleets as fleet}
-                <div class="bg-gray-800 border border-gray-700 p-4 rounded-lg shadow-lg flex flex-col gap-4">
+                <div id="fleet-{fleet.id}" class="bg-gray-800 border border-gray-700 p-4 rounded-lg shadow-lg flex flex-col gap-4">
                     <div class="flex justify-between items-start">
                         <div>
                             <div class="flex items-center gap-2 mb-1">
