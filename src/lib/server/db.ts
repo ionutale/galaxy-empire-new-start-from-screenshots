@@ -8,7 +8,8 @@ export const pool = new Pool({
     password: env.DB_PASSWORD,
     host: env.DB_HOST,
     port: parseInt(env.DB_PORT || '5432'),
-    database: env.DB_NAME
+    database: env.DB_NAME,
+    options: `-c timezone=${Intl.DateTimeFormat().resolvedOptions().timeZone}`
 });
 
 export const query = (text: string, params?: any[]) => pool.query(text, params);

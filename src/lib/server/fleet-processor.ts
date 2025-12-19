@@ -15,10 +15,10 @@ export async function processFleets() {
         const fleetsRes = await client.query(
             `SELECT * FROM fleets 
              WHERE status IN ('active', 'returning') 
-             AND arrival_time <= NOW() 
-             FOR UPDATE SKIP LOCKED`
+             AND arrival_time <= NOW()`
         );
 
+        console.log(`Processing ${fleetsRes.rows.length} fleets...`);
         for (const fleet of fleetsRes.rows) {
             console.log(`Processing fleet ${fleet.id} [${fleet.status}]: ${fleet.mission}`);
             try {
