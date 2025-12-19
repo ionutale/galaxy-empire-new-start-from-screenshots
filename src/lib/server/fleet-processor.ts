@@ -314,12 +314,13 @@ async function returnFleet(client: any, fleet: any) {
     const duration = new Date(fleet.arrival_time).getTime() - new Date(fleet.departure_time).getTime();
     const safeDuration = duration > 0 ? duration : 30000; // Fallback to 30s
 
-    const returnTime = new Date(Date.now() + safeDuration);
+    const now = new Date();
+    const returnTime = new Date(now.getTime() + safeDuration);
     
     await client.query(
         `UPDATE fleets 
-         SET status = 'returning', arrival_time = $1
-         WHERE id = $2`,
-        [returnTime, fleet.id]
+         SET status = 'returning', arrival_time = $1, departure_time = $2
+         WHERE id = $3`,
+        [returnTime, now, fleet.id]
     );
 }
