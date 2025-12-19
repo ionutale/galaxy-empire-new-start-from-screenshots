@@ -17,10 +17,10 @@
             <div class="text-gray-500 text-center p-4">No messages.</div>
         {:else}
             {#each data.messages as msg}
-                <div class="bg-gray-800 border border-gray-700 rounded p-4 shadow-sm {msg.is_read ? 'opacity-75' : 'border-l-4 border-l-blue-500'}">
+                <div class="bg-gray-800 border border-gray-700 rounded p-4 shadow-sm {msg.isRead ? 'opacity-75' : 'border-l-4 border-l-blue-500'}">
                     <div class="flex justify-between items-start mb-2">
                         <h3 class="font-bold text-gray-200">{msg.title}</h3>
-                        <span class="text-xs text-gray-500">{new Date(msg.created_at).toLocaleString()}</span>
+                        <span class="text-xs text-gray-500">{new Date(msg.createdAt).toLocaleString()}</span>
                     </div>
                     <p class="text-gray-400 text-sm">{msg.content}</p>
                 </div>

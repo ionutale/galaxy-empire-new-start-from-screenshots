@@ -1,5 +1,6 @@
-import { pool } from './db';
+import { db, planets, planetBuildings, planetShips, planetDefenses, userResearch, fleets, users } from './db';
 import { BUILDINGS, RESEARCH, SHIPS, DEFENSES } from '$lib/game-config';
+import { eq } from 'drizzle-orm';
 
 function calculateBuildingPoints(type: string, level: number): number {
     const building = BUILDINGS[type as keyof typeof BUILDINGS];
@@ -39,29 +40,33 @@ function calculateResearchPoints(type: string, level: number): number {
     return (totalMetal + totalCrystal + totalGas) / 1000;
 }
 
+function toSnake(s: string) {
+    return s.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+}
+
 export async function updateUserPoints(userId: number) {
-    const client = await pool.connect();
     try {
         let points = 0;
 
         // 1. Buildings & Defenses & Ships (on planets)
-        const planets = await client.query('SELECT id FROM planets WHERE user_id = $1', [userId]);
+        const userPlanets = await db.select({ id: planets.id }).from(planets).where(eq(planets.userId, userId));
         
-        for (const planet of planets.rows) {
+        for (const planet of userPlanets) {
             // Buildings
-            const bRes = await client.query('SELECT * FROM planet_buildings WHERE planet_id = $1', [planet.id]);
-            const buildings = bRes.rows[0] || {};
+            const bRes = await db.select().from(planetBuildings).where(eq(planetBuildings.planetId, planet.id));
+            const buildings = bRes[0] || {};
             for (const [key, level] of Object.entries(buildings)) {
-                if (key === 'planet_id') continue;
-                points += calculateBuildingPoints(key, level as number);
+                if (key === 'planetId' || key === 'id') continue;
+                // Convert camelCase key to snake_case for config lookup
+                points += calculateBuildingPoints(toSnake(key), level as number);
             }
 
             // Ships (Stationed)
-            const sRes = await client.query('SELECT * FROM planet_ships WHERE planet_id = $1', [planet.id]);
-            const ships = sRes.rows[0] || {};
+            const sRes = await db.select().from(planetShips).where(eq(planetShips.planetId, planet.id));
+            const ships = sRes[0] || {};
             for (const [key, count] of Object.entries(ships)) {
-                if (key === 'planet_id') continue;
-                const ship = SHIPS[key as keyof typeof SHIPS];
+                if (key === 'planetId' || key === 'id') continue;
+                const ship = SHIPS[toSnake(key) as keyof typeof SHIPS];
                 if (ship) {
                     const cost = ship.cost.metal + ship.cost.crystal + (ship.cost.gas || 0);
                     points += (cost * (count as number)) / 1000;
@@ -69,11 +74,11 @@ export async function updateUserPoints(userId: number) {
             }
 
             // Defenses
-            const dRes = await client.query('SELECT * FROM planet_defenses WHERE planet_id = $1', [planet.id]);
-            const defenses = dRes.rows[0] || {};
+            const dRes = await db.select().from(planetDefenses).where(eq(planetDefenses.planetId, planet.id));
+            const defenses = dRes[0] || {};
             for (const [key, count] of Object.entries(defenses)) {
-                if (key === 'planet_id') continue;
-                const def = DEFENSES[key as keyof typeof DEFENSES];
+                if (key === 'planetId' || key === 'id') continue;
+                const def = DEFENSES[toSnake(key) as keyof typeof DEFENSES];
                 if (def) {
                     const cost = def.cost.metal + def.cost.crystal + (def.cost.gas || 0);
                     points += (cost * (count as number)) / 1000;
@@ -82,18 +87,28 @@ export async function updateUserPoints(userId: number) {
         }
 
         // 2. Research
-        const rRes = await client.query('SELECT * FROM user_research WHERE user_id = $1', [userId]);
-        const research = rRes.rows[0] || {};
+        const rRes = await db.select().from(userResearch).where(eq(userResearch.userId, userId));
+        const research = rRes[0] || {};
         for (const [key, level] of Object.entries(research)) {
-            if (key === 'user_id') continue;
-            points += calculateResearchPoints(key, level as number);
+            if (key === 'userId' || key === 'id') continue;
+            points += calculateResearchPoints(toSnake(key), level as number);
         }
 
         // 3. Fleets (Flying)
-        const fRes = await client.query('SELECT ships FROM fleets WHERE user_id = $1', [userId]);
-        for (const fleet of fRes.rows) {
-            for (const [key, count] of Object.entries(fleet.ships)) {
-                const ship = SHIPS[key as keyof typeof SHIPS];
+        const fRes = await db.select({ ships: fleets.ships }).from(fleets).where(eq(fleets.userId, userId));
+        for (const fleet of fRes) {
+            const ships = fleet.ships as Record<string, number>;
+            for (const [key, count] of Object.entries(ships)) {
+                // Fleet ships are stored as JSON, likely snake_case keys if that's how they were inserted.
+                // But if we migrated insertion to use camelCase, we might have mixed.
+                // However, fleet-processor uses snake_case keys for ships in JSON usually (from frontend).
+                // Let's try both or assume snake_case.
+                // Actually, if it's JSON, Drizzle returns it as is.
+                // If we inserted { light_fighter: 10 }, we get { light_fighter: 10 }.
+                // So we don't need toSnake here if keys are already snake_case.
+                // But if we inserted { lightFighter: 10 }, we need toSnake.
+                // Let's assume snake_case for now as that's the config key format.
+                const ship = SHIPS[key as keyof typeof SHIPS] || SHIPS[toSnake(key) as keyof typeof SHIPS];
                 if (ship) {
                     const cost = ship.cost.metal + ship.cost.crystal + (ship.cost.gas || 0);
                     points += (cost * (count as number)) / 1000;
@@ -102,28 +117,23 @@ export async function updateUserPoints(userId: number) {
         }
 
         // Update User
-        await client.query('UPDATE users SET points = $1 WHERE id = $2', [Math.floor(points), userId]);
+        await db.update(users).set({ points: Math.floor(points) }).where(eq(users.id, userId));
 
     } catch (e) {
         console.error(`Error updating points for user ${userId}:`, e);
-    } finally {
-        client.release();
     }
 }
 
 export async function updateAllUserPoints() {
-    const client = await pool.connect();
     try {
-        const users = await client.query('SELECT id FROM users');
+        const allUsers = await db.select({ id: users.id }).from(users);
         
-        for (const user of users.rows) {
+        for (const user of allUsers) {
             await updateUserPoints(user.id);
         }
         console.log('Updated points for all users.');
 
     } catch (e) {
         console.error('Error updating points:', e);
-    } finally {
-        client.release();
     }
 }

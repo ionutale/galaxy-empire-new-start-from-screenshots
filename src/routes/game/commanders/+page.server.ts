@@ -1,7 +1,8 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { COMMANDERS, DURATION_COSTS, purchaseCommander, getActiveCommanders } from '$lib/server/commanders';
-import { pool } from '$lib/server/db';
+import { db, users } from '$lib/server/db';
+import { eq } from 'drizzle-orm';
 
 export const load: PageServerLoad = async ({ locals }) => {
     if (!locals.user) throw redirect(302, '/login');
@@ -9,14 +10,16 @@ export const load: PageServerLoad = async ({ locals }) => {
     const activeCommanders = await getActiveCommanders(locals.user.id);
     
     // Get current DM
-    const userRes = await pool.query('SELECT dark_matter FROM users WHERE id = $1', [locals.user.id]);
-    const darkMatter = userRes.rows[0]?.dark_matter || 0;
+    const userRes = await db.select({ darkMatter: users.darkMatter })
+        .from(users)
+        .where(eq(users.id, locals.user.id));
+    const darkMatter = userRes[0]?.darkMatter || 0;
 
     return {
         commanders: COMMANDERS,
         durationCosts: DURATION_COSTS,
         activeCommanders: activeCommanders.reduce((acc, curr) => {
-            acc[curr.commander_id] = curr.expires_at;
+            acc[curr.commanderId] = curr.expiresAt;
             return acc;
         }, {} as Record<string, Date>),
         darkMatter
