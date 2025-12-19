@@ -19,7 +19,7 @@
 		"db:migrate": "drizzle-kit migrate",
 		"db:push": "drizzle-kit push",
 		"db:studio": "drizzle-kit studio",
-		"migrate:prod": "node production-migration.js"
+		"migrate": "tsx scripts/migrate.ts"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.4.0",
@@ -34,6 +34,7 @@
 		"@types/bcryptjs": "^3.0.0",
 		"@types/node": "^22",
 		"@vitest/browser-playwright": "^4.0.15",
+		"dotenv": "^17.2.3",
 		"drizzle-kit": "^0.31.8",
 		"eslint": "^9.39.1",
 		"eslint-config-prettier": "^10.1.8",
@@ -46,6 +47,7 @@
 		"svelte": "^5.45.6",
 		"svelte-check": "^4.3.4",
 		"tailwindcss": "^4.1.17",
+		"tsx": "^4.21.0",
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.48.1",
 		"vite": "^7.2.6",
