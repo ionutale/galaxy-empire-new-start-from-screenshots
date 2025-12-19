@@ -1,5 +1,6 @@
 import { pool } from '$lib/server/db';
 import { fail } from '@sveltejs/kit';
+import { SHIPS } from '$lib/game-config';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ parent }) => {
@@ -40,21 +41,33 @@ export const actions = {
         const planet = Number(data.get('planet'));
         const mission = data.get('mission') as string;
         
+        // Parse resources
+        const metal = Number(data.get('metal') || 0);
+        const crystal = Number(data.get('crystal') || 0);
+        const gas = Number(data.get('gas') || 0);
+        const totalResources = metal + crystal + gas;
+
         // Parse ships
         const ships: Record<string, number> = {};
         const shipTypes = ['light_fighter', 'heavy_fighter', 'cruiser', 'battleship', 'small_cargo', 'colony_ship'];
         let totalShips = 0;
+        let totalCapacity = 0;
         
         for (const type of shipTypes) {
             const count = Number(data.get(type) || 0);
             if (count > 0) {
                 ships[type] = count;
                 totalShips += count;
+                totalCapacity += (SHIPS[type]?.capacity || 0) * count;
             }
         }
 
         if (totalShips === 0) {
             return fail(400, { error: 'No ships selected' });
+        }
+
+        if (totalResources > totalCapacity) {
+            return fail(400, { error: `Not enough cargo capacity. Capacity: ${totalCapacity}, Resources: ${totalResources}` });
         }
 
         const client = await pool.connect();
@@ -75,6 +88,26 @@ export const actions = {
                 }
             }
 
+            // Check if user has enough resources
+            const resourceCheck = await client.query(
+                'SELECT metal, crystal, gas FROM planet_resources WHERE planet_id = $1 FOR UPDATE',
+                [planetId]
+            );
+            const availableResources = resourceCheck.rows[0];
+
+            if (availableResources.metal < metal) {
+                await client.query('ROLLBACK');
+                return fail(400, { error: 'Not enough Metal' });
+            }
+            if (availableResources.crystal < crystal) {
+                await client.query('ROLLBACK');
+                return fail(400, { error: 'Not enough Crystal' });
+            }
+            if (availableResources.gas < gas) {
+                await client.query('ROLLBACK');
+                return fail(400, { error: 'Not enough Gas' });
+            }
+
             // Deduct ships
             for (const [type, count] of Object.entries(ships)) {
                 await client.query(
@@ -82,6 +115,14 @@ export const actions = {
                     [count, planetId]
                 );
             }
+
+            // Deduct resources
+            await client.query(
+                `UPDATE planet_resources 
+                 SET metal = metal - $1, crystal = crystal - $2, gas = gas - $3
+                 WHERE planet_id = $4`,
+                [metal, crystal, gas, planetId]
+            );
 
             // Calculate arrival time
             let durationSeconds = 30; // Default 30 seconds for demo
@@ -94,9 +135,9 @@ export const actions = {
 
             // Create fleet
             await client.query(
-                `INSERT INTO fleets (user_id, origin_planet_id, target_galaxy, target_system, target_planet, mission, ships, arrival_time)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-                [locals.user.id, planetId, galaxy, system, planet, mission, JSON.stringify(ships), arrivalTime]
+                `INSERT INTO fleets (user_id, origin_planet_id, target_galaxy, target_system, target_planet, mission, ships, resources, arrival_time)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+                [locals.user.id, planetId, galaxy, system, planet, mission, JSON.stringify(ships), JSON.stringify({ metal, crystal, gas }), arrivalTime]
             );
 
             await client.query('COMMIT');

@@ -52,6 +52,25 @@
                 {/each}
             </div>
 
+            <!-- Resource Selection -->
+            <div class="bg-gray-900/50 p-3 rounded mb-6">
+                <h4 class="text-sm font-bold text-gray-400 mb-2">Resources</h4>
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label for="metal" class="block text-xs text-gray-500 mb-1">Metal</label>
+                        <input id="metal" type="number" name="metal" min="0" class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-right" placeholder="0">
+                    </div>
+                    <div>
+                        <label for="crystal" class="block text-xs text-gray-500 mb-1">Crystal</label>
+                        <input id="crystal" type="number" name="crystal" min="0" class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-right" placeholder="0">
+                    </div>
+                    <div>
+                        <label for="gas" class="block text-xs text-gray-500 mb-1">Gas</label>
+                        <input id="gas" type="number" name="gas" min="0" class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-right" placeholder="0">
+                    </div>
+                </div>
+            </div>
+
             <!-- Target Coordinates -->
             <div class="grid grid-cols-3 gap-2 mb-4">
                 <div>

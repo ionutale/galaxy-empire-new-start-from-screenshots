@@ -91,8 +91,46 @@ async function processArrivingFleet(client: any, fleet: any) {
     let affectedUserId = targetPlanet?.user_id || null;
 
     if (fleet.mission === 'transport') {
-        // Logic for transport (not fully implemented in UI yet, but structure is here)
-        // Just return for now
+        if (targetPlanet) {
+            // Unload resources
+            const resources = fleet.resources || { metal: 0, crystal: 0, gas: 0 };
+            await client.query(
+                `UPDATE planet_resources 
+                 SET metal = metal + $1, crystal = crystal + $2, gas = gas + $3
+                 WHERE planet_id = $4`,
+                [resources.metal || 0, resources.crystal || 0, resources.gas || 0, targetPlanet.id]
+            );
+
+            // Clear resources from fleet so they don't return
+            await client.query(
+                `UPDATE fleets SET resources = '{}' WHERE id = $1`,
+                [fleet.id]
+            );
+
+            // Notify target user
+            if (affectedUserId && affectedUserId !== fleet.user_id) {
+                 await client.query(
+                    `INSERT INTO messages (user_id, type, title, content)
+                     VALUES ($1, 'transport', 'Incoming Transport', 'A fleet has arrived at your planet delivering resources: Metal: ' || $2 || ', Crystal: ' || $3 || ', Gas: ' || $4)`,
+                    [affectedUserId, resources.metal || 0, resources.crystal || 0, resources.gas || 0]
+                );
+            }
+            
+            // Notify sender
+             await client.query(
+                `INSERT INTO messages (user_id, type, title, content)
+                 VALUES ($1, 'transport', 'Transport Delivered', 'Your fleet has delivered resources to ' || $2 || ':' || $3 || ':' || $4)`,
+                [fleet.user_id, fleet.target_galaxy, fleet.target_system, fleet.target_planet]
+            );
+        } else {
+             // Notify sender of failure
+             await client.query(
+                `INSERT INTO messages (user_id, type, title, content)
+                 VALUES ($1, 'transport', 'Transport Failed', 'Target planet does not exist. Fleet is returning with resources.')`,
+                [fleet.user_id]
+            );
+        }
+        
         await returnFleet(client, fleet);
     } else if (fleet.mission === 'colonize') {
         if (!targetPlanet) {
