@@ -289,8 +289,8 @@ async function processArrivingFleet(client: any, fleet: any) {
             message = 'Your fleet encountered a massive black hole and was pulled beyond the event horizon. All contact has been lost.';
         } else {
             // 90% - Fleet Returns
-            if (outcome < 0.4) {
-                // 30% - Find Resources
+            if (outcome < 0.35) {
+                // 25% - Find Resources
                 const metal = Math.floor(Math.random() * 5000) + 1000;
                 const crystal = Math.floor(Math.random() * 3000) + 500;
                 const gas = Math.floor(Math.random() * 1000) + 100;
@@ -301,8 +301,8 @@ async function processArrivingFleet(client: any, fleet: any) {
                 );
                 message = `Your expedition found a resource cache! \nMetal: ${metal}\nCrystal: ${crystal}\nGas: ${gas}`;
             
-            } else if (outcome < 0.7) {
-                // 30% - Find Ships
+            } else if (outcome < 0.6) {
+                // 25% - Find Ships
                 const foundShips = { 'light_fighter': Math.floor(Math.random() * 5) + 1, 'small_cargo': Math.floor(Math.random() * 2) + 1 };
                 const currentShips = fleet.ships;
                 
@@ -313,8 +313,17 @@ async function processArrivingFleet(client: any, fleet: any) {
                 await client.query(`UPDATE fleets SET ships = $1 WHERE id = $2`, [JSON.stringify(currentShips), fleet.id]);
                 message = `Your expedition encountered abandoned ships that joined your fleet: \n${JSON.stringify(foundShips)}`;
 
+            } else if (outcome < 0.75) {
+                // 15% - Find Dark Matter
+                const darkMatter = 50;
+                await client.query(
+                    `UPDATE users SET dark_matter = dark_matter + $1 WHERE id = $2`,
+                    [darkMatter, fleet.user_id]
+                );
+                message = `Your expedition discovered a pocket of Dark Matter! \nDark Matter: ${darkMatter}`;
+
             } else {
-                // 30% - Nothing
+                // 25% - Nothing
                 message = 'The expedition explored the sector but found nothing of interest. The vast emptiness of space is... empty.';
             }
 

@@ -210,6 +210,10 @@
             <span class="text-xl mb-1">🤝</span>
             <span class="text-[10px] uppercase tracking-wide">Alliance</span>
         </a>
+        <a href="/game/commanders" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem]">
+            <span class="text-xl mb-1">👨‍✈️</span>
+            <span class="text-[10px] uppercase tracking-wide">Officers</span>
+        </a>
         <a href="/game/highscore" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem]">
             <span class="text-xl mb-1">🏆</span>
             <span class="text-[10px] uppercase tracking-wide">Rank</span>

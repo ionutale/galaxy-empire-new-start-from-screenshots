@@ -21,6 +21,12 @@ export const load: LayoutServerLoad = async ({ locals, depends, url, cookies }) 
         [locals.user.id]
     );
 
+    // Refresh user DM
+    const userRes = await pool.query('SELECT dark_matter FROM users WHERE id = $1', [locals.user.id]);
+    if (userRes.rows.length > 0) {
+        locals.user.darkMatter = userRes.rows[0].dark_matter;
+    }
+
     const planets = planetsRes.rows;
     
     if (planets.length === 0) {
@@ -49,10 +55,6 @@ export const load: LayoutServerLoad = async ({ locals, depends, url, cookies }) 
     // Update and fetch resources for current planet
     const resources = await updatePlanetResources(currentPlanet.id);
 
-    // Fetch user's premium currency
-    const userRes = await pool.query('SELECT dark_matter FROM users WHERE id = $1', [locals.user.id]);
-    const darkMatter = userRes.rows[0].dark_matter;
-
     // Fetch unread messages count
     const msgRes = await pool.query(
         'SELECT COUNT(*) as count FROM messages WHERE user_id = $1 AND is_read = FALSE',
@@ -61,7 +63,7 @@ export const load: LayoutServerLoad = async ({ locals, depends, url, cookies }) 
     const unreadMessages = parseInt(msgRes.rows[0].count);
 
     return {
-        user: { ...locals.user, darkMatter },
+        user: locals.user,
         planets,
         currentPlanet,
         resources,
