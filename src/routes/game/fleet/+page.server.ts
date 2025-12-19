@@ -87,7 +87,7 @@ export const actions = {
             let durationSeconds = 30; // Default 30 seconds for demo
             
             if (mission === 'expedition') {
-                durationSeconds = 3600; // 1 hour for expeditions
+                durationSeconds = 1800; // 30 minutes for expeditions
             }
 
             const arrivalTime = new Date(Date.now() + durationSeconds * 1000);
