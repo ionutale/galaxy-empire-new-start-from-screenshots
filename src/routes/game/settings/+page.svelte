@@ -48,8 +48,15 @@
                 <span class="block text-gray-400 text-sm mb-2">Avatar</span>
                 <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
                     {#each avatars as avatar}
-                        <label class="cursor-pointer">
-                            <input type="radio" name="avatar_id" value={avatar.id} class="peer sr-only" checked={data.profile.avatar_id === avatar.id}>
+                        <label class="cursor-pointer" for="avatar-{avatar.id}">
+                            <input 
+                                type="radio" 
+                                name="avatar_id" 
+                                id="avatar-{avatar.id}" 
+                                value={avatar.id} 
+                                class="peer sr-only" 
+                                checked={data.profile.avatar_id === avatar.id}
+                            >
                             <div class="flex flex-col items-center p-2 rounded border border-gray-700 bg-gray-700/50 peer-checked:bg-blue-600 peer-checked:border-blue-400 hover:bg-gray-600 transition">
                                 <span class="text-2xl mb-1">{avatar.icon}</span>
                                 <span class="text-[10px] text-gray-300">{avatar.name}</span>
@@ -104,6 +111,48 @@
                 Change Password
             </button>
         </form>
+    </div>
+
+    <!-- Push Notifications -->
+    <div class="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-6 shadow-lg">
+        <h3 class="text-xl font-bold text-gray-200 mb-4">Push Notifications</h3>
+        <p class="text-gray-400 text-sm mb-4">
+            Test if push notifications are working correctly on this device.
+        </p>
+        
+        <div class="flex flex-col sm:flex-row gap-4">
+            <form method="POST" action="?/testPush" use:enhance class="flex-1">
+                <button type="submit" class="bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 px-4 rounded transition w-full">
+                    Test Push Notification
+                </button>
+            </form>
+
+            <button 
+                type="button" 
+                onclick={async () => {
+                    if (!confirm('This will reset your push notification registration. Continue?')) return;
+                    try {
+                        const registration = await navigator.serviceWorker.ready;
+                        const subscription = await registration.pushManager.getSubscription();
+                        if (subscription) {
+                            await subscription.unsubscribe();
+                        }
+                        const registrations = await navigator.serviceWorker.getRegistrations();
+                        for (let reg of registrations) {
+                            await reg.unregister();
+                        }
+                        alert('Push notifications reset. The page will now reload.');
+                        window.location.reload();
+                    } catch (e) {
+                        console.error('Failed to reset push:', e);
+                        alert('Failed to reset push notifications. See console for details.');
+                    }
+                }}
+                class="bg-gray-700 hover:bg-gray-600 text-gray-300 font-bold py-2 px-4 rounded transition flex-1"
+            >
+                Reset Notifications
+            </button>
+        </div>
     </div>
 
     <!-- Logout -->

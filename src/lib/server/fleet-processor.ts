@@ -341,14 +341,23 @@ async function processArrivingFleet(client: any, fleet: any) {
                         }
                     };
 
-                    await webpush.sendNotification(pushSubscription, JSON.stringify({
-                        title: title,
-                        body: message,
-                        icon: '/icons/icon_web_PWA192_192x192.png'
-                    }));
+                    try {
+                        await webpush.sendNotification(pushSubscription, JSON.stringify({
+                            title: title,
+                            body: message,
+                            icon: '/icons/icon_web_PWA192_192x192.png'
+                        }));
+                    } catch (err: any) {
+                        if (err.statusCode === 410) {
+                            console.log(`Push subscription expired for user ${fleet.user_id}. Removing.`);
+                            await client.query('DELETE FROM push_subscriptions WHERE endpoint = $1', [sub.endpoint]);
+                        } else {
+                            console.error('Error sending push notification:', err);
+                        }
+                    }
                 }
             } catch (err) {
-                console.error('Error sending push notification:', err);
+                console.error('Error fetching push subscriptions:', err);
             }
 
             await returnFleet(client, fleet);

@@ -56,13 +56,23 @@
     }
 
     async function subscribeToPush() {
-        if (!('serviceWorker' in navigator)) return;
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+            console.warn('Push notifications are not supported in this browser');
+            return;
+        }
 
         try {
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+                console.log('Push notification permission not granted:', permission);
+                return;
+            }
+
             const registration = await navigator.serviceWorker.ready;
             let subscription = await registration.pushManager.getSubscription();
 
             if (!subscription) {
+                console.log('Creating new push subscription...');
                 subscription = await registration.pushManager.subscribe({
                     userVisibleOnly: true,
                     applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
@@ -73,10 +83,16 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(subscription)
                 });
-                console.log('Push subscription saved');
+                console.log('Push subscription saved successfully');
+            } else {
+                console.log('Existing push subscription found');
             }
         } catch (err) {
-            console.error('Failed to subscribe to push notifications', err);
+            console.error('Failed to subscribe to push notifications:', err);
+            if (err instanceof Error) {
+                console.error('Error name:', err.name);
+                console.error('Error message:', err.message);
+            }
         }
     }
 
