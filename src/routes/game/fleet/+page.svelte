@@ -93,6 +93,7 @@
                 <select id="mission" name="mission" value={targetMission} class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-2 text-white">
                     <option value="attack">Attack</option>
                     <option value="transport">Transport</option>
+                    <option value="deploy">Deploy</option>
                     <option value="espionage">Espionage</option>
                     <option value="colonize">Colonize</option>
                     <option value="expedition">Expedition</option>

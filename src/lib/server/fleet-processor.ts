@@ -339,6 +339,48 @@ async function processArrivingFleet(client: any, fleet: any) {
 
             await returnFleet(client, fleet);
         }
+    } else if (fleet.mission === 'deploy') {
+        if (targetPlanet && targetPlanet.user_id === fleet.user_id) {
+            // 1. Add ships to target planet
+            const ships = fleet.ships;
+            for (const [type, count] of Object.entries(ships)) {
+                await client.query(
+                    `UPDATE planet_ships SET ${type} = ${type} + $1 WHERE planet_id = $2`,
+                    [count, targetPlanet.id]
+                );
+            }
+
+            // 2. Add resources to target planet (if any)
+            const resources = fleet.resources || { metal: 0, crystal: 0, gas: 0 };
+             await client.query(
+                `UPDATE planet_resources 
+                 SET metal = metal + $1, crystal = crystal + $2, gas = gas + $3
+                 WHERE planet_id = $4`,
+                [resources.metal || 0, resources.crystal || 0, resources.gas || 0, targetPlanet.id]
+            );
+
+            // 3. Mark fleet as completed
+            await client.query(
+                `UPDATE fleets SET status = 'completed' WHERE id = $1`,
+                [fleet.id]
+            );
+
+            // 4. Notify user
+             await client.query(
+                `INSERT INTO messages (user_id, type, title, content)
+                 VALUES ($1, 'info', 'Fleet Deployed', 'Your fleet has been stationed at ' || $2 || ':' || $3 || ':' || $4)`,
+                [fleet.user_id, fleet.target_galaxy, fleet.target_system, fleet.target_planet]
+            );
+
+        } else {
+            // Target is not owned by user or doesn't exist -> Return
+             await client.query(
+                `INSERT INTO messages (user_id, type, title, content)
+                 VALUES ($1, 'warning', 'Deployment Failed', 'Cannot deploy to a planet you do not own. Fleet returning.')`,
+                [fleet.user_id]
+            );
+            await returnFleet(client, fleet);
+        }
     } else {
         // Default return
         await returnFleet(client, fleet);
