@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash VARCHAR(255) NOT NULL,
     avatar_id INT DEFAULT 1,
     dark_matter INT DEFAULT 0, -- Premium currency
+    points INT DEFAULT 0, -- Ranking points
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_login TIMESTAMP
 );

@@ -24,7 +24,11 @@ let messaging: Messaging | undefined;
 if (typeof window !== 'undefined') {
     app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
     const analytics = getAnalytics(app);
-    messaging = getMessaging(app);
+    try {
+        messaging = getMessaging(app);
+    } catch (e) {
+        console.warn('Firebase Messaging not supported in this environment:', e);
+    }
 }
 
 export { app, messaging, firebaseConfig };
