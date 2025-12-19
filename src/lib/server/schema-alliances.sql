@@ -1,9 +1,0 @@
-CREATE TABLE IF NOT EXISTS alliances (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) UNIQUE NOT NULL,
-    tag VARCHAR(10) UNIQUE NOT NULL,
-    owner_id INTEGER REFERENCES users(id),
-    created_at TIMESTAMP DEFAULT NOW()
-);
-
-ALTER TABLE users ADD COLUMN IF NOT EXISTS alliance_id INTEGER REFERENCES alliances(id);

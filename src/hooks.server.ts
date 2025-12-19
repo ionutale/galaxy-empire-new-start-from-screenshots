@@ -1,9 +1,5 @@
 import { redirect, type Handle } from '@sveltejs/kit';
 import { getSession } from '$lib/server/auth';
-import { initDb } from '$lib/server/init-db';
-
-// Initialize database on startup
-initDb().catch(console.error);
 
 export const handle: Handle = async ({ event, resolve }) => {
     const sessionId = event.cookies.get('session_id');

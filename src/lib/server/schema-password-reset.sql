@@ -1,7 +1,0 @@
-CREATE TABLE IF NOT EXISTS password_resets (
-    id SERIAL PRIMARY KEY,
-    user_id INT REFERENCES users(id),
-    token VARCHAR(255) UNIQUE NOT NULL,
-    expires_at TIMESTAMP NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
