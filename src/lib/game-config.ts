@@ -349,3 +349,5 @@ export function getProduction(type: string, level: number) {
     // Formula: Base * Level * 1.1^Level
     return Math.floor(building.productionBase * level * Math.pow(building.productionFactor, level));
 }
+
+export const VAPID_PUBLIC_KEY = 'BIocI3X7HR9tTU3yvBvYxtXDvbKUCDSP19AXWYC-6DfN-mRdqcCGZIr54zs9eagRtlvzq8MdPpBP8qNMPlva1G4';

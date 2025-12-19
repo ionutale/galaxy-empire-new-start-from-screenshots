@@ -60,3 +60,31 @@ self.addEventListener('fetch', (event) => {
 
 	event.respondWith(respond());
 });
+
+self.addEventListener('push', (event) => {
+    const data = event.data ? event.data.json() : {};
+    const title = data.title || 'Galaxy Empire';
+    const options = {
+        body: data.body || 'New notification',
+        icon: data.icon || '/icons/icon_web_PWA192_192x192.png',
+        badge: '/icons/icon_web_PWA192_192x192.png'
+    };
+
+    event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    event.waitUntil(
+        clients.matchAll({ type: 'window' }).then((windowClients) => {
+            for (const client of windowClients) {
+                if (client.url === '/' && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            if (clients.openWindow) {
+                return clients.openWindow('/');
+            }
+        })
+    );
+});

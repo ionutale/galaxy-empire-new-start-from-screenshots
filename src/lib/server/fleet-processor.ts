@@ -2,6 +2,7 @@ import { pool } from './db';
 import { SHIPS } from '$lib/game-config';
 import { simulateCombat } from './combat-engine';
 import { updateUserPoints } from './points-calculator';
+import { webpush } from './push-config';
 
 export async function processFleets() {
     const client = await pool.connect();
@@ -271,6 +272,32 @@ async function processArrivingFleet(client: any, fleet: any) {
                  VALUES ($1, 'expedition', $2, $3)`,
                 [fleet.user_id, title, message]
             );
+
+            // Send Push Notification
+            try {
+                const subs = await client.query(
+                    'SELECT * FROM push_subscriptions WHERE user_id = $1',
+                    [fleet.user_id]
+                );
+
+                for (const sub of subs.rows) {
+                    const pushSubscription = {
+                        endpoint: sub.endpoint,
+                        keys: {
+                            p256dh: sub.p256dh,
+                            auth: sub.auth
+                        }
+                    };
+
+                    await webpush.sendNotification(pushSubscription, JSON.stringify({
+                        title: title,
+                        body: message,
+                        icon: '/icons/icon_web_PWA192_192x192.png'
+                    }));
+                }
+            } catch (err) {
+                console.error('Error sending push notification:', err);
+            }
 
             await returnFleet(client, fleet);
         }
