@@ -8,6 +8,7 @@
     let interval: any;
     let reloading = false;
 
+    // TODO: Optimize this with server-sent events or websockets
     onMount(() => {
         interval = setInterval(async () => {
             now = Date.now();

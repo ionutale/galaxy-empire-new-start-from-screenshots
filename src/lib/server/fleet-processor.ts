@@ -172,7 +172,7 @@ async function processArrivingFleet(client: any, fleet: any) {
                 await client.query(`UPDATE fleets SET status = 'destroyed' WHERE id = $1`, [fleet.id]);
             } else {
                 // Update fleet ships
-                await client.query(`UPDATE fleets SET ships = $1 WHERE id = $2`, [remainingFleet, fleet.id]);
+                await client.query(`UPDATE fleets SET ships = $1 WHERE id = $2`, [JSON.stringify(remainingFleet), fleet.id]);
             }
 
             // Apply losses to Defender (Planet)
@@ -246,7 +246,7 @@ async function processArrivingFleet(client: any, fleet: any) {
                 
                 await client.query(
                     `UPDATE fleets SET resources = $1 WHERE id = $2`,
-                    [{ metal, crystal, gas }, fleet.id]
+                    [JSON.stringify({ metal, crystal, gas }), fleet.id]
                 );
                 message = `Your expedition found a resource cache! \nMetal: ${metal}\nCrystal: ${crystal}\nGas: ${gas}`;
             
@@ -259,7 +259,7 @@ async function processArrivingFleet(client: any, fleet: any) {
                     currentShips[type] = (currentShips[type] || 0) + count;
                 }
                 
-                await client.query(`UPDATE fleets SET ships = $1 WHERE id = $2`, [currentShips, fleet.id]);
+                await client.query(`UPDATE fleets SET ships = $1 WHERE id = $2`, [JSON.stringify(currentShips), fleet.id]);
                 message = `Your expedition encountered abandoned ships that joined your fleet: \n${JSON.stringify(foundShips)}`;
 
             } else {
