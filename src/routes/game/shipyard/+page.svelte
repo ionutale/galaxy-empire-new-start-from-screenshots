@@ -91,7 +91,7 @@
                         >
                         <button 
                             type="submit"
-                            class="flex-1 bg-blue-600 hover:bg-blue-500 rounded text-sm font-bold transition disabled:bg-gray-600 disabled:cursor-not-allowed"
+                            class="flex-1 bg-blue-600 hover:bg-blue-500 rounded text-sm font-bold transition disabled:bg-gray-600 disabled:cursor-not-allowed active:scale-95 transform"
                             disabled={data.shipyardLevel === 0 || !canBuild(type)}
                         >
                             Build

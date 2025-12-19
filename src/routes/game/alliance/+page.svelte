@@ -15,7 +15,7 @@
                     <p class="text-gray-400">Founder ID: {data.alliance.owner_id}</p>
                 </div>
                 <form method="POST" action="?/leave" use:enhance>
-                    <button class="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded">Leave Alliance</button>
+                    <button class="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded transition-transform active:scale-95">Leave Alliance</button>
                 </form>
             </div>
 
@@ -55,7 +55,7 @@
                         <label class="block text-gray-400 mb-1">Alliance Name</label>
                         <input type="text" name="name" class="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white" required>
                     </div>
-                    <button class="w-full bg-green-600 hover:bg-green-500 text-white py-2 rounded font-bold">Found Alliance</button>
+                    <button class="w-full bg-green-600 hover:bg-green-500 text-white py-2 rounded font-bold transition-transform active:scale-95">Found Alliance</button>
                 </form>
             </div>
 
@@ -75,7 +75,7 @@
                                 </div>
                                 <form method="POST" action="?/join" use:enhance>
                                     <input type="hidden" name="allianceId" value={alliance.id}>
-                                    <button class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-sm">Join</button>
+                                    <button class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-sm transition-transform active:scale-95">Join</button>
                                 </form>
                             </div>
                         {/each}

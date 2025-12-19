@@ -65,7 +65,7 @@
                     <input type="hidden" name="planetId" value={data.currentPlanet.id}>
                     <button 
                         type="submit" 
-                        class="w-full py-2 rounded font-bold transition-colors
+                        class="w-full py-2 rounded font-bold transition-colors active:scale-95 transform
                             {cost && data.resources.metal >= cost.metal && data.resources.crystal >= cost.crystal && data.resources.gas >= (cost.gas || 0) && data.resources.energy >= (cost.energy || 0) && data.researchLabLevel > 0
                                 ? 'bg-green-600 hover:bg-green-500 text-white' 
                                 : 'bg-gray-600 text-gray-400 cursor-not-allowed'}"

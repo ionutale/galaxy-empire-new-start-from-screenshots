@@ -40,7 +40,7 @@
             {/if}
 
             <button type="submit" 
-                class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 rounded-md text-white font-bold transition duration-200">
+                class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 rounded-md text-white font-bold transition-transform active:scale-95 duration-200">
                 Register
             </button>
         </form>

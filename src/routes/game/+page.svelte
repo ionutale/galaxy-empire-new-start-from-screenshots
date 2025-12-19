@@ -79,7 +79,7 @@
                         <button 
                             type="submit"
                             disabled={!cost || data.resources.metal < cost.metal || data.resources.crystal < cost.crystal || ((cost.gas || 0) > 0 && data.resources.gas < (cost.gas || 0))}
-                            class="w-full py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed rounded text-sm font-bold transition"
+                            class="w-full py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed rounded text-sm font-bold transition-transform active:scale-95"
                         >
                             Upgrade to Level {level + 1}
                         </button>
@@ -134,7 +134,7 @@
                         <button 
                             type="submit"
                             disabled={!cost || data.resources.metal < cost.metal || data.resources.crystal < cost.crystal || ((cost.gas || 0) > 0 && data.resources.gas < (cost.gas || 0))}
-                            class="w-full py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed rounded text-sm font-bold transition"
+                            class="w-full py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed rounded text-sm font-bold transition-transform active:scale-95"
                         >
                             Upgrade to Level {level + 1}
                         </button>
@@ -187,7 +187,7 @@
                             <input type="number" name="amount" min="1" value="1" class="w-16 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-center" disabled={data.buildings.shipyard === 0}>
                             <button 
                                 type="submit"
-                                class="flex-1 bg-blue-600 hover:bg-blue-500 rounded text-sm font-bold transition disabled:bg-gray-600 disabled:cursor-not-allowed"
+                                class="flex-1 bg-blue-600 hover:bg-blue-500 rounded text-sm font-bold transition disabled:bg-gray-600 disabled:cursor-not-allowed active:scale-95 transform"
                                 disabled={data.buildings.shipyard === 0}
                             >
                                 Build

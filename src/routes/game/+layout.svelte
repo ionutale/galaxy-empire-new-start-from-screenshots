@@ -144,7 +144,7 @@
         <div class="absolute bottom-16 left-0 right-0 h-64 bg-black/90 backdrop-blur-md border-t border-gray-700 z-30 flex flex-col">
             <div class="flex justify-between items-center p-2 bg-gray-800 border-b border-gray-700">
                 <span class="font-bold text-blue-300">Global Chat</span>
-                <button onclick={() => isChatOpen = false} class="text-gray-400 hover:text-white">▼</button>
+                <button onclick={() => isChatOpen = false} class="text-gray-400 hover:text-white transition-transform active:scale-95">▼</button>
             </div>
             
             <div class="flex-1 overflow-y-auto p-2 space-y-1 flex flex-col-reverse">
@@ -168,11 +168,11 @@
                     placeholder="Type a message..." 
                     class="flex-1 bg-gray-700 border border-gray-600 rounded-l px-2 py-1 text-white focus:outline-none focus:border-blue-500"
                 >
-                <button onclick={sendChat} class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-1 rounded-r font-bold">Send</button>
+                <button onclick={sendChat} class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-1 rounded-r font-bold transition-transform active:scale-95">Send</button>
             </div>
         </div>
     {:else}
-        <button onclick={() => isChatOpen = true} class="w-full text-left shrink-0 bg-black/60 backdrop-blur-sm border-t border-gray-700 p-2 text-sm text-gray-300 truncate cursor-pointer hover:bg-black/80 transition z-30">
+        <button onclick={() => isChatOpen = true} class="w-full text-left shrink-0 bg-black/60 backdrop-blur-sm border-t border-gray-700 p-2 text-sm text-gray-300 truncate cursor-pointer hover:bg-black/80 transition z-30 active:bg-black/90">
             {#if chatMessages.length > 0}
                 {@const lastMsg = chatMessages[0]}
                 <span class="text-blue-400 font-bold">[Global]</span> 

@@ -100,7 +100,7 @@
                 </select>
             </div>
 
-            <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded font-bold text-white transition">
+            <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded font-bold text-white transition-transform active:scale-95">
                 Send Fleet
             </button>
         </form>

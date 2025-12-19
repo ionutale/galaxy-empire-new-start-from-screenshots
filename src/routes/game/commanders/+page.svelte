@@ -66,7 +66,7 @@
 
                             <button 
                                 type="submit" 
-                                class="w-full py-2 px-4 bg-purple-600 hover:bg-purple-500 text-white rounded font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                class="w-full py-2 px-4 bg-purple-600 hover:bg-purple-500 text-white rounded font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transform"
                                 disabled={darkMatter < durationCosts[selectedDuration]}
                             >
                                 {activeCommanders[commander.id] ? 'Extend' : 'Recruit'}
