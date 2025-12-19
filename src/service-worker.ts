@@ -1,6 +1,36 @@
 /// <reference types="@sveltejs/kit" />
 import { build, files, version } from '$service-worker';
 
+// Import Firebase scripts for background handling
+importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js');
+
+// Initialize Firebase in Service Worker
+const firebaseConfig = {
+  apiKey: "AIzaSyDmKrv3-pOLUMeVKXJkpg6IEN0AOQXQ--s",
+  authDomain: "playground-428410.firebaseapp.com",
+  projectId: "playground-428410",
+  storageBucket: "playground-428410.firebasestorage.app",
+  messagingSenderId: "277290577442",
+  appId: "1:277290577442:web:829f43da4ba71ac8f9247b",
+  measurementId: "G-0B04P6NW6J"
+};
+
+firebase.initializeApp(firebaseConfig);
+const messaging = firebase.messaging();
+
+// Handle background messages
+messaging.onBackgroundMessage((payload) => {
+  console.log('[firebase-messaging-sw.js] Received background message ', payload);
+  const notificationTitle = payload.notification.title;
+  const notificationOptions = {
+    body: payload.notification.body,
+    icon: payload.notification.icon || '/icons/icon_web_PWA192_192x192.png'
+  };
+
+  self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
 // Create a unique cache name for this deployment
 const CACHE = `cache-${version}`;
 
@@ -61,17 +91,17 @@ self.addEventListener('fetch', (event) => {
 	event.respondWith(respond());
 });
 
-self.addEventListener('push', (event) => {
-    const data = event.data ? event.data.json() : {};
-    const title = data.title || 'Galaxy Empire';
-    const options = {
-        body: data.body || 'New notification',
-        icon: data.icon || '/icons/icon_web_PWA192_192x192.png',
-        badge: '/icons/icon_web_PWA192_192x192.png'
-    };
+// self.addEventListener('push', (event) => {
+//     const data = event.data ? event.data.json() : {};
+//     const title = data.title || 'Galaxy Empire';
+//     const options = {
+//         body: data.body || 'New notification',
+//         icon: data.icon || '/icons/icon_web_PWA192_192x192.png',
+//         badge: '/icons/icon_web_PWA192_192x192.png'
+//     };
 
-    event.waitUntil(self.registration.showNotification(title, options));
-});
+//     event.waitUntil(self.registration.showNotification(title, options));
+// });
 
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();

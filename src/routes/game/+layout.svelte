@@ -1,6 +1,8 @@
 <script lang="ts">
     import { onMount, onDestroy } from 'svelte';
     import { VAPID_PUBLIC_KEY } from '$lib/game-config';
+    import { messaging } from '$lib/firebase.config';
+    import { getToken, onMessage } from 'firebase/messaging';
 
     let { children, data } = $props();
 
@@ -56,7 +58,7 @@
     }
 
     async function subscribeToPush() {
-        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        if (!('serviceWorker' in navigator) || !messaging) {
             console.warn('Push notifications are not supported in this browser');
             return;
         }
@@ -68,25 +70,44 @@
                 return;
             }
 
+            // Get existing service worker registration
             const registration = await navigator.serviceWorker.ready;
-            let subscription = await registration.pushManager.getSubscription();
 
-            if (!subscription) {
-                console.log('Creating new push subscription...');
-                subscription = await registration.pushManager.subscribe({
-                    userVisibleOnly: true,
-                    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-                });
+            // Get Firebase Token using the existing registration
+            const currentToken = await getToken(messaging, { 
+                vapidKey: VAPID_PUBLIC_KEY,
+                serviceWorkerRegistration: registration
+            });
 
+            if (currentToken) {
+                console.log('Firebase Token:', currentToken);
+                
+                // Send token to server
                 await fetch('/api/push-subscription', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(subscription)
+                    body: JSON.stringify({ 
+                        endpoint: currentToken, // We use the token as the endpoint ID
+                        keys: { p256dh: '', auth: '' } // Firebase manages keys internally
+                    })
                 });
                 console.log('Push subscription saved successfully');
             } else {
-                console.log('Existing push subscription found');
+                console.log('No registration token available. Request permission to generate one.');
             }
+
+            // Listen for foreground messages
+            onMessage(messaging, (payload) => {
+                console.log('Message received. ', payload);
+                // You can show a toast or custom UI here
+                if (payload.notification) {
+                    new Notification(payload.notification.title || 'New Message', {
+                        body: payload.notification.body,
+                        icon: payload.notification.icon
+                    });
+                }
+            });
+
         } catch (err) {
             console.error('Failed to subscribe to push notifications:', err);
             if (err instanceof Error) {

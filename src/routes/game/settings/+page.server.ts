@@ -1,7 +1,7 @@
 import { pool } from '$lib/server/db';
 import { fail, redirect } from '@sveltejs/kit';
 import { hashPassword, comparePassword, deleteSession } from '$lib/server/auth';
-import { webpush } from '$lib/server/push-config';
+import { webpush, admin } from '$lib/server/push-config';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -93,23 +93,40 @@ export const actions = {
 
             let successCount = 0;
             for (const sub of subs.rows) {
-                const pushSubscription = {
-                    endpoint: sub.endpoint,
-                    keys: {
-                        p256dh: sub.p256dh,
-                        auth: sub.auth
-                    }
-                };
+                // Check if it's a Firebase token (simple string) or Web Push subscription (URL)
+                const isFirebase = !sub.endpoint.startsWith('http');
 
                 try {
-                    await webpush.sendNotification(pushSubscription, JSON.stringify({
-                        title: 'Test Notification',
-                        body: 'This is a test notification from Galaxy Empire!',
-                        icon: '/icons/icon_web_PWA192_192x192.png'
-                    }));
+                    if (isFirebase && admin) {
+                        await admin.messaging().send({
+                            token: sub.endpoint,
+                            notification: {
+                                title: 'Test Notification',
+                                body: 'This is a test notification from Galaxy Empire!',
+                            },
+                            webpush: {
+                                notification: {
+                                    icon: '/icons/icon_web_PWA192_192x192.png'
+                                }
+                            }
+                        });
+                    } else {
+                        const pushSubscription = {
+                            endpoint: sub.endpoint,
+                            keys: {
+                                p256dh: sub.p256dh,
+                                auth: sub.auth
+                            }
+                        };
+                        await webpush.sendNotification(pushSubscription, JSON.stringify({
+                            title: 'Test Notification',
+                            body: 'This is a test notification from Galaxy Empire!',
+                            icon: '/icons/icon_web_PWA192_192x192.png'
+                        }));
+                    }
                     successCount++;
                 } catch (err: any) {
-                    if (err.statusCode === 410) {
+                    if (err.code === 'messaging/registration-token-not-registered' || err.statusCode === 410) {
                         console.log(`Push subscription expired for endpoint ${sub.endpoint.slice(0, 20)}... Removing.`);
                         await pool.query('DELETE FROM push_subscriptions WHERE endpoint = $1', [sub.endpoint]);
                     } else {

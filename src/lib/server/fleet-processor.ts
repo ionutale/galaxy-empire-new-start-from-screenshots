@@ -2,7 +2,7 @@ import { pool } from './db';
 import { SHIPS } from '$lib/game-config';
 import { simulateCombat } from './combat-engine';
 import { updateUserPoints } from './points-calculator';
-import { webpush } from './push-config';
+import { webpush, admin } from './push-config';
 
 export async function processFleets() {
     const client = await pool.connect();
@@ -333,22 +333,38 @@ async function processArrivingFleet(client: any, fleet: any) {
                 );
 
                 for (const sub of subs.rows) {
-                    const pushSubscription = {
-                        endpoint: sub.endpoint,
-                        keys: {
-                            p256dh: sub.p256dh,
-                            auth: sub.auth
-                        }
-                    };
+                    const isFirebase = !sub.endpoint.startsWith('http');
 
                     try {
-                        await webpush.sendNotification(pushSubscription, JSON.stringify({
-                            title: title,
-                            body: message,
-                            icon: '/icons/icon_web_PWA192_192x192.png'
-                        }));
+                        if (isFirebase && admin) {
+                            await admin.messaging().send({
+                                token: sub.endpoint,
+                                notification: {
+                                    title: title,
+                                    body: message,
+                                },
+                                webpush: {
+                                    notification: {
+                                        icon: '/icons/icon_web_PWA192_192x192.png'
+                                    }
+                                }
+                            });
+                        } else {
+                            const pushSubscription = {
+                                endpoint: sub.endpoint,
+                                keys: {
+                                    p256dh: sub.p256dh,
+                                    auth: sub.auth
+                                }
+                            };
+                            await webpush.sendNotification(pushSubscription, JSON.stringify({
+                                title: title,
+                                body: message,
+                                icon: '/icons/icon_web_PWA192_192x192.png'
+                            }));
+                        }
                     } catch (err: any) {
-                        if (err.statusCode === 410) {
+                        if (err.code === 'messaging/registration-token-not-registered' || err.statusCode === 410) {
                             console.log(`Push subscription expired for user ${fleet.user_id}. Removing.`);
                             await client.query('DELETE FROM push_subscriptions WHERE endpoint = $1', [sub.endpoint]);
                         } else {

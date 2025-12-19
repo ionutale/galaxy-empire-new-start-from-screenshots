@@ -17,8 +17,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
             [
                 locals.user.id,
                 subscription.endpoint,
-                subscription.keys.p256dh,
-                subscription.keys.auth
+                subscription.keys?.p256dh || '',
+                subscription.keys?.auth || ''
             ]
         );
 
