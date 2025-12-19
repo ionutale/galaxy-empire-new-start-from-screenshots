@@ -77,12 +77,16 @@
         <h3 class="text-xl font-bold text-gray-200 mb-4">Change Password</h3>
         
         <form method="POST" action="?/changePassword" use:enhance class="space-y-4">
+            <!-- Hidden username field for accessibility/password managers -->
+            <input type="text" name="username" autocomplete="username" class="hidden" aria-hidden="true" value={data.profile.email}>
+
             <div>
                 <label class="block text-gray-400 text-sm mb-2" for="current_password">Current Password</label>
                 <input 
                     type="password" 
                     name="current_password" 
                     id="current_password" 
+                    autocomplete="current-password"
                     class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
                 >
             </div>
@@ -93,6 +97,7 @@
                     type="password" 
                     name="new_password" 
                     id="new_password" 
+                    autocomplete="new-password"
                     class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
                 >
             </div>
@@ -103,6 +108,7 @@
                     type="password" 
                     name="confirm_password" 
                     id="confirm_password" 
+                    autocomplete="new-password"
                     class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
                 >
             </div>
@@ -121,6 +127,29 @@
         </p>
         
         <div class="flex flex-col sm:flex-row gap-4">
+            <button 
+                type="button" 
+                onclick={async () => {
+                    try {
+                        const permission = await Notification.requestPermission();
+                        if (permission === 'granted') {
+                            // Trigger the subscription logic from the layout
+                            // Since we can't easily call the layout function directly, we reload
+                            // or we could move the logic to a shared store/function.
+                            // For now, a reload is the simplest way to trigger the onMount check.
+                            window.location.reload();
+                        } else {
+                            alert('Permission denied. Please enable notifications in your browser settings.');
+                        }
+                    } catch (e) {
+                        console.error('Error requesting permission:', e);
+                    }
+                }}
+                class="bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded transition flex-1"
+            >
+                Enable Notifications
+            </button>
+
             <form method="POST" action="?/testPush" use:enhance class="flex-1">
                 <button type="submit" class="bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 px-4 rounded transition w-full">
                     Test Push Notification

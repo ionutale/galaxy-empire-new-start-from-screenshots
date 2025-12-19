@@ -1,9 +1,7 @@
 /// <reference types="@sveltejs/kit" />
 import { build, files, version } from '$service-worker';
-
-// Import Firebase scripts for background handling
-importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js');
+import { initializeApp } from 'firebase/app';
+import { getMessaging, onBackgroundMessage } from 'firebase/messaging/sw';
 
 // Initialize Firebase in Service Worker
 const firebaseConfig = {
@@ -16,19 +14,21 @@ const firebaseConfig = {
   measurementId: "G-0B04P6NW6J"
 };
 
-firebase.initializeApp(firebaseConfig);
-const messaging = firebase.messaging();
+const app = initializeApp(firebaseConfig);
+const messaging = getMessaging(app);
 
 // Handle background messages
-messaging.onBackgroundMessage((payload) => {
+onBackgroundMessage(messaging, (payload) => {
   console.log('[firebase-messaging-sw.js] Received background message ', payload);
-  const notificationTitle = payload.notification.title;
-  const notificationOptions = {
-    body: payload.notification.body,
-    icon: payload.notification.icon || '/icons/icon_web_PWA192_192x192.png'
-  };
+  if (payload.notification) {
+    const notificationTitle = payload.notification.title || 'Galaxy Empire';
+    const notificationOptions = {
+        body: payload.notification.body,
+        icon: payload.notification.icon || '/icons/icon_web_PWA192_192x192.png'
+    };
 
-  self.registration.showNotification(notificationTitle, notificationOptions);
+    self.registration.showNotification(notificationTitle, notificationOptions);
+  }
 });
 
 // Create a unique cache name for this deployment

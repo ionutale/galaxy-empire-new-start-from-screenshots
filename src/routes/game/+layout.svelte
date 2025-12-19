@@ -120,7 +120,11 @@
     onMount(() => {
         fetchChat();
         chatInterval = setInterval(fetchChat, 5000); // Poll every 5s
-        subscribeToPush();
+        
+        // Only subscribe if we already have permission, otherwise wait for user action
+        if (Notification.permission === 'granted') {
+            subscribeToPush();
+        }
     });
 
     onDestroy(() => {
