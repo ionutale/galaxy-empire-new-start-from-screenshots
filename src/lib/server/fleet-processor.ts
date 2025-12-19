@@ -11,7 +11,7 @@ export async function processFleets() {
     try {
         await client.query('BEGIN');
 
-        // Find fleets that have arrived
+        // Find fleets that have reached their destination (active) or returned to base (returning)
         const fleetsRes = await client.query(
             `SELECT * FROM fleets 
              WHERE status IN ('active', 'returning') 
@@ -20,12 +20,22 @@ export async function processFleets() {
         );
 
         for (const fleet of fleetsRes.rows) {
-            usersToUpdate.add(fleet.user_id);
-            if (fleet.status === 'returning') {
-                await processReturningFleet(client, fleet);
-            } else {
-                const targetUserId = await processArrivingFleet(client, fleet);
-                if (targetUserId) usersToUpdate.add(targetUserId);
+            console.log(`Processing fleet ${fleet.id} [${fleet.status}]: ${fleet.mission}`);
+            try {
+                await client.query(`SAVEPOINT fleet_${fleet.id}`);
+                
+                usersToUpdate.add(fleet.user_id);
+                if (fleet.status === 'returning') {
+                    await processReturningFleet(client, fleet);
+                } else {
+                    const targetUserId = await processArrivingFleet(client, fleet);
+                    if (targetUserId) usersToUpdate.add(targetUserId);
+                }
+
+                await client.query(`RELEASE SAVEPOINT fleet_${fleet.id}`);
+            } catch (err) {
+                console.error(`Error processing fleet ${fleet.id}:`, err);
+                await client.query(`ROLLBACK TO SAVEPOINT fleet_${fleet.id}`);
             }
         }
 
@@ -43,15 +53,19 @@ export async function processFleets() {
     }
 }
 
+const VALID_SHIP_TYPES = ['light_fighter', 'heavy_fighter', 'cruiser', 'battleship', 'colony_ship', 'small_cargo', 'large_cargo'];
+
 async function processReturningFleet(client: any, fleet: any) {
     // Add ships back to origin planet
-    const ships = fleet.ships; // JSON object
+    const ships = fleet.ships || {}; // JSON object
     
     for (const [type, count] of Object.entries(ships)) {
-        await client.query(
-            `UPDATE planet_ships SET ${type} = ${type} + $1 WHERE planet_id = $2`,
-            [count, fleet.origin_planet_id]
-        );
+        if (VALID_SHIP_TYPES.includes(type)) {
+            await client.query(
+                `UPDATE planet_ships SET ${type} = ${type} + $1 WHERE planet_id = $2`,
+                [count, fleet.origin_planet_id]
+            );
+        }
     }
 
     // Add resources back to origin planet
