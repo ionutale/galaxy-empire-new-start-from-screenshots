@@ -35,6 +35,11 @@
         if (total <= 0) return 100;
         const current = now - start;
         const pct = Math.max(0, Math.min(100, (current / total) * 100));
+        
+        if (fleet.status === 'returning') {
+            return 100 - pct;
+        }
+
         return pct;
     }
 
