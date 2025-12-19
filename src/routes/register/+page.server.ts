@@ -98,9 +98,9 @@ export const actions = {
                     [planetId]
                 );
 
-                // Initialize Planet Ships
+                // Initialize Planet Ships - Starter Kit
                 await client.query(
-                    'INSERT INTO planet_ships (planet_id) VALUES ($1)',
+                    'INSERT INTO planet_ships (planet_id, small_cargo, light_fighter) VALUES ($1, 5, 5)',
                     [planetId]
                 );
 
