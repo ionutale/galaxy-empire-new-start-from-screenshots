@@ -1,6 +1,7 @@
 import { pool } from './db';
 import { getProduction } from '$lib/game-config';
 import { getCommanderBonus } from './commanders';
+import { getBoosterMultipliers } from './shop';
 
 export async function updatePlanetResources(planetId: number) {
     const client = await pool.connect();
@@ -37,17 +38,22 @@ export async function updatePlanetResources(planetId: number) {
         const mineBonus = await getCommanderBonus(data.user_id, 'mine_production');
         const energyBonus = await getCommanderBonus(data.user_id, 'energy_production');
         
+        // Get Shop Booster Multipliers
+        const boosterMultipliers = await getBoosterMultipliers(data.user_id);
+
         const productionMultiplier = 1 + (mineBonus / 100);
         const energyMultiplier = 1 + (energyBonus / 100);
 
         // Calculate production per second
         // Base production (e.g. 30/hour) -> / 3600
-        const metalProd = ((getProduction('metal_mine', data.metal_mine) * productionMultiplier) + 30) / 3600; // +30 base
-        const crystalProd = ((getProduction('crystal_mine', data.crystal_mine) * productionMultiplier) + 15) / 3600; // +15 base
-        const gasProd = (getProduction('gas_extractor', data.gas_extractor) * productionMultiplier) / 3600;
+        // Formula: (Base + MineProd) * CommanderBonus * BoosterBonus
+        
+        const metalProd = ((getProduction('metal_mine', data.metal_mine) * productionMultiplier * boosterMultipliers.metal) + 30) / 3600; 
+        const crystalProd = ((getProduction('crystal_mine', data.crystal_mine) * productionMultiplier * boosterMultipliers.crystal) + 15) / 3600; 
+        const gasProd = (getProduction('gas_extractor', data.gas_extractor) * productionMultiplier * boosterMultipliers.gas) / 3600;
         
         // Energy calculation (static, not accumulated)
-        const energyProd = getProduction('solar_plant', data.solar_plant) * energyMultiplier;
+        const energyProd = getProduction('solar_plant', data.solar_plant) * energyMultiplier * boosterMultipliers.energy;
         const energyCons = 
             Math.ceil(10 * data.metal_mine * Math.pow(1.1, data.metal_mine)) + 
             Math.ceil(10 * data.crystal_mine * Math.pow(1.1, data.crystal_mine)) +
