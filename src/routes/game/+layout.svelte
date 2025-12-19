@@ -74,10 +74,20 @@
             const registration = await navigator.serviceWorker.ready;
 
             // Get Firebase Token using the existing registration
-            const currentToken = await getToken(messaging, { 
-                vapidKey: VAPID_PUBLIC_KEY,
-                serviceWorkerRegistration: registration
-            });
+            // We try without a specific VAPID key first, letting Firebase use the default one for the project
+            let currentToken;
+            try {
+                currentToken = await getToken(messaging, { 
+                    serviceWorkerRegistration: registration
+                });
+            } catch (e: any) {
+                console.warn('Failed to get token without VAPID key, retrying with local key...', e);
+                // Fallback (though this likely won't work if the key is not added to Firebase Console)
+                currentToken = await getToken(messaging, { 
+                    vapidKey: VAPID_PUBLIC_KEY,
+                    serviceWorkerRegistration: registration
+                });
+            }
 
             if (currentToken) {
                 console.log('Firebase Token:', currentToken);
@@ -113,6 +123,10 @@
             if (err instanceof Error) {
                 console.error('Error name:', err.name);
                 console.error('Error message:', err.message);
+                
+                if (err.name === 'AbortError' || err.message.includes('Registration failed')) {
+                    alert('Push registration failed. This often happens if:\n1. You are in Incognito/Private mode (Push not supported).\n2. You are using a VPN or corporate network blocking FCM.\n3. The VAPID key does not match the Firebase project.');
+                }
             }
         }
     }
