@@ -336,19 +336,21 @@ async function processArrivingFleet(client: any, fleet: any) {
                     const isFirebase = !sub.endpoint.startsWith('http');
 
                     try {
-                        if (isFirebase && admin) {
-                            await admin.messaging().send({
-                                token: sub.endpoint,
-                                notification: {
-                                    title: title,
-                                    body: message,
-                                },
-                                webpush: {
+                        if (isFirebase) {
+                            if (admin.apps.length > 0) {
+                                await admin.messaging().send({
+                                    token: sub.endpoint,
                                     notification: {
-                                        icon: '/icons/icon_web_PWA192_192x192.png'
+                                        title: title,
+                                        body: message,
+                                    },
+                                    webpush: {
+                                        notification: {
+                                            icon: '/icons/icon_web_PWA192_192x192.png'
+                                        }
                                     }
-                                }
-                            });
+                                });
+                            }
                         } else {
                             const pushSubscription = {
                                 endpoint: sub.endpoint,

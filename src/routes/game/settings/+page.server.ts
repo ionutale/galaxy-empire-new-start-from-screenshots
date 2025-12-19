@@ -97,19 +97,24 @@ export const actions = {
                 const isFirebase = !sub.endpoint.startsWith('http');
 
                 try {
-                    if (isFirebase && admin) {
-                        await admin.messaging().send({
-                            token: sub.endpoint,
-                            notification: {
-                                title: 'Test Notification',
-                                body: 'This is a test notification from Galaxy Empire!',
-                            },
-                            webpush: {
+                    if (isFirebase) {
+                        if (admin.apps.length > 0) {
+                            await admin.messaging().send({
+                                token: sub.endpoint,
                                 notification: {
-                                    icon: '/icons/icon_web_PWA192_192x192.png'
+                                    title: 'Test Notification',
+                                    body: 'This is a test notification from Galaxy Empire!',
+                                },
+                                webpush: {
+                                    notification: {
+                                        icon: '/icons/icon_web_PWA192_192x192.png'
+                                    }
                                 }
-                            }
-                        });
+                            });
+                        } else {
+                            console.warn('Firebase Admin not initialized. Skipping Firebase notification.');
+                            continue;
+                        }
                     } else {
                         const pushSubscription = {
                             endpoint: sub.endpoint,
