@@ -77,7 +77,7 @@
                     {#if slot.isNebula}
                         <a href="/game/fleet?galaxy={data.galaxy}&system={data.system}&planet=16&mission=expedition" class="p-1 bg-purple-900/50 text-purple-400 rounded hover:bg-purple-800 flex items-center justify-center transition-transform active:scale-95" title="Expedition">🔭</a>
                     {:else if slot.planet}
-                        {#if slot.planet.user_id !== $page.data.user.id}
+                        {#if slot.planet.userId !== $page.data.user.id}
                             <a href="/game/fleet?galaxy={data.galaxy}&system={data.system}&planet={slot.number}&mission=attack" class="p-1 bg-red-900/50 text-red-400 rounded hover:bg-red-800 flex items-center justify-center transition-transform active:scale-95" title="Attack">⚔️</a>
                             <a href="/game/fleet?galaxy={data.galaxy}&system={data.system}&planet={slot.number}&mission=espionage" class="p-1 bg-blue-900/50 text-blue-400 rounded hover:bg-blue-800 flex items-center justify-center transition-transform active:scale-95" title="Espionage">👁️</a>
                         {:else}

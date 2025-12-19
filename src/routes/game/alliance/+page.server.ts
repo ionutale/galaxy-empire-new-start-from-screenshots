@@ -1,4 +1,6 @@
-import { pool } from '$lib/server/db';
+import { db } from '$lib/server/db';
+import { users, alliances } from '$lib/server/db/schema';
+import { eq, desc, sql } from 'drizzle-orm';
 import type { PageServerLoad, Actions } from './$types';
 import { fail } from '@sveltejs/kit';
 
@@ -6,35 +8,49 @@ export const load: PageServerLoad = async ({ locals }) => {
     if (!locals.user) return {};
 
     // Refresh user data to get alliance_id
-    const userRes = await pool.query('SELECT alliance_id FROM users WHERE id = $1', [locals.user.id]);
-    const allianceId = userRes.rows[0]?.alliance_id;
+    const userRes = await db.select({ allianceId: users.allianceId })
+        .from(users)
+        .where(eq(users.id, locals.user.id));
+    
+    const allianceId = userRes[0]?.allianceId;
 
     if (allianceId) {
         // User is in an alliance
-        const allianceRes = await pool.query('SELECT * FROM alliances WHERE id = $1', [allianceId]);
-        const alliance = allianceRes.rows[0];
+        const allianceRes = await db.select().from(alliances).where(eq(alliances.id, allianceId));
+        const alliance = allianceRes[0];
 
-        const membersRes = await pool.query('SELECT id, username, points FROM users WHERE alliance_id = $1 ORDER BY points DESC', [allianceId]);
-        const members = membersRes.rows;
+        const membersRes = await db.select({
+            id: users.id,
+            username: users.username,
+            points: users.points
+        })
+        .from(users)
+        .where(eq(users.allianceId, allianceId))
+        .orderBy(desc(users.points));
 
         return {
             inAlliance: true,
             alliance,
-            members
+            members: membersRes
         };
     } else {
         // User is not in an alliance
-        const alliancesRes = await pool.query(
-            `SELECT a.*, COUNT(u.id) as member_count 
-             FROM alliances a 
-             LEFT JOIN users u ON a.id = u.alliance_id 
-             GROUP BY a.id 
-             ORDER BY member_count DESC`
-        );
+        const alliancesRes = await db.select({
+            id: alliances.id,
+            name: alliances.name,
+            tag: alliances.tag,
+            ownerId: alliances.ownerId,
+            createdAt: alliances.createdAt,
+            memberCount: sql<number>`count(${users.id})`
+        })
+        .from(alliances)
+        .leftJoin(users, eq(alliances.id, users.allianceId))
+        .groupBy(alliances.id)
+        .orderBy(desc(sql`count(${users.id})`));
         
         return {
             inAlliance: false,
-            alliances: alliancesRes.rows
+            alliances: alliancesRes
         };
     }
 };
@@ -48,53 +64,49 @@ export const actions: Actions = {
         if (!locals.user) return fail(401, { error: 'Unauthorized' });
         if (!name || !tag) return fail(400, { error: 'Name and Tag required' });
 
-        const client = await pool.connect();
         try {
-            await client.query('BEGIN');
+            await db.transaction(async (tx) => {
+                // Create alliance
+                const res = await tx.insert(alliances)
+                    .values({
+                        name,
+                        tag,
+                        ownerId: locals.user.id
+                    })
+                    .returning({ id: alliances.id });
+                
+                const allianceId = res[0].id;
 
-            // Create alliance
-            const res = await client.query(
-                'INSERT INTO alliances (name, tag, owner_id) VALUES ($1, $2, $3) RETURNING id',
-                [name, tag, locals.user.id]
-            );
-            const allianceId = res.rows[0].id;
+                // Update user
+                await tx.update(users)
+                    .set({ allianceId })
+                    .where(eq(users.id, locals.user.id));
+            });
 
-            // Update user
-            await client.query(
-                'UPDATE users SET alliance_id = $1 WHERE id = $2',
-                [allianceId, locals.user.id]
-            );
-
-            await client.query('COMMIT');
             return { success: true };
         } catch (e) {
-            await client.query('ROLLBACK');
             console.error(e);
             return fail(500, { error: 'Failed to create alliance' });
-        } finally {
-            client.release();
         }
     },
     join: async ({ request, locals }) => {
         const data = await request.formData();
-        const allianceId = data.get('allianceId') as string;
+        const allianceId = Number(data.get('allianceId'));
 
         if (!locals.user) return fail(401, { error: 'Unauthorized' });
 
-        await pool.query(
-            'UPDATE users SET alliance_id = $1 WHERE id = $2',
-            [allianceId, locals.user.id]
-        );
+        await db.update(users)
+            .set({ allianceId })
+            .where(eq(users.id, locals.user.id));
 
         return { success: true };
     },
     leave: async ({ locals }) => {
         if (!locals.user) return fail(401, { error: 'Unauthorized' });
 
-        await pool.query(
-            'UPDATE users SET alliance_id = NULL WHERE id = $1',
-            [locals.user.id]
-        );
+        await db.update(users)
+            .set({ allianceId: null })
+            .where(eq(users.id, locals.user.id));
 
         return { success: true };
     }

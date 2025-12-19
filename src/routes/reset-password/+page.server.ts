@@ -1,5 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
-import { pool } from '$lib/server/db';
+import { db } from '$lib/server/db';
+import { passwordResets, users } from '$lib/server/db/schema';
+import { eq, and, gt } from 'drizzle-orm';
 import { hashPassword } from '$lib/server/auth';
 
 export const load = async ({ url }) => {
@@ -10,12 +12,14 @@ export const load = async ({ url }) => {
     }
 
     // Verify token exists and is valid
-    const result = await pool.query(
-        'SELECT * FROM password_resets WHERE token = $1 AND expires_at > NOW()',
-        [token]
-    );
+    const result = await db.select()
+        .from(passwordResets)
+        .where(and(
+            eq(passwordResets.token, token),
+            gt(passwordResets.expiresAt, new Date())
+        ));
 
-    if (result.rows.length === 0) {
+    if (result.length === 0) {
         return {
             token,
             error: 'Invalid or expired password reset link.'
@@ -46,26 +50,31 @@ export const actions = {
 
         try {
             // 1. Verify token again
-            const result = await pool.query(
-                'SELECT user_id FROM password_resets WHERE token = $1 AND expires_at > NOW()',
-                [token]
-            );
+            const result = await db.select({ userId: passwordResets.userId })
+                .from(passwordResets)
+                .where(and(
+                    eq(passwordResets.token, token),
+                    gt(passwordResets.expiresAt, new Date())
+                ));
 
-            if (result.rows.length === 0) {
+            if (result.length === 0) {
                 return fail(400, { error: 'Invalid or expired token' });
             }
 
-            const userId = result.rows[0].user_id;
+            const userId = result[0].userId;
+
+            if (!userId) {
+                return fail(400, { error: 'Invalid user associated with token' });
+            }
 
             // 2. Update password
             const hashedPassword = await hashPassword(password);
-            await pool.query(
-                'UPDATE users SET password_hash = $1 WHERE id = $2',
-                [hashedPassword, userId]
-            );
+            await db.update(users)
+                .set({ passwordHash: hashedPassword })
+                .where(eq(users.id, userId));
 
             // 3. Delete used token (and any other tokens for this user)
-            await pool.query('DELETE FROM password_resets WHERE user_id = $1', [userId]);
+            await db.delete(passwordResets).where(eq(passwordResets.userId, userId));
 
         } catch (err) {
             console.error('Reset password error:', err);

@@ -1,5 +1,7 @@
 import bcrypt from 'bcryptjs';
-import { pool } from './db';
+import { db } from './db';
+import { sessions, users } from './db/schema';
+import { eq, and, gt } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 
 export const hashPassword = async (password: string) => {
@@ -15,26 +17,33 @@ export const createSession = async (userId: number) => {
     // Session expires in 30 days
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30);
     
-    await pool.query(
-        'INSERT INTO sessions (id, user_id, expires_at) VALUES ($1, $2, $3)',
-        [sessionId, userId, expiresAt]
-    );
+    await db.insert(sessions).values({
+        id: sessionId,
+        userId,
+        expiresAt
+    });
     
     return sessionId;
 };
 
 export const getSession = async (sessionId: string) => {
-    const result = await pool.query(
-        `SELECT s.*, u.username, u.dark_matter, u.id as user_id 
-         FROM sessions s 
-         JOIN users u ON s.user_id = u.id 
-         WHERE s.id = $1 AND s.expires_at > NOW()`,
-        [sessionId]
-    );
+    const result = await db.select({
+        id: sessions.id,
+        userId: sessions.userId,
+        expiresAt: sessions.expiresAt,
+        username: users.username,
+        darkMatter: users.darkMatter
+    })
+    .from(sessions)
+    .innerJoin(users, eq(sessions.userId, users.id))
+    .where(and(
+        eq(sessions.id, sessionId),
+        gt(sessions.expiresAt, new Date())
+    ));
     
-    return result.rows[0];
+    return result[0];
 };
 
 export const deleteSession = async (sessionId: string) => {
-    await pool.query('DELETE FROM sessions WHERE id = $1', [sessionId]);
+    await db.delete(sessions).where(eq(sessions.id, sessionId));
 };

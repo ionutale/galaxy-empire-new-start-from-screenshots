@@ -1,7 +1,9 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { SHOP_ITEMS, purchaseShopItem, getActiveBoosters } from '$lib/server/shop';
-import { pool } from '$lib/server/db';
+import { db } from '$lib/server/db';
+import { users } from '$lib/server/db/schema';
+import { eq } from 'drizzle-orm';
 
 export const load: PageServerLoad = async ({ locals }) => {
     if (!locals.user) throw redirect(302, '/login');
@@ -9,13 +11,16 @@ export const load: PageServerLoad = async ({ locals }) => {
     const activeBoosters = await getActiveBoosters(locals.user.id);
     
     // Get current DM
-    const userRes = await pool.query('SELECT dark_matter FROM users WHERE id = $1', [locals.user.id]);
-    const darkMatter = userRes.rows[0]?.dark_matter || 0;
+    const userRes = await db.select({ darkMatter: users.darkMatter })
+        .from(users)
+        .where(eq(users.id, locals.user.id));
+    
+    const darkMatter = userRes[0]?.darkMatter || 0;
 
     return {
         shopItems: SHOP_ITEMS,
         activeBoosters: activeBoosters.reduce((acc, curr) => {
-            acc[curr.booster_id] = curr.expires_at;
+            acc[curr.boosterId] = curr.expiresAt;
             return acc;
         }, {} as Record<string, Date>),
         darkMatter

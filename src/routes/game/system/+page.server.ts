@@ -1,4 +1,6 @@
-import { pool } from '$lib/server/db';
+import { db } from '$lib/server/db';
+import { planets, users } from '$lib/server/db/schema';
+import { eq, and, asc } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url, parent }) => {
@@ -9,8 +11,8 @@ export const load: PageServerLoad = async ({ url, parent }) => {
 
     if (!galaxy || !system) {
         if (currentPlanet) {
-            galaxy = currentPlanet.galaxy_id;
-            system = currentPlanet.system_id;
+            galaxy = currentPlanet.galaxyId;
+            system = currentPlanet.systemId;
         } else {
             galaxy = 1;
             system = 1;
@@ -18,16 +20,20 @@ export const load: PageServerLoad = async ({ url, parent }) => {
     }
 
     // Fetch planets in this system
-    const planetsRes = await pool.query(
-        `SELECT p.planet_number, p.name, p.planet_type, u.username, p.user_id
-         FROM planets p
-         LEFT JOIN users u ON p.user_id = u.id
-         WHERE p.galaxy_id = $1 AND p.system_id = $2
-         ORDER BY p.planet_number ASC`,
-        [galaxy, system]
-    );
-
-    const occupiedPlanets = planetsRes.rows;
+    const occupiedPlanets = await db.select({
+        planetNumber: planets.planetNumber,
+        name: planets.name,
+        planetType: planets.planetType,
+        username: users.username,
+        userId: planets.userId
+    })
+    .from(planets)
+    .leftJoin(users, eq(planets.userId, users.id))
+    .where(and(
+        eq(planets.galaxyId, galaxy),
+        eq(planets.systemId, system)
+    ))
+    .orderBy(asc(planets.planetNumber));
     
     // Create array of 16 slots (1-15 planets, 16 nebula)
     const slots = Array.from({ length: 16 }, (_, i) => {
@@ -41,7 +47,7 @@ export const load: PageServerLoad = async ({ url, parent }) => {
             };
         }
 
-        const planet = occupiedPlanets.find(p => p.planet_number === num);
+        const planet = occupiedPlanets.find(p => p.planetNumber === num);
         return {
             number: num,
             planet: planet || null,

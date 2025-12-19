@@ -12,7 +12,7 @@
             <div class="flex justify-between items-start mb-6">
                 <div>
                     <h1 class="text-3xl font-bold text-white">[{data.alliance.tag}] {data.alliance.name}</h1>
-                    <p class="text-gray-400">Founder ID: {data.alliance.owner_id}</p>
+                    <p class="text-gray-400">Founder ID: {data.alliance.ownerId}</p>
                 </div>
                 <form method="POST" action="?/leave" use:enhance>
                     <button class="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded transition-transform active:scale-95">Leave Alliance</button>
@@ -71,7 +71,7 @@
                                 <div>
                                     <span class="font-bold text-blue-400">[{alliance.tag}]</span>
                                     <span class="text-gray-300 ml-2">{alliance.name}</span>
-                                    <span class="text-gray-500 text-sm ml-2">({alliance.member_count} members)</span>
+                                    <span class="text-gray-500 text-sm ml-2">({alliance.memberCount} members)</span>
                                 </div>
                                 <form method="POST" action="?/join" use:enhance>
                                     <input type="hidden" name="allianceId" value={alliance.id}>

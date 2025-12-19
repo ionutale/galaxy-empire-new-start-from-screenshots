@@ -19,19 +19,23 @@
     ];
 
     const defenseTypes = Object.keys(DEFENSES);
+
+    function toCamel(s: string) {
+        return s.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+    }
 </script>
 
 <div class="p-4 pb-20">
     <div class="mb-6 text-center">
         <h2 class="text-2xl font-bold text-blue-300">{data.currentPlanet.name}</h2>
-        <p class="text-gray-400 text-sm">[{data.currentPlanet.galaxy_id}:{data.currentPlanet.system_id}:{data.currentPlanet.planet_number}]</p>
+        <p class="text-gray-400 text-sm">[{data.currentPlanet.galaxyId}:{data.currentPlanet.systemId}:{data.currentPlanet.planetNumber}]</p>
     </div>
 
     <!-- Resources Section -->
     <h3 class="text-xl font-bold text-gray-300 mb-4 border-b border-gray-700 pb-2">Resources</h3>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
         {#each resourceBuildings as building}
-            {@const level = data.buildings[building.id]}
+            {@const level = data.buildings[toCamel(building.id)]}
             {@const cost = getBuildingCost(building.id, level)}
             {@const production = getProduction(building.id, level)}
             
@@ -93,7 +97,7 @@
     <h3 class="text-xl font-bold text-gray-300 mb-4 border-b border-gray-700 pb-2">Facilities</h3>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {#each facilityBuildings as building}
-            {@const level = data.buildings[building.id]}
+            {@const level = data.buildings[toCamel(building.id)]}
             {@const cost = getBuildingCost(building.id, level)}
             
             <div class="bg-gray-800/80 border border-gray-700 rounded-lg p-4 flex flex-col shadow-lg backdrop-blur-sm">
@@ -156,7 +160,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 {data.buildings.shipyard === 0 ? 'opacity-50 pointer-events-none grayscale' : ''}">
         {#each defenseTypes as type}
             {@const defense = DEFENSES[type as keyof typeof DEFENSES]}
-            {@const count = data.defenses ? data.defenses[type] : 0}
+            {@const count = data.defenses ? data.defenses[toCamel(type)] : 0}
             
             <div class="bg-gray-800 border border-gray-700 rounded-lg p-4 flex flex-col shadow-lg">
                 <div class="flex justify-between items-start mb-2">

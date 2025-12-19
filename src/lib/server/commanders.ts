@@ -1,4 +1,6 @@
-import { pool } from './db';
+import { db } from './db';
+import { users, userCommanders } from './db/schema';
+import { eq, and, gt } from 'drizzle-orm';
 
 export interface Commander {
     id: string;
@@ -56,67 +58,74 @@ export async function purchaseCommander(userId: number, commanderId: string, dur
     if (!DURATION_COSTS[durationDays as keyof typeof DURATION_COSTS]) throw new Error('Invalid duration');
 
     const cost = DURATION_COSTS[durationDays as keyof typeof DURATION_COSTS];
-    const client = await pool.connect();
 
-    try {
-        await client.query('BEGIN');
-
+    return await db.transaction(async (tx) => {
         // Check user DM
-        const userRes = await client.query('SELECT dark_matter FROM users WHERE id = $1', [userId]);
-        if (userRes.rows.length === 0) throw new Error('User not found');
+        const userRes = await tx.select({ darkMatter: users.darkMatter })
+            .from(users)
+            .where(eq(users.id, userId));
         
-        const currentDM = userRes.rows[0].dark_matter;
+        if (userRes.length === 0) throw new Error('User not found');
+        
+        const currentDM = userRes[0].darkMatter || 0;
         if (currentDM < cost) throw new Error('Not enough Dark Matter');
 
         // Deduct DM
-        await client.query('UPDATE users SET dark_matter = dark_matter - $1 WHERE id = $2', [cost, userId]);
+        await tx.update(users)
+            .set({ darkMatter: currentDM - cost })
+            .where(eq(users.id, userId));
 
         // Add/Extend Commander
         // Check if already active
-        const existingRes = await client.query(
-            'SELECT expires_at FROM user_commanders WHERE user_id = $1 AND commander_id = $2',
-            [userId, commanderId]
-        );
+        const existingRes = await tx.select({ expiresAt: userCommanders.expiresAt })
+            .from(userCommanders)
+            .where(and(
+                eq(userCommanders.userId, userId),
+                eq(userCommanders.commanderId, commanderId)
+            ));
 
         let newExpiresAt = new Date();
         newExpiresAt.setDate(newExpiresAt.getDate() + durationDays);
 
-        if (existingRes.rows.length > 0) {
-            const currentExpiresAt = new Date(existingRes.rows[0].expires_at);
+        if (existingRes.length > 0) {
+            const currentExpiresAt = new Date(existingRes[0].expiresAt);
             if (currentExpiresAt > new Date()) {
                 // Extend
                 newExpiresAt = new Date(currentExpiresAt);
                 newExpiresAt.setDate(newExpiresAt.getDate() + durationDays);
             }
             
-            await client.query(
-                'UPDATE user_commanders SET expires_at = $1 WHERE user_id = $2 AND commander_id = $3',
-                [newExpiresAt, userId, commanderId]
-            );
+            await tx.update(userCommanders)
+                .set({ expiresAt: newExpiresAt })
+                .where(and(
+                    eq(userCommanders.userId, userId),
+                    eq(userCommanders.commanderId, commanderId)
+                ));
         } else {
             // Insert
-            await client.query(
-                'INSERT INTO user_commanders (user_id, commander_id, expires_at) VALUES ($1, $2, $3)',
-                [userId, commanderId, newExpiresAt]
-            );
+            await tx.insert(userCommanders).values({
+                userId,
+                commanderId,
+                expiresAt: newExpiresAt
+            });
         }
 
-        await client.query('COMMIT');
         return { success: true, expiresAt: newExpiresAt, remainingDM: currentDM - cost };
-    } catch (e) {
-        await client.query('ROLLBACK');
-        throw e;
-    } finally {
-        client.release();
-    }
+    });
 }
 
 export async function getActiveCommanders(userId: number) {
-    const res = await pool.query(
-        'SELECT commander_id, expires_at FROM user_commanders WHERE user_id = $1 AND expires_at > NOW()',
-        [userId]
-    );
-    return res.rows;
+    const res = await db.select({
+        commanderId: userCommanders.commanderId,
+        expiresAt: userCommanders.expiresAt
+    })
+    .from(userCommanders)
+    .where(and(
+        eq(userCommanders.userId, userId),
+        gt(userCommanders.expiresAt, new Date())
+    ));
+    
+    return res;
 }
 
 export async function getCommanderBonus(userId: number, bonusType: string): Promise<number> {
@@ -124,7 +133,7 @@ export async function getCommanderBonus(userId: number, bonusType: string): Prom
     let totalBonus = 0;
     
     for (const row of active) {
-        const commander = COMMANDERS[row.commander_id];
+        const commander = COMMANDERS[row.commanderId];
         if (commander && commander.bonusType === bonusType) {
             totalBonus += commander.bonusValue;
         }

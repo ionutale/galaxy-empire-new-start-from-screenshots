@@ -73,7 +73,7 @@
             >
                 {#each data.planets as planet}
                     <option value={planet.id}>
-                        {planet.name} [{planet.galaxy_id}:{planet.system_id}:{planet.planet_number}]
+                        {planet.name} [{planet.galaxyId}:{planet.systemId}:{planet.planetNumber}]
                     </option>
                 {/each}
             </select>

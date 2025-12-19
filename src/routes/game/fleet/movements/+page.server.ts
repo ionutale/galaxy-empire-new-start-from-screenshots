@@ -1,28 +1,43 @@
-import { pool } from '$lib/server/db';
+import { db } from '$lib/server/db';
+import { fleets, planets } from '$lib/server/db/schema';
+import { eq, and, notInArray, asc } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ parent }) => {
-    const { currentPlanet } = await parent();
+    const { currentPlanet, user } = await parent();
 
     if (!currentPlanet) {
         return { fleets: [] };
     }
 
     // Fetch active fleets (own fleets)
-    const fleetsRes = await pool.query(
-        `SELECT f.*, 
-                p.galaxy_id as origin_galaxy, 
-                p.system_id as origin_system, 
-                p.planet_number as origin_planet
-         FROM fleets f
-         JOIN planets p ON f.origin_planet_id = p.id
-         WHERE f.user_id = (SELECT user_id FROM planets WHERE id = $1) 
-         AND f.status NOT IN ('completed', 'destroyed')
-         ORDER BY f.arrival_time ASC`,
-        [currentPlanet.id]
-    );
+    const fleetsRes = await db.select({
+        id: fleets.id,
+        userId: fleets.userId,
+        originPlanetId: fleets.originPlanetId,
+        targetGalaxy: fleets.targetGalaxy,
+        targetSystem: fleets.targetSystem,
+        targetPlanet: fleets.targetPlanet,
+        mission: fleets.mission,
+        ships: fleets.ships,
+        resources: fleets.resources,
+        departureTime: fleets.departureTime,
+        arrivalTime: fleets.arrivalTime,
+        returnTime: fleets.returnTime,
+        status: fleets.status,
+        originGalaxy: planets.galaxyId,
+        originSystem: planets.systemId,
+        originPlanet: planets.planetNumber
+    })
+    .from(fleets)
+    .innerJoin(planets, eq(fleets.originPlanetId, planets.id))
+    .where(and(
+        eq(fleets.userId, user.id),
+        notInArray(fleets.status, ['completed', 'destroyed'])
+    ))
+    .orderBy(asc(fleets.arrivalTime));
 
     return {
-        fleets: fleetsRes.rows
+        fleets: fleetsRes
     };
 };

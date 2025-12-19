@@ -1,5 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
-import { pool } from '$lib/server/db';
+import { db } from '$lib/server/db';
+import { users } from '$lib/server/db/schema';
+import { eq } from 'drizzle-orm';
 import { comparePassword, createSession } from '$lib/server/auth';
 import type { Actions } from './$types';
 
@@ -14,14 +16,16 @@ export const actions = {
         }
 
         try {
-            const result = await pool.query(
-                'SELECT id, password_hash FROM users WHERE username = $1',
-                [username]
-            );
+            const result = await db.select({
+                id: users.id,
+                passwordHash: users.passwordHash
+            })
+            .from(users)
+            .where(eq(users.username, username));
 
-            const user = result.rows[0];
+            const user = result[0];
 
-            if (!user || !(await comparePassword(password, user.password_hash))) {
+            if (!user || !(await comparePassword(password, user.passwordHash))) {
                 return fail(400, { invalid: true });
             }
 

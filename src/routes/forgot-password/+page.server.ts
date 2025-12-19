@@ -1,5 +1,7 @@
 import { fail } from '@sveltejs/kit';
-import { pool } from '$lib/server/db';
+import { db } from '$lib/server/db';
+import { users, passwordResets } from '$lib/server/db/schema';
+import { eq } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { env } from '$env/dynamic/private';
 
@@ -14,8 +16,11 @@ export const actions = {
 
         try {
             // 1. Check if user exists
-            const userResult = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
-            const user = userResult.rows[0];
+            const userResult = await db.select({ id: users.id })
+                .from(users)
+                .where(eq(users.email, email));
+            
+            const user = userResult[0];
 
             if (user) {
                 // 2. Generate token
@@ -23,10 +28,11 @@ export const actions = {
                 const expiresAt = new Date(Date.now() + 1000 * 60 * 60); // 1 hour
 
                 // 3. Save token
-                await pool.query(
-                    'INSERT INTO password_resets (user_id, token, expires_at) VALUES ($1, $2, $3)',
-                    [user.id, token, expiresAt]
-                );
+                await db.insert(passwordResets).values({
+                    userId: user.id,
+                    token,
+                    expiresAt
+                });
 
                 // 4. "Send" email (Log to console for now)
                 const origin = env.ORIGIN || 'http://localhost:3000';

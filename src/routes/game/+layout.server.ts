@@ -1,5 +1,7 @@
 import { redirect } from '@sveltejs/kit';
-import { pool } from '$lib/server/db';
+import { db } from '$lib/server/db';
+import { planets, users, messages } from '$lib/server/db/schema';
+import { eq, and, asc } from 'drizzle-orm';
 import { updatePlanetResources } from '$lib/server/game';
 import { processFleets } from '$lib/server/fleet-processor';
 import type { LayoutServerLoad } from './$types';
@@ -16,37 +18,47 @@ export const load: LayoutServerLoad = async ({ locals, depends, url, cookies }) 
     await processFleets();
 
     // Fetch user's planets
-    const planetsRes = await pool.query(
-        'SELECT id, name, galaxy_id, system_id, planet_number, image_variant FROM planets WHERE user_id = $1 ORDER BY id ASC',
-        [locals.user.id]
-    );
+    const planetsRes = await db.select({
+        id: planets.id,
+        name: planets.name,
+        galaxyId: planets.galaxyId,
+        systemId: planets.systemId,
+        planetNumber: planets.planetNumber,
+        imageVariant: planets.imageVariant
+    })
+    .from(planets)
+    .where(eq(planets.userId, locals.user.id))
+    .orderBy(asc(planets.id));
 
     // Refresh user DM
-    const userRes = await pool.query('SELECT dark_matter FROM users WHERE id = $1', [locals.user.id]);
-    if (userRes.rows.length > 0) {
-        locals.user.darkMatter = userRes.rows[0].dark_matter;
+    const userRes = await db.select({ darkMatter: users.darkMatter })
+        .from(users)
+        .where(eq(users.id, locals.user.id));
+    
+    if (userRes.length > 0) {
+        locals.user.darkMatter = userRes[0].darkMatter || 0;
     }
 
-    const planets = planetsRes.rows;
+    const userPlanets = planetsRes;
     
-    if (planets.length === 0) {
+    if (userPlanets.length === 0) {
         // Should not happen if registration works correctly
         return { user: locals.user, planets: [], currentPlanet: null, resources: null };
     }
 
     // Determine current planet
-    let currentPlanet = planets[0];
+    let currentPlanet = userPlanets[0];
     const queryPlanetId = url.searchParams.get('planet');
     const cookiePlanetId = cookies.get('currentPlanetId');
 
     if (queryPlanetId) {
-        const selected = planets.find(p => p.id === parseInt(queryPlanetId));
+        const selected = userPlanets.find(p => p.id === parseInt(queryPlanetId));
         if (selected) {
             currentPlanet = selected;
             cookies.set('currentPlanetId', currentPlanet.id.toString(), { path: '/', httpOnly: true, sameSite: 'strict', maxAge: 60 * 60 * 24 * 30 });
         }
     } else if (cookiePlanetId) {
-        const selected = planets.find(p => p.id === parseInt(cookiePlanetId));
+        const selected = userPlanets.find(p => p.id === parseInt(cookiePlanetId));
         if (selected) {
             currentPlanet = selected;
         }
@@ -56,15 +68,21 @@ export const load: LayoutServerLoad = async ({ locals, depends, url, cookies }) 
     const resources = await updatePlanetResources(currentPlanet.id);
 
     // Fetch unread messages count
-    const msgRes = await pool.query(
-        'SELECT COUNT(*) as count FROM messages WHERE user_id = $1 AND is_read = FALSE',
-        [locals.user.id]
-    );
-    const unreadMessages = parseInt(msgRes.rows[0].count);
+    // Drizzle count() helper or raw sql
+    // Using length of array for simplicity if not too many messages, or count query
+    // Better to use count query
+    const msgRes = await db.select({ id: messages.id })
+        .from(messages)
+        .where(and(
+            eq(messages.userId, locals.user.id),
+            eq(messages.isRead, false)
+        ));
+    
+    const unreadMessages = msgRes.length;
 
     return {
         user: locals.user,
-        planets,
+        planets: userPlanets,
         currentPlanet,
         resources,
         unreadMessages

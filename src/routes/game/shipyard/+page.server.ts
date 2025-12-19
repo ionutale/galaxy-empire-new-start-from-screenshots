@@ -1,4 +1,6 @@
-import { pool } from '$lib/server/db';
+import { db } from '$lib/server/db';
+import { planetShips, planetBuildings, planetResources } from '$lib/server/db/schema';
+import { eq, sql } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
 import { SHIPS } from '$lib/game-config';
 import { updatePlanetResources } from '$lib/server/game';
@@ -12,19 +14,16 @@ export const load: PageServerLoad = async ({ parent }) => {
         return { ships: null };
     }
 
-    const shipsRes = await pool.query(
-        'SELECT * FROM planet_ships WHERE planet_id = $1',
-        [currentPlanet.id]
-    );
+    const shipsRes = await db.select().from(planetShips).where(eq(planetShips.planetId, currentPlanet.id));
 
-    const buildRes = await pool.query(
-        'SELECT shipyard FROM planet_buildings WHERE planet_id = $1',
-        [currentPlanet.id]
-    );
-    const shipyardLevel = buildRes.rows[0]?.shipyard || 0;
+    const buildRes = await db.select({ shipyard: planetBuildings.shipyard })
+        .from(planetBuildings)
+        .where(eq(planetBuildings.planetId, currentPlanet.id));
+    
+    const shipyardLevel = buildRes[0]?.shipyard || 0;
 
     return {
-        ships: shipsRes.rows[0],
+        ships: shipsRes[0],
         shipyardLevel
     };
 };
@@ -46,77 +45,78 @@ export const actions = {
         // Update resources first
         await updatePlanetResources(planetId);
 
-        const client = await pool.connect();
         try {
-            await client.query('BEGIN');
+            await db.transaction(async (tx) => {
+                // Check Shipyard Level
+                const buildRes = await tx.select({ shipyard: planetBuildings.shipyard })
+                    .from(planetBuildings)
+                    .where(eq(planetBuildings.planetId, planetId));
+                
+                if ((buildRes[0]?.shipyard || 0) < 1) {
+                    throw new Error('Shipyard required');
+                }
 
-            // Check Shipyard Level
-            const buildRes = await client.query(
-                'SELECT shipyard FROM planet_buildings WHERE planet_id = $1',
-                [planetId]
-            );
-            if ((buildRes.rows[0]?.shipyard || 0) < 1) {
-                await client.query('ROLLBACK');
-                return fail(400, { error: 'Shipyard required' });
-            }
+                // Check resources with lock
+                const resCheck = await tx.select({
+                    metal: planetResources.metal,
+                    crystal: planetResources.crystal,
+                    gas: planetResources.gas
+                })
+                .from(planetResources)
+                .where(eq(planetResources.planetId, planetId))
+                .for('update');
 
-            // Update resources (re-fetch inside transaction to be safe, though updatePlanetResources does it outside)
-            // Ideally updatePlanetResources should be inside transaction or we lock resources.
-            // For now, we rely on the check below.
-            
-            // Check resources
-            const resCheck = await client.query(
-                'SELECT metal, crystal, gas FROM planet_resources WHERE planet_id = $1 FOR UPDATE',
-                [planetId]
-            );
-            const resources = resCheck.rows[0];
+                if (resCheck.length === 0) throw new Error('Planet resources not found');
+                const resources = resCheck[0];
 
-            const totalCost = {
-                metal: shipConfig.cost.metal * amount,
-                crystal: shipConfig.cost.crystal * amount,
-                gas: (shipConfig.cost.gas || 0) * amount
-            };
+                const totalCost = {
+                    metal: shipConfig.cost.metal * amount,
+                    crystal: shipConfig.cost.crystal * amount,
+                    gas: (shipConfig.cost.gas || 0) * amount
+                };
 
-            if (resources.metal < totalCost.metal || 
-                resources.crystal < totalCost.crystal || 
-                resources.gas < totalCost.gas) {
-                await client.query('ROLLBACK');
-                return fail(400, { error: 'Not enough resources' });
-            }
+                if ((resources.metal || 0) < totalCost.metal || 
+                    (resources.crystal || 0) < totalCost.crystal || 
+                    (resources.gas || 0) < totalCost.gas) {
+                    throw new Error('Not enough resources');
+                }
 
-            // Deduct resources
-            await client.query(
-                `UPDATE planet_resources 
-                 SET metal = metal - $1, crystal = crystal - $2, gas = gas - $3 
-                 WHERE planet_id = $4`,
-                [totalCost.metal, totalCost.crystal, totalCost.gas, planetId]
-            );
+                // Deduct resources
+                await tx.update(planetResources)
+                    .set({
+                        metal: sql`${planetResources.metal} - ${totalCost.metal}`,
+                        crystal: sql`${planetResources.crystal} - ${totalCost.crystal}`,
+                        gas: sql`${planetResources.gas} - ${totalCost.gas}`
+                    })
+                    .where(eq(planetResources.planetId, planetId));
 
-            // Ensure planet_ships row exists
-            await client.query(
-                'INSERT INTO planet_ships (planet_id) VALUES ($1) ON CONFLICT (planet_id) DO NOTHING',
-                [planetId]
-            );
+                // Ensure planet_ships row exists
+                await tx.insert(planetShips)
+                    .values({ planetId })
+                    .onConflictDoNothing({ target: planetShips.planetId });
 
-            // Add ships (Instant build for now)
-            await client.query(
-                `UPDATE planet_ships 
-                 SET ${shipType} = ${shipType} + $1 
-                 WHERE planet_id = $2`,
-                [amount, planetId]
-            );
+                // Add ships
+                // Convert snake_case shipType to camelCase for Drizzle column
+                const shipKey = shipType.replace(/_([a-z])/g, (g) => g[1].toUpperCase()) as keyof typeof planetShips;
+                const shipColumn = planetShips[shipKey];
+                
+                if (!shipColumn) throw new Error('Invalid ship column mapping');
 
-            await client.query('COMMIT');
+                await tx.update(planetShips)
+                    .set({ [shipKey]: sql`${shipColumn} + ${amount}` })
+                    .where(eq(planetShips.planetId, planetId));
+            });
             
             // Update points
             await updateUserPoints(locals.user.id);
-        } catch (e) {
-            await client.query('ROLLBACK');
-            throw e;
-        } finally {
-            client.release();
-        }
+            return { success: true };
 
-        return { success: true };
+        } catch (e: any) {
+            if (e.message === 'Shipyard required' || e.message === 'Not enough resources') {
+                return fail(400, { error: e.message });
+            }
+            console.error(e);
+            return fail(500, { error: 'Internal server error' });
+        }
     }
 } satisfies Actions;

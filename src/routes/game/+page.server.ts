@@ -1,4 +1,6 @@
-import { pool } from '$lib/server/db';
+import { db } from '$lib/server/db';
+import { planetBuildings, planetDefenses, planetResources } from '$lib/server/db/schema';
+import { eq, sql } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
 import { getBuildingCost, DEFENSES } from '$lib/game-config';
 import { updatePlanetResources } from '$lib/server/game';
@@ -13,13 +15,13 @@ export const load: PageServerLoad = async ({ parent }) => {
     }
 
     const [buildingsRes, defensesRes] = await Promise.all([
-        pool.query('SELECT * FROM planet_buildings WHERE planet_id = $1', [currentPlanet.id]),
-        pool.query('SELECT * FROM planet_defenses WHERE planet_id = $1', [currentPlanet.id])
+        db.select().from(planetBuildings).where(eq(planetBuildings.planetId, currentPlanet.id)),
+        db.select().from(planetDefenses).where(eq(planetDefenses.planetId, currentPlanet.id))
     ]);
 
     return {
-        buildings: buildingsRes.rows[0],
-        defenses: defensesRes.rows[0]
+        buildings: buildingsRes[0],
+        defenses: defensesRes[0]
     };
 };
 
@@ -36,58 +38,64 @@ export const actions = {
         // Update resources first to get accurate count
         await updatePlanetResources(planetId);
 
-        const client = await pool.connect();
         try {
-            await client.query('BEGIN');
+            await db.transaction(async (tx) => {
+                // Get current level and resources
+                // We need to map buildingType (snake_case) to column (camelCase)
+                const buildingKey = buildingType.replace(/_([a-z])/g, (g) => g[1].toUpperCase()) as keyof typeof planetBuildings;
+                const buildingColumn = planetBuildings[buildingKey];
+                
+                if (!buildingColumn) throw new Error('Invalid building type column');
 
-            // Get current level and resources
-            const planetRes = await client.query(
-                `SELECT r.metal, r.crystal, r.gas, b.${buildingType} as level 
-                 FROM planet_resources r
-                 JOIN planet_buildings b ON r.planet_id = b.planet_id
-                 WHERE r.planet_id = $1`,
-                [planetId]
-            );
-            
-            if (planetRes.rows.length === 0) return fail(404);
-            
-            const { metal, crystal, gas, level } = planetRes.rows[0];
-            const cost = getBuildingCost(buildingType, level);
+                const planetRes = await tx.select({
+                    metal: planetResources.metal,
+                    crystal: planetResources.crystal,
+                    gas: planetResources.gas,
+                    level: buildingColumn
+                })
+                .from(planetResources)
+                .innerJoin(planetBuildings, eq(planetResources.planetId, planetBuildings.planetId))
+                .where(eq(planetResources.planetId, planetId))
+                .for('update'); // Lock resources
+                
+                if (planetRes.length === 0) return fail(404);
+                
+                const { metal, crystal, gas, level } = planetRes[0];
+                const currentLevel = level || 0;
+                const cost = getBuildingCost(buildingType, currentLevel);
 
-            if (!cost) return fail(400, { error: 'Invalid building' });
+                if (!cost) throw new Error('Invalid building');
 
-            if (metal < cost.metal || crystal < cost.crystal || (cost.gas && gas < cost.gas)) {
-                return fail(400, { error: 'Not enough resources' });
-            }
+                if ((metal || 0) < cost.metal || (crystal || 0) < cost.crystal || (cost.gas && (gas || 0) < cost.gas)) {
+                    throw new Error('Not enough resources');
+                }
 
-            // Deduct resources
-            await client.query(
-                `UPDATE planet_resources 
-                 SET metal = metal - $1, crystal = crystal - $2, gas = gas - $3
-                 WHERE planet_id = $4`,
-                [cost.metal, cost.crystal, cost.gas || 0, planetId]
-            );
+                // Deduct resources
+                await tx.update(planetResources)
+                    .set({
+                        metal: sql`${planetResources.metal} - ${cost.metal}`,
+                        crystal: sql`${planetResources.crystal} - ${cost.crystal}`,
+                        gas: sql`${planetResources.gas} - ${cost.gas || 0}`
+                    })
+                    .where(eq(planetResources.planetId, planetId));
 
-            // Upgrade building
-            await client.query(
-                `UPDATE planet_buildings 
-                 SET ${buildingType} = ${buildingType} + 1 
-                 WHERE planet_id = $1`,
-                [planetId]
-            );
-
-            await client.query('COMMIT');
+                // Upgrade building
+                await tx.update(planetBuildings)
+                    .set({ [buildingKey]: sql`${buildingColumn} + 1` })
+                    .where(eq(planetBuildings.planetId, planetId));
+            });
             
             // Update points
             await updateUserPoints(locals.user.id);
-        } catch (e) {
-            await client.query('ROLLBACK');
-            throw e;
-        } finally {
-            client.release();
-        }
+            return { success: true };
 
-        return { success: true };
+        } catch (e: any) {
+            if (e.message === 'Not enough resources' || e.message === 'Invalid building') {
+                return fail(400, { error: e.message });
+            }
+            console.error(e);
+            return fail(500, { error: 'Internal server error' });
+        }
     },
 
     build_defense: async ({ request, locals }) => {
@@ -106,80 +114,83 @@ export const actions = {
         // Update resources first
         await updatePlanetResources(planetId);
 
-        const client = await pool.connect();
         try {
-            await client.query('BEGIN');
-
-            // Check Shipyard Level
-            const buildRes = await client.query(
-                'SELECT shipyard FROM planet_buildings WHERE planet_id = $1',
-                [planetId]
-            );
-            if ((buildRes.rows[0]?.shipyard || 0) < 1) {
-                await client.query('ROLLBACK');
-                return fail(400, { error: 'Shipyard required' });
-            }
-
-            // Check resources
-            const resCheck = await client.query(
-                'SELECT metal, crystal, gas FROM planet_resources WHERE planet_id = $1 FOR UPDATE',
-                [planetId]
-            );
-            const resources = resCheck.rows[0];
-
-            const totalCost = {
-                metal: defenseConfig.cost.metal * amount,
-                crystal: defenseConfig.cost.crystal * amount,
-                gas: (defenseConfig.cost.gas || 0) * amount
-            };
-
-            if (resources.metal < totalCost.metal || 
-                resources.crystal < totalCost.crystal || 
-                resources.gas < totalCost.gas) {
-                await client.query('ROLLBACK');
-                return fail(400, { error: 'Not enough resources' });
-            }
-
-            // Check max limit (for shields)
-            if (defenseConfig.max) {
-                const currentDefRes = await client.query(
-                    `SELECT ${defenseType} FROM planet_defenses WHERE planet_id = $1`,
-                    [planetId]
-                );
-                const currentAmount = currentDefRes.rows[0][defenseType] || 0;
-                if (currentAmount + amount > defenseConfig.max) {
-                    await client.query('ROLLBACK');
-                    return fail(400, { error: `Max limit reached for ${defenseConfig.name}` });
+            await db.transaction(async (tx) => {
+                // Check Shipyard Level
+                const buildRes = await tx.select({ shipyard: planetBuildings.shipyard })
+                    .from(planetBuildings)
+                    .where(eq(planetBuildings.planetId, planetId));
+                
+                if ((buildRes[0]?.shipyard || 0) < 1) {
+                    throw new Error('Shipyard required');
                 }
-            }
 
-            // Deduct resources
-            await client.query(
-                `UPDATE planet_resources 
-                 SET metal = metal - $1, crystal = crystal - $2, gas = gas - $3 
-                 WHERE planet_id = $4`,
-                [totalCost.metal, totalCost.crystal, totalCost.gas, planetId]
-            );
+                // Check resources
+                const resCheck = await tx.select({
+                    metal: planetResources.metal,
+                    crystal: planetResources.crystal,
+                    gas: planetResources.gas
+                })
+                .from(planetResources)
+                .where(eq(planetResources.planetId, planetId))
+                .for('update');
+                
+                const resources = resCheck[0];
 
-            // Build defense
-            await client.query(
-                `UPDATE planet_defenses 
-                 SET ${defenseType} = ${defenseType} + $1 
-                 WHERE planet_id = $2`,
-                [amount, planetId]
-            );
+                const totalCost = {
+                    metal: defenseConfig.cost.metal * amount,
+                    crystal: defenseConfig.cost.crystal * amount,
+                    gas: (defenseConfig.cost.gas || 0) * amount
+                };
 
-            await client.query('COMMIT');
+                if ((resources.metal || 0) < totalCost.metal || 
+                    (resources.crystal || 0) < totalCost.crystal || 
+                    (resources.gas || 0) < totalCost.gas) {
+                    throw new Error('Not enough resources');
+                }
+
+                // Check max limit (for shields)
+                const defenseKey = defenseType.replace(/_([a-z])/g, (g) => g[1].toUpperCase()) as keyof typeof planetDefenses;
+                const defenseColumn = planetDefenses[defenseKey];
+                
+                if (!defenseColumn) throw new Error('Invalid defense column');
+
+                if (defenseConfig.max) {
+                    const currentDefRes = await tx.select({ level: defenseColumn })
+                        .from(planetDefenses)
+                        .where(eq(planetDefenses.planetId, planetId));
+                    
+                    const currentAmount = currentDefRes[0]?.level || 0;
+                    if (currentAmount + amount > defenseConfig.max) {
+                        throw new Error(`Max limit reached for ${defenseConfig.name}`);
+                    }
+                }
+
+                // Deduct resources
+                await tx.update(planetResources)
+                    .set({
+                        metal: sql`${planetResources.metal} - ${totalCost.metal}`,
+                        crystal: sql`${planetResources.crystal} - ${totalCost.crystal}`,
+                        gas: sql`${planetResources.gas} - ${totalCost.gas}`
+                    })
+                    .where(eq(planetResources.planetId, planetId));
+
+                // Build defense
+                await tx.update(planetDefenses)
+                    .set({ [defenseKey]: sql`${defenseColumn} + ${amount}` })
+                    .where(eq(planetDefenses.planetId, planetId));
+            });
             
             // Update points
             await updateUserPoints(locals.user.id);
-        } catch (e) {
-            await client.query('ROLLBACK');
-            throw e;
-        } finally {
-            client.release();
-        }
+            return { success: true };
 
-        return { success: true };
+        } catch (e: any) {
+            if (e.message.startsWith('Not enough') || e.message.startsWith('Max limit') || e.message === 'Shipyard required') {
+                return fail(400, { error: e.message });
+            }
+            console.error(e);
+            return fail(500, { error: 'Internal server error' });
+        }
     }
 } satisfies Actions;

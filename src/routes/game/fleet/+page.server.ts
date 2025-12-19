@@ -1,4 +1,6 @@
-import { pool } from '$lib/server/db';
+import { db } from '$lib/server/db';
+import { planetShips, fleets, planetResources } from '$lib/server/db/schema';
+import { eq, and, or, sql } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
 import { SHIPS } from '$lib/game-config';
 import { getFleetTemplates, createFleetTemplate, deleteFleetTemplate } from '$lib/server/fleet-templates';
@@ -12,23 +14,23 @@ export const load: PageServerLoad = async ({ parent }) => {
     }
 
     // Fetch ships
-    const shipsRes = await pool.query(
-        'SELECT * FROM planet_ships WHERE planet_id = $1',
-        [currentPlanet.id]
-    );
+    const shipsRes = await db.select().from(planetShips).where(eq(planetShips.planetId, currentPlanet.id));
 
     // Fetch active fleets count
-    const fleetsCountRes = await pool.query(
-        "SELECT COUNT(*) FROM fleets WHERE user_id = $1 AND (status = 'active' OR status = 'returning')",
-        [user.id]
-    );
-    const activeFleetsCount = parseInt(fleetsCountRes.rows[0].count);
+    const fleetsCountRes = await db.select({ count: sql<number>`count(*)` })
+        .from(fleets)
+        .where(and(
+            eq(fleets.userId, user.id),
+            or(eq(fleets.status, 'active'), eq(fleets.status, 'returning'))
+        ));
+    
+    const activeFleetsCount = Number(fleetsCountRes[0]?.count || 0);
 
     // Fetch templates
     const templates = await getFleetTemplates(user.id);
 
     return {
-        ships: shipsRes.rows[0],
+        ships: shipsRes[0],
         activeFleetsCount,
         templates
     };
@@ -90,7 +92,9 @@ export const actions = {
 
         // Parse ships
         const ships: Record<string, number> = {};
-        const shipTypes = ['light_fighter', 'heavy_fighter', 'cruiser', 'battleship', 'small_cargo', 'colony_ship'];
+        // Using keys from SHIPS to be more comprehensive than the original list
+        const shipTypes = Object.keys(SHIPS); 
+        
         let totalShips = 0;
         let totalCapacity = 0;
         
@@ -111,84 +115,97 @@ export const actions = {
             return fail(400, { error: `Not enough cargo capacity. Capacity: ${totalCapacity}, Resources: ${totalResources}` });
         }
 
-        const client = await pool.connect();
         try {
-            await client.query('BEGIN');
+            await db.transaction(async (tx) => {
+                // Check if user has enough ships
+                const shipCheck = await tx.select()
+                    .from(planetShips)
+                    .where(eq(planetShips.planetId, planetId))
+                    .for('update');
+                
+                if (shipCheck.length === 0) throw new Error('Planet ships not found');
+                const availableShips = shipCheck[0];
 
-            // Check if user has enough ships
-            const shipCheck = await client.query(
-                'SELECT * FROM planet_ships WHERE planet_id = $1 FOR UPDATE',
-                [planetId]
-            );
-            
-            const availableShips = shipCheck.rows[0];
-            for (const [type, count] of Object.entries(ships)) {
-                if (availableShips[type] < count) {
-                    await client.query('ROLLBACK');
-                    return fail(400, { error: `Not enough ${type}` });
+                for (const [type, count] of Object.entries(ships)) {
+                    // Convert snake_case type to camelCase key for Drizzle object
+                    const shipKey = type.replace(/_([a-z])/g, (g) => g[1].toUpperCase()) as keyof typeof planetShips;
+                    
+                    // Check if key exists on availableShips (it should)
+                    const available = availableShips[shipKey];
+                    
+                    if (typeof available !== 'number' || available < count) {
+                        throw new Error(`Not enough ${type}`);
+                    }
                 }
+
+                // Check if user has enough resources
+                const resourceCheck = await tx.select({
+                    metal: planetResources.metal,
+                    crystal: planetResources.crystal,
+                    gas: planetResources.gas
+                })
+                .from(planetResources)
+                .where(eq(planetResources.planetId, planetId))
+                .for('update');
+
+                if (resourceCheck.length === 0) throw new Error('Planet resources not found');
+                const availableResources = resourceCheck[0];
+
+                if ((availableResources.metal || 0) < metal) throw new Error('Not enough Metal');
+                if ((availableResources.crystal || 0) < crystal) throw new Error('Not enough Crystal');
+                if ((availableResources.gas || 0) < gas) throw new Error('Not enough Gas');
+
+                // Deduct ships
+                for (const [type, count] of Object.entries(ships)) {
+                    const shipKey = type.replace(/_([a-z])/g, (g) => g[1].toUpperCase()) as keyof typeof planetShips;
+                    const shipColumn = planetShips[shipKey];
+                    
+                    await tx.update(planetShips)
+                        .set({ [shipKey]: sql`${shipColumn} - ${count}` })
+                        .where(eq(planetShips.planetId, planetId));
+                }
+
+                // Deduct resources
+                await tx.update(planetResources)
+                    .set({
+                        metal: sql`${planetResources.metal} - ${metal}`,
+                        crystal: sql`${planetResources.crystal} - ${crystal}`,
+                        gas: sql`${planetResources.gas} - ${gas}`
+                    })
+                    .where(eq(planetResources.planetId, planetId));
+
+                // Calculate arrival time
+                let durationSeconds = 30; // Default 30 seconds for demo
+                
+                if (mission === 'expedition') {
+                    durationSeconds = 1800; // 30 minutes for expeditions
+                }
+
+                const arrivalTime = new Date(Date.now() + durationSeconds * 1000);
+
+                // Create fleet
+                await tx.insert(fleets).values({
+                    userId: locals.user.id,
+                    originPlanetId: planetId,
+                    targetGalaxy: galaxy,
+                    targetSystem: system,
+                    targetPlanet: planet,
+                    mission: mission,
+                    ships: ships, // Drizzle handles JSON stringification
+                    resources: { metal, crystal, gas },
+                    arrivalTime: arrivalTime,
+                    status: 'active'
+                });
+            });
+
+            return { success: true };
+
+        } catch (e: any) {
+            if (e.message.startsWith('Not enough')) {
+                return fail(400, { error: e.message });
             }
-
-            // Check if user has enough resources
-            const resourceCheck = await client.query(
-                'SELECT metal, crystal, gas FROM planet_resources WHERE planet_id = $1 FOR UPDATE',
-                [planetId]
-            );
-            const availableResources = resourceCheck.rows[0];
-
-            if (availableResources.metal < metal) {
-                await client.query('ROLLBACK');
-                return fail(400, { error: 'Not enough Metal' });
-            }
-            if (availableResources.crystal < crystal) {
-                await client.query('ROLLBACK');
-                return fail(400, { error: 'Not enough Crystal' });
-            }
-            if (availableResources.gas < gas) {
-                await client.query('ROLLBACK');
-                return fail(400, { error: 'Not enough Gas' });
-            }
-
-            // Deduct ships
-            for (const [type, count] of Object.entries(ships)) {
-                await client.query(
-                    `UPDATE planet_ships SET ${type} = ${type} - $1 WHERE planet_id = $2`,
-                    [count, planetId]
-                );
-            }
-
-            // Deduct resources
-            await client.query(
-                `UPDATE planet_resources 
-                 SET metal = metal - $1, crystal = crystal - $2, gas = gas - $3
-                 WHERE planet_id = $4`,
-                [metal, crystal, gas, planetId]
-            );
-
-            // Calculate arrival time
-            let durationSeconds = 30; // Default 30 seconds for demo
-            
-            if (mission === 'expedition') {
-                durationSeconds = 1800; // 30 minutes for expeditions
-            }
-
-            const arrivalTime = new Date(Date.now() + durationSeconds * 1000);
-
-            // Create fleet
-            await client.query(
-                `INSERT INTO fleets (user_id, origin_planet_id, target_galaxy, target_system, target_planet, mission, ships, resources, arrival_time)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-                [locals.user.id, planetId, galaxy, system, planet, mission, JSON.stringify(ships), JSON.stringify({ metal, crystal, gas }), arrivalTime]
-            );
-
-            await client.query('COMMIT');
-        } catch (e) {
-            await client.query('ROLLBACK');
-            throw e;
-        } finally {
-            client.release();
+            console.error(e);
+            return fail(500, { error: 'Internal server error' });
         }
-
-        return { success: true };
     }
 } satisfies Actions;

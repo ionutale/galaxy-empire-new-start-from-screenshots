@@ -1,4 +1,6 @@
-import { pool } from './db';
+import { db } from './db';
+import { users, userBoosters } from './db/schema';
+import { eq, and, gt } from 'drizzle-orm';
 
 export interface ShopItem {
     id: string;
@@ -68,71 +70,74 @@ export async function purchaseShopItem(userId: number, itemId: string) {
     const item = SHOP_ITEMS[itemId];
     if (!item) throw new Error('Invalid item');
 
-    const client = await pool.connect();
-
-    try {
-        await client.query('BEGIN');
-
+    return await db.transaction(async (tx) => {
         // Check user DM
-        const userRes = await client.query('SELECT dark_matter FROM users WHERE id = $1', [userId]);
-        if (userRes.rows.length === 0) throw new Error('User not found');
+        const userRes = await tx.select({ darkMatter: users.darkMatter })
+            .from(users)
+            .where(eq(users.id, userId));
         
-        const currentDM = userRes.rows[0].dark_matter;
+        if (userRes.length === 0) throw new Error('User not found');
+        
+        const currentDM = userRes[0].darkMatter || 0;
         if (currentDM < item.cost) throw new Error('Not enough Dark Matter');
 
         // Deduct DM
-        await client.query('UPDATE users SET dark_matter = dark_matter - $1 WHERE id = $2', [item.cost, userId]);
+        await tx.update(users)
+            .set({ darkMatter: currentDM - item.cost })
+            .where(eq(users.id, userId));
 
         // Add Booster
-        // We allow stacking duration or multiple active boosters?
-        // Let's say purchasing adds a new booster instance. 
-        // Or extends existing one? Extending is cleaner for UI.
-        
         // Check for existing active booster of same type
-        const existingRes = await client.query(
-            'SELECT id, expires_at FROM user_boosters WHERE user_id = $1 AND booster_id = $2 AND expires_at > NOW()',
-            [userId, itemId]
-        );
+        const existingRes = await tx.select({
+            id: userBoosters.id,
+            expiresAt: userBoosters.expiresAt
+        })
+        .from(userBoosters)
+        .where(and(
+            eq(userBoosters.userId, userId),
+            eq(userBoosters.boosterId, itemId),
+            gt(userBoosters.expiresAt, new Date())
+        ));
 
         let newExpiresAt = new Date();
         newExpiresAt.setSeconds(newExpiresAt.getSeconds() + item.durationSeconds);
 
-        if (existingRes.rows.length > 0) {
+        if (existingRes.length > 0) {
             // Extend existing
-            const currentExpiresAt = new Date(existingRes.rows[0].expires_at);
+            const currentExpiresAt = new Date(existingRes[0].expiresAt);
             // If current expires in future, add duration to it
             if (currentExpiresAt > new Date()) {
                 newExpiresAt = new Date(currentExpiresAt.getTime() + item.durationSeconds * 1000);
             }
             
-            await client.query(
-                'UPDATE user_boosters SET expires_at = $1 WHERE id = $2',
-                [newExpiresAt, existingRes.rows[0].id]
-            );
+            await tx.update(userBoosters)
+                .set({ expiresAt: newExpiresAt })
+                .where(eq(userBoosters.id, existingRes[0].id));
         } else {
             // Insert new
-            await client.query(
-                'INSERT INTO user_boosters (user_id, booster_id, expires_at) VALUES ($1, $2, $3)',
-                [userId, itemId, newExpiresAt]
-            );
+            await tx.insert(userBoosters).values({
+                userId,
+                boosterId: itemId,
+                expiresAt: newExpiresAt
+            });
         }
 
-        await client.query('COMMIT');
         return { success: true, expiresAt: newExpiresAt, remainingDM: currentDM - item.cost };
-    } catch (e) {
-        await client.query('ROLLBACK');
-        throw e;
-    } finally {
-        client.release();
-    }
+    });
 }
 
 export async function getActiveBoosters(userId: number) {
-    const res = await pool.query(
-        'SELECT booster_id, expires_at FROM user_boosters WHERE user_id = $1 AND expires_at > NOW()',
-        [userId]
-    );
-    return res.rows;
+    const res = await db.select({
+        boosterId: userBoosters.boosterId,
+        expiresAt: userBoosters.expiresAt
+    })
+    .from(userBoosters)
+    .where(and(
+        eq(userBoosters.userId, userId),
+        gt(userBoosters.expiresAt, new Date())
+    ));
+    
+    return res;
 }
 
 export async function getBoosterMultipliers(userId: number) {
@@ -145,8 +150,8 @@ export async function getBoosterMultipliers(userId: number) {
         energy: 1.0
     };
 
-    for (const row of active) {
-        const item = SHOP_ITEMS[row.booster_id];
+    for (const b of active) {
+        const item = SHOP_ITEMS[b.boosterId];
         if (!item) continue;
 
         const factor = 1 + (item.effectValue / 100);

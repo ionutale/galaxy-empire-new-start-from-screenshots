@@ -14,7 +14,7 @@
             now = Date.now();
 
             if (!reloading) {
-                const shouldReload = data.fleets.some((f: any) => new Date(f.arrival_time).getTime() <= now);
+                const shouldReload = data.fleets.some((f: any) => new Date(f.arrivalTime).getTime() <= now);
                 if (shouldReload) {
                     reloading = true;
                     await invalidateAll();
@@ -29,8 +29,8 @@
     });
 
     function getProgress(fleet: any) {
-        const start = new Date(fleet.departure_time).getTime();
-        const end = new Date(fleet.arrival_time).getTime();
+        const start = new Date(fleet.departureTime).getTime();
+        const end = new Date(fleet.arrivalTime).getTime();
         const total = end - start;
         if (total <= 0) return 100;
         const current = now - start;
@@ -44,7 +44,7 @@
     }
 
     function getRemainingTime(fleet: any) {
-        const end = new Date(fleet.arrival_time).getTime();
+        const end = new Date(fleet.arrivalTime).getTime();
         const diff = Math.max(0, end - now);
         const seconds = Math.floor((diff / 1000) % 60);
         const minutes = Math.floor((diff / (1000 * 60)) % 60);
@@ -82,16 +82,16 @@
                             </div>
                             
                             <div class="text-sm text-gray-300 flex items-center gap-2">
-                                <span>From: <span class="font-mono text-white">[{fleet.origin_galaxy}:{fleet.origin_system}:{fleet.origin_planet}]</span></span>
+                                <span>From: <span class="font-mono text-white">[{fleet.originGalaxy}:{fleet.originSystem}:{fleet.originPlanet}]</span></span>
                                 <span class="text-gray-500">→</span>
-                                <span>To: <span class="font-mono text-white">[{fleet.target_galaxy}:{fleet.target_system}:{fleet.target_planet}]</span></span>
+                                <span>To: <span class="font-mono text-white">[{fleet.targetGalaxy}:{fleet.targetSystem}:{fleet.targetPlanet}]</span></span>
                             </div>
                         </div>
                         
                         <div class="text-right">
                             <div class="text-xs text-gray-400 uppercase tracking-wide mb-1">Arrival</div>
                             <div class="font-mono text-blue-300">
-                                {new Date(fleet.arrival_time).toLocaleTimeString()}
+                                {new Date(fleet.arrivalTime).toLocaleTimeString()}
                             </div>
                         </div>
                     </div>
