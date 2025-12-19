@@ -12,11 +12,10 @@ function calculateBuildingPoints(type: string, level: number): number {
     for (let l = 1; l <= level; l++) {
         totalMetal += Math.floor(building.baseCost.metal * Math.pow(building.costFactor, l - 1));
         totalCrystal += Math.floor(building.baseCost.crystal * Math.pow(building.costFactor, l - 1));
-        // Gas? Buildings usually don't have gas cost in config? Let's check.
-        // Config has gas for some?
+        if (building.baseCost.gas) {
+            totalGas += Math.floor(building.baseCost.gas * Math.pow(building.costFactor, l - 1));
+        }
     }
-    // Check config for gas
-    // In game-config.ts: baseCost: { metal: 225, crystal: 75 } (no gas property shown in snippet, but let's assume 0 if missing)
     
     return (totalMetal + totalCrystal + totalGas) / 1000;
 }
@@ -32,7 +31,9 @@ function calculateResearchPoints(type: string, level: number): number {
     for (let l = 1; l <= level; l++) {
         totalMetal += Math.floor(tech.baseCost.metal * Math.pow(tech.costFactor, l - 1));
         totalCrystal += Math.floor(tech.baseCost.crystal * Math.pow(tech.costFactor, l - 1));
-        totalGas += Math.floor(tech.baseCost.gas * Math.pow(tech.costFactor, l - 1));
+        if (tech.baseCost.gas) {
+            totalGas += Math.floor(tech.baseCost.gas * Math.pow(tech.costFactor, l - 1));
+        }
     }
 
     return (totalMetal + totalCrystal + totalGas) / 1000;
@@ -62,7 +63,7 @@ export async function updateUserPoints(userId: number) {
                 if (key === 'planet_id') continue;
                 const ship = SHIPS[key as keyof typeof SHIPS];
                 if (ship) {
-                    const cost = ship.cost.metal + ship.cost.crystal + ship.cost.gas;
+                    const cost = ship.cost.metal + ship.cost.crystal + (ship.cost.gas || 0);
                     points += (cost * (count as number)) / 1000;
                 }
             }
@@ -74,7 +75,7 @@ export async function updateUserPoints(userId: number) {
                 if (key === 'planet_id') continue;
                 const def = DEFENSES[key as keyof typeof DEFENSES];
                 if (def) {
-                    const cost = def.cost.metal + def.cost.crystal + def.cost.gas;
+                    const cost = def.cost.metal + def.cost.crystal + (def.cost.gas || 0);
                     points += (cost * (count as number)) / 1000;
                 }
             }
@@ -94,7 +95,7 @@ export async function updateUserPoints(userId: number) {
             for (const [key, count] of Object.entries(fleet.ships)) {
                 const ship = SHIPS[key as keyof typeof SHIPS];
                 if (ship) {
-                    const cost = ship.cost.metal + ship.cost.crystal + ship.cost.gas;
+                    const cost = ship.cost.metal + ship.cost.crystal + (ship.cost.gas || 0);
                     points += (cost * (count as number)) / 1000;
                 }
             }

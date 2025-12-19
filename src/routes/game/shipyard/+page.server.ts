@@ -74,7 +74,7 @@ export const actions = {
             const totalCost = {
                 metal: shipConfig.cost.metal * amount,
                 crystal: shipConfig.cost.crystal * amount,
-                gas: shipConfig.cost.gas * amount
+                gas: (shipConfig.cost.gas || 0) * amount
             };
 
             if (resources.metal < totalCost.metal || 

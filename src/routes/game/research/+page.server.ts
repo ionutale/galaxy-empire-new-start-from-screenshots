@@ -58,7 +58,7 @@ export const actions: Actions = {
                 return fail(404, { error: 'Planet not found' });
             }
 
-            if (resources.metal < cost.metal || resources.crystal < cost.crystal || resources.gas < cost.gas || resources.energy < (cost.energy || 0)) {
+            if (resources.metal < cost.metal || resources.crystal < cost.crystal || resources.gas < (cost.gas || 0) || resources.energy < (cost.energy || 0)) {
                 await client.query('ROLLBACK');
                 return fail(400, { error: 'Not enough resources' });
             }
@@ -78,7 +78,7 @@ export const actions: Actions = {
                 `UPDATE planet_resources 
                  SET metal = metal - $1, crystal = crystal - $2, gas = gas - $3 
                  WHERE planet_id = $4`,
-                [cost.metal, cost.crystal, cost.gas, planetId]
+                [cost.metal, cost.crystal, cost.gas || 0, planetId]
             );
 
             // Upgrade tech (Instant for now)

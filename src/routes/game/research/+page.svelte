@@ -13,7 +13,7 @@
 
     {#if data.researchLabLevel === 0}
         <div class="bg-red-900/50 border border-red-500 p-4 rounded text-center text-red-200 mb-6">
-            You need a Research Lab to conduct research. <a href="/game/facilities" class="underline font-bold hover:text-white">Build one in the Facilities menu.</a>
+            You need a Research Lab to conduct research. <a href="/game" class="underline font-bold hover:text-white">Build one in the Facilities menu.</a>
         </div>
     {/if}
 
@@ -31,29 +31,31 @@
                     <p class="text-gray-400 text-sm mb-4 h-10">{tech.description}</p>
                     
                     <div class="space-y-1 text-sm mb-4">
-                        {#if cost.metal > 0}
-                            <div class="flex justify-between">
-                                <span class="text-gray-500">Metal:</span>
-                                <span class={data.resources.metal < cost.metal ? 'text-red-500' : 'text-gray-300'}>{f(cost.metal)}</span>
-                            </div>
-                        {/if}
-                        {#if cost.crystal > 0}
-                            <div class="flex justify-between">
-                                <span class="text-gray-500">Crystal:</span>
-                                <span class={data.resources.crystal < cost.crystal ? 'text-red-500' : 'text-gray-300'}>{f(cost.crystal)}</span>
-                            </div>
-                        {/if}
-                        {#if cost.gas > 0}
-                            <div class="flex justify-between">
-                                <span class="text-gray-500">Gas:</span>
-                                <span class={data.resources.gas < cost.gas ? 'text-red-500' : 'text-gray-300'}>{f(cost.gas)}</span>
-                            </div>
-                        {/if}
-                        {#if cost.energy > 0}
-                            <div class="flex justify-between">
-                                <span class="text-gray-500">Energy:</span>
-                                <span class={data.resources.energy < cost.energy ? 'text-red-500' : 'text-gray-300'}>{f(cost.energy)}</span>
-                            </div>
+                        {#if cost}
+                            {#if cost.metal > 0}
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Metal:</span>
+                                    <span class={data.resources.metal < cost.metal ? 'text-red-500' : 'text-gray-300'}>{f(cost.metal)}</span>
+                                </div>
+                            {/if}
+                            {#if cost.crystal > 0}
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Crystal:</span>
+                                    <span class={data.resources.crystal < cost.crystal ? 'text-red-500' : 'text-gray-300'}>{f(cost.crystal)}</span>
+                                </div>
+                            {/if}
+                            {#if (cost.gas || 0) > 0}
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Gas:</span>
+                                    <span class={data.resources.gas < (cost.gas || 0) ? 'text-red-500' : 'text-gray-300'}>{f(cost.gas || 0)}</span>
+                                </div>
+                            {/if}
+                            {#if (cost.energy || 0) > 0}
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Energy:</span>
+                                    <span class={data.resources.energy < (cost.energy || 0) ? 'text-red-500' : 'text-gray-300'}>{f(cost.energy || 0)}</span>
+                                </div>
+                            {/if}
                         {/if}
                     </div>
                 </div>
@@ -64,10 +66,10 @@
                     <button 
                         type="submit" 
                         class="w-full py-2 rounded font-bold transition-colors
-                            {data.resources.metal >= cost.metal && data.resources.crystal >= cost.crystal && data.resources.gas >= cost.gas && data.resources.energy >= (cost.energy || 0) && data.researchLabLevel > 0
+                            {cost && data.resources.metal >= cost.metal && data.resources.crystal >= cost.crystal && data.resources.gas >= (cost.gas || 0) && data.resources.energy >= (cost.energy || 0) && data.researchLabLevel > 0
                                 ? 'bg-green-600 hover:bg-green-500 text-white' 
                                 : 'bg-gray-600 text-gray-400 cursor-not-allowed'}"
-                        disabled={!(data.resources.metal >= cost.metal && data.resources.crystal >= cost.crystal && data.resources.gas >= cost.gas && data.resources.energy >= (cost.energy || 0)) || data.researchLabLevel === 0}
+                        disabled={!cost || !(data.resources.metal >= cost.metal && data.resources.crystal >= cost.crystal && data.resources.gas >= (cost.gas || 0) && data.resources.energy >= (cost.energy || 0)) || data.researchLabLevel === 0}
                     >
                         Research
                     </button>

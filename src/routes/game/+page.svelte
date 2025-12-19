@@ -65,9 +65,9 @@
                                     Crystal: {cost.crystal.toLocaleString()}
                                 </span>
                             {/if}
-                            {#if cost.gas > 0}
-                                <span class={data.resources.gas < cost.gas ? 'text-red-400' : 'text-gray-300'}>
-                                    Gas: {cost.gas.toLocaleString()}
+                            {#if (cost.gas || 0) > 0}
+                                <span class={data.resources.gas < (cost.gas || 0) ? 'text-red-400' : 'text-gray-300'}>
+                                    Gas: {(cost.gas || 0).toLocaleString()}
                                 </span>
                             {/if}
                         {/if}
@@ -78,7 +78,7 @@
                         <input type="hidden" name="planet_id" value={data.currentPlanet.id}>
                         <button 
                             type="submit"
-                            disabled={!cost || data.resources.metal < cost.metal || data.resources.crystal < cost.crystal || (cost.gas && data.resources.gas < cost.gas)}
+                            disabled={!cost || data.resources.metal < cost.metal || data.resources.crystal < cost.crystal || ((cost.gas || 0) > 0 && data.resources.gas < (cost.gas || 0))}
                             class="w-full py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed rounded text-sm font-bold transition"
                         >
                             Upgrade to Level {level + 1}
@@ -120,9 +120,9 @@
                                     Crystal: {cost.crystal.toLocaleString()}
                                 </span>
                             {/if}
-                            {#if cost.gas > 0}
-                                <span class={data.resources.gas < cost.gas ? 'text-red-400' : 'text-gray-300'}>
-                                    Gas: {cost.gas.toLocaleString()}
+                            {#if (cost.gas || 0) > 0}
+                                <span class={data.resources.gas < (cost.gas || 0) ? 'text-red-400' : 'text-gray-300'}>
+                                    Gas: {(cost.gas || 0).toLocaleString()}
                                 </span>
                             {/if}
                         {/if}
@@ -133,7 +133,7 @@
                         <input type="hidden" name="planet_id" value={data.currentPlanet.id}>
                         <button 
                             type="submit"
-                            disabled={!cost || data.resources.metal < cost.metal || data.resources.crystal < cost.crystal || (cost.gas && data.resources.gas < cost.gas)}
+                            disabled={!cost || data.resources.metal < cost.metal || data.resources.crystal < cost.crystal || ((cost.gas || 0) > 0 && data.resources.gas < (cost.gas || 0))}
                             class="w-full py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed rounded text-sm font-bold transition"
                         >
                             Upgrade to Level {level + 1}
@@ -174,7 +174,7 @@
                     <div class="text-xs text-gray-500 mb-2 space-x-2">
                         {#if defense.cost.metal > 0}<span>M: {defense.cost.metal.toLocaleString()}</span>{/if}
                         {#if defense.cost.crystal > 0}<span>C: {defense.cost.crystal.toLocaleString()}</span>{/if}
-                        {#if defense.cost.gas > 0}<span>G: {defense.cost.gas.toLocaleString()}</span>{/if}
+                        {#if (defense.cost.gas || 0) > 0}<span>G: {(defense.cost.gas || 0).toLocaleString()}</span>{/if}
                     </div>
                     
                     <form method="POST" action="?/build_defense" use:enhance class="flex space-x-2">

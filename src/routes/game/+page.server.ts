@@ -130,7 +130,7 @@ export const actions = {
             const totalCost = {
                 metal: defenseConfig.cost.metal * amount,
                 crystal: defenseConfig.cost.crystal * amount,
-                gas: defenseConfig.cost.gas * amount
+                gas: (defenseConfig.cost.gas || 0) * amount
             };
 
             if (resources.metal < totalCost.metal || 
