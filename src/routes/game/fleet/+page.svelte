@@ -24,7 +24,7 @@
     <div class="flex justify-between items-center mb-4">
         <h2 class="text-2xl font-bold text-blue-300">Fleet Command</h2>
         <a href="/game/fleet/movements" class="bg-blue-900/50 hover:bg-blue-800 border border-blue-700 text-blue-200 px-3 py-1 rounded text-sm transition flex items-center gap-2">
-            <span>📡</span> View Movements
+            <span>📡</span> View Movements ({data.activeFleetsCount})
         </a>
     </div>
 

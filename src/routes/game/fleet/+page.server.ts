@@ -3,10 +3,10 @@ import { fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ parent }) => {
-    const { currentPlanet } = await parent();
+    const { currentPlanet, user } = await parent();
 
     if (!currentPlanet) {
-        return { ships: null, fleets: [] };
+        return { ships: null, fleets: [], activeFleetsCount: 0 };
     }
 
     // Fetch ships
@@ -15,8 +15,16 @@ export const load: PageServerLoad = async ({ parent }) => {
         [currentPlanet.id]
     );
 
+    // Fetch active fleets count
+    const fleetsCountRes = await pool.query(
+        "SELECT COUNT(*) FROM fleets WHERE user_id = $1 AND (status = 'active' OR status = 'returning')",
+        [user.id]
+    );
+    const activeFleetsCount = parseInt(fleetsCountRes.rows[0].count);
+
     return {
-        ships: shipsRes.rows[0]
+        ships: shipsRes.rows[0],
+        activeFleetsCount
     };
 };
 
