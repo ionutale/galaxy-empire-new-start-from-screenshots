@@ -1,13 +1,14 @@
 import { pool } from '$lib/server/db';
 import { fail } from '@sveltejs/kit';
 import { SHIPS } from '$lib/game-config';
+import { getFleetTemplates, createFleetTemplate, deleteFleetTemplate } from '$lib/server/fleet-templates';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ parent }) => {
     const { currentPlanet, user } = await parent();
 
     if (!currentPlanet) {
-        return { ships: null, fleets: [], activeFleetsCount: 0 };
+        return { ships: null, fleets: [], activeFleetsCount: 0, templates: [] };
     }
 
     // Fetch ships
@@ -23,14 +24,54 @@ export const load: PageServerLoad = async ({ parent }) => {
     );
     const activeFleetsCount = parseInt(fleetsCountRes.rows[0].count);
 
+    // Fetch templates
+    const templates = await getFleetTemplates(user.id);
+
     return {
         ships: shipsRes.rows[0],
-        activeFleetsCount
+        activeFleetsCount,
+        templates
     };
 };
 
 
 export const actions = {
+    createTemplate: async ({ request, locals }) => {
+        if (!locals.user) return fail(401);
+        const data = await request.formData();
+        const name = data.get('name') as string;
+        
+        const ships: Record<string, number> = {};
+        const shipTypes = ['light_fighter', 'heavy_fighter', 'cruiser', 'battleship', 'small_cargo', 'large_cargo', 'colony_ship', 'espionage_probe', 'recycler', 'bomber', 'destroyer', 'death_star', 'battle_cruiser'];
+        
+        for (const type of shipTypes) {
+            const count = Number(data.get(type) || 0);
+            if (count > 0) {
+                ships[type] = count;
+            }
+        }
+
+        try {
+            await createFleetTemplate(locals.user.id, name, ships);
+            return { success: true };
+        } catch (e: any) {
+            return fail(400, { error: e.message });
+        }
+    },
+
+    deleteTemplate: async ({ request, locals }) => {
+        if (!locals.user) return fail(401);
+        const data = await request.formData();
+        const id = Number(data.get('id'));
+
+        try {
+            await deleteFleetTemplate(locals.user.id, id);
+            return { success: true };
+        } catch (e: any) {
+            return fail(400, { error: e.message });
+        }
+    },
+
     dispatch: async ({ request, locals }) => {
         if (!locals.user) return fail(401);
 
