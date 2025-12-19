@@ -1,35 +1,5 @@
 /// <reference types="@sveltejs/kit" />
 import { build, files, version } from '$service-worker';
-import { initializeApp } from 'firebase/app';
-import { getMessaging, onBackgroundMessage } from 'firebase/messaging/sw';
-
-// Initialize Firebase in Service Worker
-const firebaseConfig = {
-  apiKey: "AIzaSyDmKrv3-pOLUMeVKXJkpg6IEN0AOQXQ--s",
-  authDomain: "playground-428410.firebaseapp.com",
-  projectId: "playground-428410",
-  storageBucket: "playground-428410.firebasestorage.app",
-  messagingSenderId: "277290577442",
-  appId: "1:277290577442:web:829f43da4ba71ac8f9247b",
-  measurementId: "G-0B04P6NW6J"
-};
-
-const app = initializeApp(firebaseConfig);
-const messaging = getMessaging(app);
-
-// Handle background messages
-onBackgroundMessage(messaging, (payload) => {
-  console.log('[firebase-messaging-sw.js] Received background message ', payload);
-  if (payload.notification) {
-    const notificationTitle = payload.notification.title || 'Galaxy Empire';
-    const notificationOptions = {
-        body: payload.notification.body,
-        icon: payload.notification.icon || '/icons/icon_web_PWA192_192x192.png'
-    };
-
-    self.registration.showNotification(notificationTitle, notificationOptions);
-  }
-});
 
 // Create a unique cache name for this deployment
 const CACHE = `cache-${version}`;

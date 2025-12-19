@@ -2,9 +2,6 @@
     import { onMount, onDestroy } from 'svelte';
     import { goto } from '$app/navigation';
     import { page } from '$app/stores';
-    import { VAPID_PUBLIC_KEY } from '$lib/game-config';
-    import { messaging } from '$lib/firebase.config';
-    import { getToken, onMessage } from 'firebase/messaging';
 
     let { children, data } = $props();
 
@@ -44,103 +41,9 @@
         }
     }
 
-    function urlBase64ToUint8Array(base64String: string) {
-        const padding = '='.repeat((4 - base64String.length % 4) % 4);
-        const base64 = (base64String + padding)
-            .replace(/\-/g, '+')
-            .replace(/_/g, '/');
-
-        const rawData = window.atob(base64);
-        const outputArray = new Uint8Array(rawData.length);
-
-        for (let i = 0; i < rawData.length; ++i) {
-            outputArray[i] = rawData.charCodeAt(i);
-        }
-        return outputArray;
-    }
-
-    async function subscribeToPush() {
-        if (!('serviceWorker' in navigator) || !messaging) {
-            console.warn('Push notifications are not supported in this browser');
-            return;
-        }
-
-        try {
-            const permission = await Notification.requestPermission();
-            if (permission !== 'granted') {
-                console.log('Push notification permission not granted:', permission);
-                return;
-            }
-
-            // Get existing service worker registration
-            const registration = await navigator.serviceWorker.ready;
-
-            // Get Firebase Token using the existing registration
-            // We try without a specific VAPID key first, letting Firebase use the default one for the project
-            let currentToken;
-            try {
-                currentToken = await getToken(messaging, { 
-                    serviceWorkerRegistration: registration
-                });
-            } catch (e: any) {
-                console.warn('Failed to get token without VAPID key, retrying with local key...', e);
-                // Fallback (though this likely won't work if the key is not added to Firebase Console)
-                currentToken = await getToken(messaging, { 
-                    vapidKey: VAPID_PUBLIC_KEY,
-                    serviceWorkerRegistration: registration
-                });
-            }
-
-            if (currentToken) {
-                console.log('Firebase Token:', currentToken);
-                
-                // Send token to server
-                await fetch('/api/push-subscription', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        endpoint: currentToken, // We use the token as the endpoint ID
-                        keys: { p256dh: '', auth: '' } // Firebase manages keys internally
-                    })
-                });
-                console.log('Push subscription saved successfully');
-            } else {
-                console.log('No registration token available. Request permission to generate one.');
-            }
-
-            // Listen for foreground messages
-            onMessage(messaging, (payload) => {
-                console.log('Message received. ', payload);
-                // You can show a toast or custom UI here
-                if (payload.notification) {
-                    new Notification(payload.notification.title || 'New Message', {
-                        body: payload.notification.body,
-                        icon: payload.notification.icon
-                    });
-                }
-            });
-
-        } catch (err) {
-            console.error('Failed to subscribe to push notifications:', err);
-            if (err instanceof Error) {
-                console.error('Error name:', err.name);
-                console.error('Error message:', err.message);
-                
-                if (err.name === 'AbortError' || err.message.includes('Registration failed')) {
-                    alert('Push registration failed. This often happens if:\n1. You are in Incognito/Private mode (Push not supported).\n2. You are using a VPN or corporate network blocking FCM.\n3. The VAPID key does not match the Firebase project.');
-                }
-            }
-        }
-    }
-
     onMount(() => {
         fetchChat();
         chatInterval = setInterval(fetchChat, 5000); // Poll every 5s
-        
-        // Only subscribe if we already have permission, otherwise wait for user action
-        if (Notification.permission === 'granted') {
-            subscribeToPush();
-        }
     });
 
     onDestroy(() => {

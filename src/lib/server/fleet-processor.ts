@@ -2,7 +2,6 @@ import { pool } from './db';
 import { SHIPS } from '$lib/game-config';
 import { simulateCombat } from './combat-engine';
 import { updateUserPoints } from './points-calculator';
-import { webpush, admin } from './push-config';
 
 export async function processFleets() {
     const client = await pool.connect();
@@ -374,10 +373,6 @@ async function processArrivingFleet(client: any, fleet: any) {
                         }
                     }
                 }
-            } catch (err) {
-                console.error('Error fetching push subscriptions:', err);
-            }
-
             await returnFleet(client, fleet);
         }
     } else if (fleet.mission === 'deploy') {
