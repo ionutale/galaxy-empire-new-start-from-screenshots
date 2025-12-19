@@ -89,7 +89,7 @@
                 <div class="w-6 h-6 bg-gray-700 rounded-full border border-gray-600"></div>
                 <div class="w-6 h-6 bg-gray-700 rounded-full border border-gray-600"></div>
             </div>
-            <a href="/game/messages" class="relative">
+            <a href="/game/messages" class="relative transition-transform active:scale-95">
                 <span class="text-2xl">✉️</span>
                 {#if data.unreadMessages > 0}
                     <span class="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full w-4 h-4 flex items-center justify-center">
@@ -97,7 +97,7 @@
                     </span>
                 {/if}
             </a>
-            <a href="/game/settings" class="text-2xl hover:text-gray-300 transition">
+            <a href="/game/settings" class="text-2xl hover:text-gray-300 transition transition-transform active:scale-95">
                 ⚙️
             </a>
         </div>
@@ -186,35 +186,35 @@
 
     <!-- Bottom Navigation Bar (Dock) -->
     <nav class="shrink-0 bg-gray-800 border-t border-gray-700 flex items-center overflow-x-auto px-2 z-20 no-scrollbar pb-8 md:pb-safe min-h-[4rem]">
-        <a href="/game" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem]">
+        <a href="/game" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem] active:scale-95 transform">
             <span class="text-xl mb-1">🪐</span>
             <span class="text-[10px] uppercase tracking-wide">Base</span>
         </a>
-        <a href="/game/research" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem]">
+        <a href="/game/research" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem] active:scale-95 transform">
             <span class="text-xl mb-1">🔬</span>
             <span class="text-[10px] uppercase tracking-wide">Research</span>
         </a>
-        <a href="/game/shipyard" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem]">
+        <a href="/game/shipyard" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem] active:scale-95 transform">
             <span class="text-xl mb-1">🛠️</span>
             <span class="text-[10px] uppercase tracking-wide">Shipyard</span>
         </a>
-        <a href="/game/fleet" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem]">
+        <a href="/game/fleet" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem] active:scale-95 transform">
             <span class="text-xl mb-1">🚀</span>
             <span class="text-[10px] uppercase tracking-wide">Fleet</span>
         </a>
-        <a href="/game/system" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem]">
+        <a href="/game/system" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem] active:scale-95 transform">
             <span class="text-xl mb-1">☀️</span>
             <span class="text-[10px] uppercase tracking-wide">Galaxy</span>
         </a>
-        <a href="/game/alliance" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem]">
+        <a href="/game/alliance" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem] active:scale-95 transform">
             <span class="text-xl mb-1">🤝</span>
             <span class="text-[10px] uppercase tracking-wide">Alliance</span>
         </a>
-        <a href="/game/commanders" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem]">
+        <a href="/game/commanders" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem] active:scale-95 transform">
             <span class="text-xl mb-1">👨‍✈️</span>
             <span class="text-[10px] uppercase tracking-wide">Officers</span>
         </a>
-        <a href="/game/highscore" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem]">
+        <a href="/game/highscore" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem] active:scale-95 transform">
             <span class="text-xl mb-1">🏆</span>
             <span class="text-[10px] uppercase tracking-wide">Rank</span>
         </a>

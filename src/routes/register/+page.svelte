@@ -46,7 +46,7 @@
         </form>
         
         <p class="mt-4 text-center text-sm text-gray-400">
-            Already have an account? <a href="/login" class="text-blue-400 hover:underline">Login</a>
+            Already have an account? <a href="/login" class="text-blue-400 hover:underline transition-transform active:scale-95 inline-block">Login</a>
         </p>
     </div>
 </div>

@@ -50,7 +50,7 @@
         </form>
         
         <p class="mt-4 text-center text-sm text-gray-400">
-            New commander? <a href="/register" class="text-blue-400 hover:underline">Register</a>
+            New commander? <a href="/register" class="text-blue-400 hover:underline transition-transform active:scale-95 inline-block">Register</a>
         </p>
     </div>
 </div>
