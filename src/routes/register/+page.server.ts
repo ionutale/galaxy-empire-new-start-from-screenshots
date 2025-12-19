@@ -46,43 +46,37 @@ export const actions = {
                 );
 
                 // Find a free planet slot for Home Planet
-                // For simplicity, we'll just pick a random system in Galaxy 1 for now
-                // In a real game, we'd have a better algorithm
-                const galaxyId = 1;
-                // Ensure galaxy exists
-                await client.query('INSERT INTO galaxies (id, name) VALUES (1, \'Milky Way\') ON CONFLICT DO NOTHING');
-                
-                // Find a system or create one
-                // Let's just pick system 1 for the first user, or find the next available
-                // Simplified: Just put everyone in System 1, Planet 1, 2, 3... for this demo
-                // We need to find an empty planet slot.
-                
-                // Let's try to find an empty spot in existing systems or create a new system
-                // This is a bit complex for a single transaction block without helper functions, 
-                // but let's try a simple approach: Find first empty planet in system 1.
-                
-                // Ensure system 1 exists
-                await client.query('INSERT INTO solar_systems (galaxy_id, system_number) VALUES (1, 1) ON CONFLICT DO NOTHING');
-
-                // Find next available planet number in system 1
-                const planetCheck = await client.query(
-                    'SELECT planet_number FROM planets WHERE galaxy_id = 1 AND system_id = 1'
-                );
-                const occupied = planetCheck.rows.map(r => r.planet_number);
+                // Random assignment logic: Random Galaxy (1-3), Random System (1-499), Random Planet (1-15)
+                let galaxyId = 1;
+                let systemId = 1;
                 let planetNum = 1;
-                while (occupied.includes(planetNum) && planetNum <= 15) {
-                    planetNum++;
+                let found = false;
+                
+                // Try to find a random empty slot
+                for (let i = 0; i < 100; i++) {
+                    const g = Math.floor(Math.random() * 3) + 1;
+                    const s = Math.floor(Math.random() * 499) + 1;
+                    const p = Math.floor(Math.random() * 15) + 1;
+                    
+                    const check = await client.query(
+                        'SELECT 1 FROM planets WHERE galaxy_id = $1 AND system_id = $2 AND planet_number = $3',
+                        [g, s, p]
+                    );
+                    
+                    if (check.rows.length === 0) {
+                        galaxyId = g;
+                        systemId = s;
+                        planetNum = p;
+                        found = true;
+                        break;
+                    }
                 }
 
-                if (planetNum > 15) {
-                    // System full, in real app we'd move to next system
-                    // For now, just fail or put in system 2 (simplified)
-                     await client.query('INSERT INTO solar_systems (galaxy_id, system_number) VALUES (1, 2) ON CONFLICT DO NOTHING');
-                     planetNum = 1; // Reset for system 2
-                     // Assume system 2 is empty for this demo fallback
-                }
+                // Ensure galaxy exists
+                await client.query('INSERT INTO galaxies (id, name) VALUES ($1, $2) ON CONFLICT DO NOTHING', [galaxyId, `Galaxy ${galaxyId}`]);
                 
-                const systemId = planetNum > 15 ? 2 : 1; // Hacky fallback
+                // Ensure system exists
+                await client.query('INSERT INTO solar_systems (galaxy_id, system_number) VALUES ($1, $2) ON CONFLICT DO NOTHING', [galaxyId, systemId]);
 
                 // Create Home Planet
                 const planetRes = await client.query(
@@ -92,9 +86,9 @@ export const actions = {
                 );
                 const planetId = planetRes.rows[0].id;
 
-                // Initialize Planet Resources
+                // Initialize Planet Resources - New users start with more resources
                 await client.query(
-                    'INSERT INTO planet_resources (planet_id, metal, crystal, gas, energy) VALUES ($1, 500, 500, 0, 0)',
+                    'INSERT INTO planet_resources (planet_id, metal, crystal, gas, energy) VALUES ($1, 30000, 21000, 7500, 0)',
                     [planetId]
                 );
 
