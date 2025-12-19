@@ -1,24 +1,22 @@
-import { pool } from '$lib/server/db';
+import { db, messages } from '$lib/server/db';
+import { desc, eq } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
     if (!locals.user) return { messages: [] };
 
-    const res = await pool.query(
-        `SELECT * FROM messages 
-         WHERE user_id = $1 
-         ORDER BY created_at DESC 
-         LIMIT 50`,
-        [locals.user.id]
-    );
+    const res = await db.select()
+        .from(messages)
+        .where(eq(messages.userId, locals.user.id))
+        .orderBy(desc(messages.createdAt))
+        .limit(50);
 
     // Mark as read (simplified: mark all as read on open)
-    await pool.query(
-        'UPDATE messages SET is_read = TRUE WHERE user_id = $1',
-        [locals.user.id]
-    );
+    await db.update(messages)
+        .set({ isRead: true })
+        .where(eq(messages.userId, locals.user.id));
 
     return {
-        messages: res.rows
+        messages: res
     };
 };

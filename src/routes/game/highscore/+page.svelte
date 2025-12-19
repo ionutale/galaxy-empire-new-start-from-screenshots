@@ -21,9 +21,9 @@
                         <td class="p-3 text-gray-500 font-mono w-16">#{i + 1}</td>
                         <td class="p-3 font-bold text-gray-200">{player.username}</td>
                         <td class="p-3">
-                            {#if player.alliance_tag}
-                                <span class="text-blue-400">[{player.alliance_tag}]</span>
-                                <span class="text-gray-500 text-xs hidden sm:inline ml-1">{player.alliance_name}</span>
+                            {#if player.allianceTag}
+                                <span class="text-blue-400">[{player.allianceTag}]</span>
+                                <span class="text-gray-500 text-xs hidden sm:inline ml-1">{player.allianceName}</span>
                             {:else}
                                 <span class="text-gray-600">-</span>
                             {/if}

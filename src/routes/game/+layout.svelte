@@ -150,9 +150,9 @@
             <div class="flex-1 overflow-y-auto p-2 space-y-1 flex flex-col-reverse">
                 {#each chatMessages as msg}
                     <div class="text-sm">
-                        <span class="text-gray-500 text-xs">[{new Date(msg.created_at).toLocaleTimeString()}]</span>
-                        {#if msg.alliance_tag}
-                            <span class="text-blue-400 font-bold">[{msg.alliance_tag}]</span>
+                        <span class="text-gray-500 text-xs">[{new Date(msg.createdAt).toLocaleTimeString()}]</span>
+                        {#if msg.allianceTag}
+                            <span class="text-blue-400 font-bold">[{msg.allianceTag}]</span>
                         {/if}
                         <span class="text-yellow-500 font-bold">{msg.username}:</span>
                         <span class="text-gray-300">{msg.content}</span>

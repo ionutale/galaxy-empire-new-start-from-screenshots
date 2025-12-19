@@ -55,7 +55,7 @@
                                 id="avatar-{avatar.id}" 
                                 value={avatar.id} 
                                 class="peer sr-only" 
-                                checked={data.profile.avatar_id === avatar.id}
+                                checked={data.profile.avatarId === avatar.id}
                             >
                             <div class="flex flex-col items-center p-2 rounded border border-gray-700 bg-gray-700/50 peer-checked:bg-blue-600 peer-checked:border-blue-400 hover:bg-gray-600 transition">
                                 <span class="text-2xl mb-1">{avatar.icon}</span>

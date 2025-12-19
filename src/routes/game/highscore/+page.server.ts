@@ -1,16 +1,21 @@
-import { pool } from '$lib/server/db';
+import { db, users, alliances } from '$lib/server/db';
+import { desc, eq } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {
-    const res = await pool.query(`
-        SELECT u.id, u.username, u.points, a.tag as alliance_tag, a.name as alliance_name
-        FROM users u
-        LEFT JOIN alliances a ON u.alliance_id = a.id
-        ORDER BY u.points DESC
-        LIMIT 100
-    `);
+    const highscores = await db.select({
+        id: users.id,
+        username: users.username,
+        points: users.points,
+        allianceTag: alliances.tag,
+        allianceName: alliances.name
+    })
+    .from(users)
+    .leftJoin(alliances, eq(users.allianceId, alliances.id))
+    .orderBy(desc(users.points))
+    .limit(100);
 
     return {
-        highscores: res.rows
+        highscores
     };
 };

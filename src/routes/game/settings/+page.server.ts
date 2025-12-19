@@ -1,4 +1,5 @@
-import { pool } from '$lib/server/db';
+import { db, users } from '$lib/server/db';
+import { eq } from 'drizzle-orm';
 import { fail, redirect } from '@sveltejs/kit';
 import { hashPassword, comparePassword, deleteSession } from '$lib/server/auth';
 import type { PageServerLoad, Actions } from './$types';
@@ -6,13 +7,15 @@ import type { PageServerLoad, Actions } from './$types';
 export const load: PageServerLoad = async ({ locals }) => {
     if (!locals.user) throw redirect(302, '/login');
 
-    const userRes = await pool.query(
-        'SELECT email, avatar_id FROM users WHERE id = $1',
-        [locals.user.id]
-    );
+    const userRes = await db.select({
+        email: users.email,
+        avatarId: users.avatarId
+    })
+    .from(users)
+    .where(eq(users.id, locals.user.id));
 
     return {
-        profile: userRes.rows[0]
+        profile: userRes[0]
     };
 };
 
@@ -27,10 +30,9 @@ export const actions = {
         if (!email) return fail(400, { error: 'Email is required' });
 
         try {
-            await pool.query(
-                'UPDATE users SET email = $1, avatar_id = $2 WHERE id = $3',
-                [email, avatarId, locals.user.id]
-            );
+            await db.update(users)
+                .set({ email, avatarId })
+                .where(eq(users.id, locals.user.id));
         } catch (e) {
             return fail(500, { error: 'Database error' });
         }
@@ -55,13 +57,12 @@ export const actions = {
         }
 
         // Verify current password
-        const userRes = await pool.query(
-            'SELECT password_hash FROM users WHERE id = $1',
-            [locals.user.id]
-        );
-        const user = userRes.rows[0];
+        const userRes = await db.select({ passwordHash: users.passwordHash })
+            .from(users)
+            .where(eq(users.id, locals.user.id));
+        const user = userRes[0];
 
-        const valid = await comparePassword(currentPassword, user.password_hash);
+        const valid = await comparePassword(currentPassword, user.passwordHash);
         if (!valid) {
             return fail(400, { error: 'Incorrect current password' });
         }
@@ -69,10 +70,9 @@ export const actions = {
         // Hash new password
         const newHash = await hashPassword(newPassword);
 
-        await pool.query(
-            'UPDATE users SET password_hash = $1 WHERE id = $2',
-            [newHash, locals.user.id]
-        );
+        await db.update(users)
+            .set({ passwordHash: newHash })
+            .where(eq(users.id, locals.user.id));
 
         return { success: true, message: 'Password changed successfully' };
     },

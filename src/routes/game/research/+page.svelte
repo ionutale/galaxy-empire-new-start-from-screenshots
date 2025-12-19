@@ -6,6 +6,10 @@
     
     // Helper to format numbers
     const f = (n: number) => Math.floor(n).toLocaleString();
+
+    function toCamel(s: string) {
+        return s.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+    }
 </script>
 
 <div class="p-4 pb-20">
@@ -19,7 +23,7 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 {data.researchLabLevel === 0 ? 'opacity-50 pointer-events-none grayscale' : ''}">
         {#each Object.entries(data.techs) as [id, tech]}
-            {@const currentLevel = data.userResearch[id] || 0}
+            {@const currentLevel = data.userResearch[toCamel(id)] || 0}
             {@const cost = getResearchCost(id, currentLevel)}
             
             <div class="bg-gray-800 border border-gray-700 rounded p-4 flex flex-col justify-between">
