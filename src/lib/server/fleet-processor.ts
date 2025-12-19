@@ -324,55 +324,6 @@ async function processArrivingFleet(client: any, fleet: any) {
                 [fleet.user_id, title, message]
             );
 
-            // Send Push Notification
-            try {
-                const subs = await client.query(
-                    'SELECT * FROM push_subscriptions WHERE user_id = $1',
-                    [fleet.user_id]
-                );
-
-                for (const sub of subs.rows) {
-                    const isFirebase = !sub.endpoint.startsWith('http');
-
-                    try {
-                        if (isFirebase) {
-                            if (admin.apps.length > 0) {
-                                await admin.messaging().send({
-                                    token: sub.endpoint,
-                                    notification: {
-                                        title: title,
-                                        body: message,
-                                    },
-                                    webpush: {
-                                        notification: {
-                                            icon: '/icons/icon_web_PWA192_192x192.png'
-                                        }
-                                    }
-                                });
-                            }
-                        } else {
-                            const pushSubscription = {
-                                endpoint: sub.endpoint,
-                                keys: {
-                                    p256dh: sub.p256dh,
-                                    auth: sub.auth
-                                }
-                            };
-                            await webpush.sendNotification(pushSubscription, JSON.stringify({
-                                title: title,
-                                body: message,
-                                icon: '/icons/icon_web_PWA192_192x192.png'
-                            }));
-                        }
-                    } catch (err: any) {
-                        if (err.code === 'messaging/registration-token-not-registered' || err.statusCode === 410) {
-                            console.log(`Push subscription expired for user ${fleet.user_id}. Removing.`);
-                            await client.query('DELETE FROM push_subscriptions WHERE endpoint = $1', [sub.endpoint]);
-                        } else {
-                            console.error('Error sending push notification:', err);
-                        }
-                    }
-                }
             await returnFleet(client, fleet);
         }
     } else if (fleet.mission === 'deploy') {
