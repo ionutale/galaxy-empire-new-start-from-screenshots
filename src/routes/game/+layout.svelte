@@ -192,7 +192,7 @@
             </div>
         </div>
     {:else}
-        <div onclick={() => isChatOpen = true} class="shrink-0 bg-black/60 backdrop-blur-sm border-t border-gray-700 p-2 text-sm text-gray-300 truncate cursor-pointer hover:bg-black/80 transition z-30">
+        <button onclick={() => isChatOpen = true} class="w-full text-left shrink-0 bg-black/60 backdrop-blur-sm border-t border-gray-700 p-2 text-sm text-gray-300 truncate cursor-pointer hover:bg-black/80 transition z-30">
             {#if chatMessages.length > 0}
                 {@const lastMsg = chatMessages[0]}
                 <span class="text-blue-400 font-bold">[Global]</span> 
@@ -201,7 +201,7 @@
             {:else}
                 <span class="text-gray-500 italic">Click to open chat...</span>
             {/if}
-        </div>
+        </button>
     {/if}
 
     <!-- Bottom Navigation Bar (Dock) -->

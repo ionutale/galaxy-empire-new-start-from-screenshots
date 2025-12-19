@@ -45,7 +45,7 @@
             </div>
 
             <div>
-                <label class="block text-gray-400 text-sm mb-2">Avatar</label>
+                <span class="block text-gray-400 text-sm mb-2">Avatar</span>
                 <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
                     {#each avatars as avatar}
                         <label class="cursor-pointer">

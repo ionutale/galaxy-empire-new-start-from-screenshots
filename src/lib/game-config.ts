@@ -180,7 +180,7 @@ export const RESEARCH: Record<string, Research> = {
         costFactor: 2.0,
         description: 'Increases ship shield strength.'
     },
-    armor_tech: {
+    armour_tech: {
         name: 'Armor Technology',
         baseCost: { metal: 1000, crystal: 0, gas: 0 },
         costFactor: 2.0,
