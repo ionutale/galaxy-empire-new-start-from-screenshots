@@ -1,0 +1,203 @@
+import { pgTable, serial, text, integer, timestamp, boolean, doublePrecision, jsonb, unique, primaryKey, varchar } from 'drizzle-orm/pg-core';
+
+// 1. Users & Auth
+export const users = pgTable('users', {
+    id: serial('id').primaryKey(),
+    username: varchar('username', { length: 50 }).unique().notNull(),
+    email: varchar('email', { length: 100 }).unique().notNull(),
+    passwordHash: varchar('password_hash', { length: 255 }).notNull(),
+    avatarId: integer('avatar_id').default(1),
+    darkMatter: integer('dark_matter').default(0),
+    points: integer('points').default(0),
+    createdAt: timestamp('created_at').defaultNow(),
+    lastLogin: timestamp('last_login'),
+    allianceId: integer('alliance_id') // Foreign key added later in SQL, defining here
+});
+
+export const sessions = pgTable('sessions', {
+    id: text('id').primaryKey(),
+    userId: integer('user_id').references(() => users.id),
+    expiresAt: timestamp('expires_at').notNull()
+});
+
+export const passwordResets = pgTable('password_resets', {
+    id: serial('id').primaryKey(),
+    userId: integer('user_id').references(() => users.id),
+    token: varchar('token', { length: 255 }).unique().notNull(),
+    expiresAt: timestamp('expires_at').notNull(),
+    createdAt: timestamp('created_at').defaultNow()
+});
+
+// 2. Universe & Map
+export const galaxies = pgTable('galaxies', {
+    id: serial('id').primaryKey(),
+    name: varchar('name', { length: 50 })
+});
+
+export const solarSystems = pgTable('solar_systems', {
+    id: serial('id').primaryKey(),
+    galaxyId: integer('galaxy_id').references(() => galaxies.id),
+    systemNumber: integer('system_number').notNull()
+}, (t) => ({
+    unq: unique().on(t.galaxyId, t.systemNumber)
+}));
+
+export const planets = pgTable('planets', {
+    id: serial('id').primaryKey(),
+    userId: integer('user_id').references(() => users.id),
+    galaxyId: integer('galaxy_id').notNull(),
+    systemId: integer('system_id').notNull(),
+    planetNumber: integer('planet_number').notNull(),
+    name: varchar('name', { length: 50 }).default('Colony'),
+    planetType: varchar('planet_type', { length: 20 }).notNull(),
+    fieldsUsed: integer('fields_used').default(0),
+    fieldsMax: integer('fields_max').default(163),
+    temperatureMin: integer('temperature_min'),
+    temperatureMax: integer('temperature_max'),
+    imageVariant: integer('image_variant'),
+    createdAt: timestamp('created_at').defaultNow()
+}, (t) => ({
+    unq: unique().on(t.galaxyId, t.systemId, t.planetNumber)
+}));
+
+// 3. Resources & Buildings
+export const planetResources = pgTable('planet_resources', {
+    planetId: integer('planet_id').primaryKey().references(() => planets.id),
+    metal: doublePrecision('metal').default(500),
+    crystal: doublePrecision('crystal').default(500),
+    gas: doublePrecision('gas').default(0),
+    energy: integer('energy').default(0),
+    lastUpdate: timestamp('last_update').defaultNow()
+});
+
+export const planetBuildings = pgTable('planet_buildings', {
+    planetId: integer('planet_id').primaryKey().references(() => planets.id),
+    metalMine: integer('metal_mine').default(0),
+    crystalMine: integer('crystal_mine').default(0),
+    gasExtractor: integer('gas_extractor').default(0),
+    solarPlant: integer('solar_plant').default(0),
+    shipyard: integer('shipyard').default(0),
+    researchLab: integer('research_lab').default(0),
+    roboticsFactory: integer('robotics_factory').default(0),
+    naniteFactory: integer('nanite_factory').default(0),
+    metalStorage: integer('metal_storage').default(0),
+    crystalStorage: integer('crystal_storage').default(0),
+    gasStorage: integer('gas_storage').default(0)
+});
+
+// 4. Research & Tech
+export const userResearch = pgTable('user_research', {
+    userId: integer('user_id').primaryKey().references(() => users.id),
+    energyTech: integer('energy_tech').default(0),
+    laserTech: integer('laser_tech').default(0),
+    ionTech: integer('ion_tech').default(0),
+    hyperspaceTech: integer('hyperspace_tech').default(0),
+    plasmaTech: integer('plasma_tech').default(0),
+    combustionDrive: integer('combustion_drive').default(0),
+    impulseDrive: integer('impulse_drive').default(0),
+    hyperspaceDrive: integer('hyperspace_drive').default(0),
+    espionageTech: integer('espionage_tech').default(0),
+    computerTech: integer('computer_tech').default(0),
+    astrophysics: integer('astrophysics').default(0),
+    weaponsTech: integer('weapons_tech').default(0),
+    shieldingTech: integer('shielding_tech').default(0),
+    armourTech: integer('armour_tech').default(0)
+});
+
+// 5. Fleets & Ships
+export const fleets = pgTable('fleets', {
+    id: serial('id').primaryKey(),
+    userId: integer('user_id').references(() => users.id),
+    originPlanetId: integer('origin_planet_id').references(() => planets.id),
+    targetGalaxy: integer('target_galaxy'),
+    targetSystem: integer('target_system'),
+    targetPlanet: integer('target_planet'),
+    mission: varchar('mission', { length: 20 }),
+    ships: jsonb('ships'),
+    resources: jsonb('resources'),
+    departureTime: timestamp('departure_time').defaultNow(),
+    arrivalTime: timestamp('arrival_time'),
+    returnTime: timestamp('return_time'),
+    status: varchar('status', { length: 20 }).default('active')
+});
+
+export const planetShips = pgTable('planet_ships', {
+    planetId: integer('planet_id').primaryKey().references(() => planets.id),
+    lightFighter: integer('light_fighter').default(0),
+    heavyFighter: integer('heavy_fighter').default(0),
+    cruiser: integer('cruiser').default(0),
+    battleship: integer('battleship').default(0),
+    battleCruiser: integer('battle_cruiser').default(0),
+    bomber: integer('bomber').default(0),
+    destroyer: integer('destroyer').default(0),
+    deathStar: integer('death_star').default(0),
+    smallCargo: integer('small_cargo').default(0),
+    largeCargo: integer('large_cargo').default(0),
+    colonyShip: integer('colony_ship').default(0),
+    espionageProbe: integer('espionage_probe').default(0),
+    recycler: integer('recycler').default(0)
+});
+
+export const fleetTemplates = pgTable('fleet_templates', {
+    id: serial('id').primaryKey(),
+    userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 50 }).notNull(),
+    ships: jsonb('ships').notNull(),
+    createdAt: timestamp('created_at').defaultNow()
+});
+
+// 6. Defenses
+export const planetDefenses = pgTable('planet_defenses', {
+    planetId: integer('planet_id').primaryKey().references(() => planets.id),
+    rocketLauncher: integer('rocket_launcher').default(0),
+    lightLaser: integer('light_laser').default(0),
+    heavyLaser: integer('heavy_laser').default(0),
+    gaussCannon: integer('gauss_cannon').default(0),
+    ionCannon: integer('ion_cannon').default(0),
+    plasmaTurret: integer('plasma_turret').default(0),
+    smallShieldDome: integer('small_shield_dome').default(0),
+    largeShieldDome: integer('large_shield_dome').default(0)
+});
+
+// 7. Communication & Social
+export const alliances = pgTable('alliances', {
+    id: serial('id').primaryKey(),
+    name: varchar('name', { length: 255 }).unique().notNull(),
+    tag: varchar('tag', { length: 10 }).unique().notNull(),
+    ownerId: integer('owner_id').references(() => users.id),
+    createdAt: timestamp('created_at').defaultNow()
+});
+
+export const messages = pgTable('messages', {
+    id: serial('id').primaryKey(),
+    userId: integer('user_id').references(() => users.id),
+    type: varchar('type', { length: 20 }),
+    title: varchar('title', { length: 100 }),
+    content: text('content'),
+    isRead: boolean('is_read').default(false),
+    createdAt: timestamp('created_at').defaultNow()
+});
+
+export const chatMessages = pgTable('chat_messages', {
+    id: serial('id').primaryKey(),
+    userId: integer('user_id').references(() => users.id),
+    channel: varchar('channel', { length: 20 }).default('global'),
+    content: text('content').notNull(),
+    createdAt: timestamp('created_at').defaultNow()
+});
+
+// 8. Premium Features
+export const userCommanders = pgTable('user_commanders', {
+    userId: integer('user_id').references(() => users.id),
+    commanderId: varchar('commander_id', { length: 50 }).notNull(),
+    expiresAt: timestamp('expires_at').notNull()
+}, (t) => ({
+    pk: primaryKey({ columns: [t.userId, t.commanderId] })
+}));
+
+export const userBoosters = pgTable('user_boosters', {
+    id: serial('id').primaryKey(),
+    userId: integer('user_id').references(() => users.id),
+    boosterId: varchar('booster_id', { length: 50 }).notNull(),
+    expiresAt: timestamp('expires_at').notNull()
+});

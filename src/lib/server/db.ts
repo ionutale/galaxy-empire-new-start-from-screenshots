@@ -1,4 +1,6 @@
 import pg from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import * as schema from './db/schema';
 import { env } from '$env/dynamic/private';
 
 const { Pool } = pg;
@@ -11,5 +13,7 @@ export const pool = new Pool({
     database: env.DB_NAME,
     options: `-c timezone=${Intl.DateTimeFormat().resolvedOptions().timeZone}`
 });
+
+export const db = drizzle(pool, { schema });
 
 export const query = (text: string, params?: any[]) => pool.query(text, params);
