@@ -40,37 +40,43 @@ export async function processAutoExplore() {
                         or(eq(fleets.status, 'active'), eq(fleets.status, 'returning'))
                     ));
                 
-                const activeFleets = Number(activeFleetsRes[0]?.count || 0);
+                let currentActiveFleets = Number(activeFleetsRes[0]?.count || 0);
 
-                if (activeFleets >= maxFleets) {
-                    continue; // No slots available
+                // 3. Dispatch Fleets until slots full or ships run out
+                while (currentActiveFleets < maxFleets) {
+                    // Target: Random coordinates? Or specific expedition slot (16)?
+                    // Usually expeditions go to slot 16 of the current system.
+                    const targetGalaxy = explorer.galaxy;
+                    const targetSystem = explorer.system;
+                    const targetPlanet = 16;
+
+                    const ships = explorer.templateShips as Record<string, number>;
+
+                    try {
+                        await dispatchFleet(
+                            explorer.userId,
+                            explorer.originPlanetId!,
+                            targetGalaxy,
+                            targetSystem,
+                            targetPlanet,
+                            'expedition',
+                            ships,
+                            { metal: 0, crystal: 0, gas: 0 } // No resources for now
+                        );
+
+                        console.log(`Auto-dispatched expedition for user ${explorer.userId}`);
+                        currentActiveFleets++;
+                    } catch (dispatchErr: any) {
+                        if (dispatchErr.message.startsWith('Not enough')) {
+                            console.log(`Auto-explore stopped for user ${explorer.userId}: Not enough ships`);
+                            break; // Stop trying for this user
+                        }
+                        throw dispatchErr; // Re-throw unexpected errors
+                    }
                 }
-
-                // 3. Dispatch Fleet
-                // Target: Random coordinates? Or specific expedition slot (16)?
-                // Usually expeditions go to slot 16 of the current system.
-                const targetGalaxy = explorer.galaxy;
-                const targetSystem = explorer.system;
-                const targetPlanet = 16;
-
-                const ships = explorer.templateShips as Record<string, number>;
-
-                await dispatchFleet(
-                    explorer.userId,
-                    explorer.originPlanetId!,
-                    targetGalaxy,
-                    targetSystem,
-                    targetPlanet,
-                    'expedition',
-                    ships,
-                    { metal: 0, crystal: 0, gas: 0 } // No resources for now
-                );
-
-                console.log(`Auto-dispatched expedition for user ${explorer.userId}`);
 
             } catch (err) {
                 // Log error but continue with other users
-                // Common errors: Not enough ships, etc.
                 console.log(`Failed to auto-dispatch for user ${explorer.userId}: ${(err as Error).message}`);
             }
         }
