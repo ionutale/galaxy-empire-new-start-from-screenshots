@@ -2,12 +2,12 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN npm install -g pnpm@9 && pnpm install --frozen-lockfile --child-concurrency 1 --network-concurrency 1
 
 COPY . .
 
-RUN pnpm build
+RUN pnpm run build
 # Build the migration script
 RUN npx esbuild scripts/migrate.ts --bundle --platform=node --external:pg --external:drizzle-orm --outfile=migrate.js
 
