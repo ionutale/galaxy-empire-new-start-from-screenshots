@@ -106,15 +106,9 @@ CREATE TABLE "planet_ships" (
 "heavy_fighter" integer DEFAULT 0,
 "cruiser" integer DEFAULT 0,
 "battleship" integer DEFAULT 0,
-"battle_cruiser" integer DEFAULT 0,
-"bomber" integer DEFAULT 0,
-"destroyer" integer DEFAULT 0,
-"death_star" integer DEFAULT 0,
 "small_cargo" integer DEFAULT 0,
 "large_cargo" integer DEFAULT 0,
-"colony_ship" integer DEFAULT 0,
-"espionage_probe" integer DEFAULT 0,
-"recycler" integer DEFAULT 0
+"colony_ship" integer DEFAULT 0
 );
 --> statement-breakpoint
 CREATE TABLE "planets" (

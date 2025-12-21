@@ -1,6 +1,6 @@
 {
-  "id": "dd6c3ba9-b4e9-4adc-b50a-4e566c5570e0",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "fdb7528c-b07a-4ad4-a82f-a4a35919d3d2",
+  "prevId": "dd6c3ba9-b4e9-4adc-b50a-4e566c5570e0",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -781,6 +781,34 @@
           "notNull": false,
           "default": 0
         },
+        "battle_cruiser": {
+          "name": "battle_cruiser",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "bomber": {
+          "name": "bomber",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "destroyer": {
+          "name": "destroyer",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "death_star": {
+          "name": "death_star",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
         "small_cargo": {
           "name": "small_cargo",
           "type": "integer",
@@ -797,6 +825,20 @@
         },
         "colony_ship": {
           "name": "colony_ship",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "espionage_probe": {
+          "name": "espionage_probe",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "recycler": {
+          "name": "recycler",
           "type": "integer",
           "primaryKey": false,
           "notNull": false,
