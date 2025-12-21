@@ -26,7 +26,7 @@ export async function processAutoExplore() {
         .innerJoin(planets, eq(autoExploreSettings.originPlanetId, planets.id))
         .where(eq(autoExploreSettings.enabled, true));
 
-        console.log(`Found ${activeExplorers.length} active auto-explorers`);
+        console.log(`[AutoExplore] Found ${activeExplorers.length} active auto-explorers`);
 
         for (const explorer of activeExplorers) {
             try {
@@ -41,6 +41,13 @@ export async function processAutoExplore() {
                     ));
                 
                 let currentActiveFleets = Number(activeFleetsRes[0]?.count || 0);
+
+                console.log(`[AutoExplore] User ${explorer.userId}: Active Fleets: ${currentActiveFleets}, Max Fleets: ${maxFleets}`);
+
+                if (currentActiveFleets >= maxFleets) {
+                    console.log(`[AutoExplore] User ${explorer.userId}: No slots available.`);
+                    continue;
+                }
 
                 // 3. Dispatch Fleets until slots full or ships run out
                 while (currentActiveFleets < maxFleets) {
@@ -64,20 +71,21 @@ export async function processAutoExplore() {
                             { metal: 0, crystal: 0, gas: 0 } // No resources for now
                         );
 
-                        console.log(`Auto-dispatched expedition for user ${explorer.userId}`);
+                        console.log(`[AutoExplore] Auto-dispatched expedition for user ${explorer.userId}`);
                         currentActiveFleets++;
                     } catch (dispatchErr: any) {
                         if (dispatchErr.message.startsWith('Not enough')) {
-                            console.log(`Auto-explore stopped for user ${explorer.userId}: Not enough ships`);
+                            console.log(`[AutoExplore] Auto-explore stopped for user ${explorer.userId}: Not enough ships (${dispatchErr.message})`);
                             break; // Stop trying for this user
                         }
+                        console.error(`[AutoExplore] Dispatch error for user ${explorer.userId}:`, dispatchErr);
                         throw dispatchErr; // Re-throw unexpected errors
                     }
                 }
 
             } catch (err) {
                 // Log error but continue with other users
-                console.log(`Failed to auto-dispatch for user ${explorer.userId}: ${(err as Error).message}`);
+                console.log(`[AutoExplore] Failed to auto-dispatch for user ${explorer.userId}: ${(err as Error).message}`);
             }
         }
 
