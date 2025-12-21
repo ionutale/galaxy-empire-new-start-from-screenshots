@@ -62,7 +62,7 @@ export async function updatePlanetResources(planetId: number) {
             Math.ceil(10 * data.crystalMine! * Math.pow(1.1, data.crystalMine!)) +
             Math.ceil(20 * data.gasExtractor! * Math.pow(1.1, data.gasExtractor!));
             
-        const energy = energyProd - energyCons;
+        const energy = Math.floor(energyProd - energyCons);
         
         // Production factor based on energy (simplified: if negative, 0% or reduced? Let's say 0 for now or linear drop)
         let productionFactor = 1.0;
