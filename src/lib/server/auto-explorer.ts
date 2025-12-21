@@ -30,27 +30,10 @@ export async function processAutoExplore() {
 
         for (const explorer of activeExplorers) {
             try {
-                // 2. Check fleet slots
-                const maxFleets = 1 + (explorer.computerTech || 0);
-                
-                const activeFleetsRes = await db.select({ count: sql<number>`count(*)` })
-                    .from(fleets)
-                    .where(and(
-                        eq(fleets.userId, explorer.userId),
-                        or(eq(fleets.status, 'active'), eq(fleets.status, 'returning'))
-                    ));
-                
-                let currentActiveFleets = Number(activeFleetsRes[0]?.count || 0);
+                // 2. Dispatch Fleets until ships run out (Ignoring fleet slots for Nebula Explorer)
+                console.log(`[AutoExplore] Processing user ${explorer.userId}...`);
 
-                console.log(`[AutoExplore] User ${explorer.userId}: Active Fleets: ${currentActiveFleets}, Max Fleets: ${maxFleets}`);
-
-                if (currentActiveFleets >= maxFleets) {
-                    console.log(`[AutoExplore] User ${explorer.userId}: No slots available.`);
-                    continue;
-                }
-
-                // 3. Dispatch Fleets until slots full or ships run out
-                while (currentActiveFleets < maxFleets) {
+                while (true) {
                     // Target: Random coordinates? Or specific expedition slot (16)?
                     // Usually expeditions go to slot 16 of the current system.
                     const targetGalaxy = explorer.galaxy;
@@ -72,7 +55,6 @@ export async function processAutoExplore() {
                         );
 
                         console.log(`[AutoExplore] Auto-dispatched expedition for user ${explorer.userId}`);
-                        currentActiveFleets++;
                     } catch (dispatchErr: any) {
                         if (dispatchErr.message.startsWith('Not enough')) {
                             console.log(`[AutoExplore] Auto-explore stopped for user ${explorer.userId}: Not enough ships (${dispatchErr.message})`);
