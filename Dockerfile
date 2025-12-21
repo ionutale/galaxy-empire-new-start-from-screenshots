@@ -3,7 +3,7 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml ./
-RUN npm install -g pnpm && pnpm install --frozen-lockfile --jobs 1
+RUN npm install -g pnpm@9 && pnpm install --frozen-lockfile --child-concurrency 1 --network-concurrency 1
 
 COPY . .
 
