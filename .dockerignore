@@ -1,0 +1,8 @@
+node_modules
+.svelte-kit
+.git
+.env
+.DS_Store
+build
+dist
+coverage

@@ -8,8 +8,12 @@ RUN npm install -g pnpm@9 && pnpm install --frozen-lockfile --child-concurrency 
 COPY . .
 
 RUN pnpm run build
+
+
 # Build the migration script
-RUN npx esbuild scripts/migrate.ts --bundle --platform=node --external:pg --external:drizzle-orm --outfile=migrate.js
+RUN pnpm exec esbuild scripts/migrate.ts --bundle --platform=node --external:pg --external:drizzle-orm --outfile=migrate.cjs
+
+
 
 RUN CI=true pnpm prune --prod
 
@@ -20,9 +24,9 @@ WORKDIR /app
 COPY --from=builder /app/build ./build
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
-COPY --from=builder /app/migrate.js ./migrate.js
+COPY --from=builder /app/migrate.cjs ./migrate.cjs
 COPY --from=builder /app/drizzle ./drizzle
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "node migrate.js && node build"]
+CMD ["sh", "-c", "node migrate.cjs && node build"]
