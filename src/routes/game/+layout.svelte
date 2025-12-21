@@ -66,7 +66,6 @@
         if (chatInterval) clearInterval(chatInterval);
         if (gameTickInterval) clearInterval(gameTickInterval);
     });
-    });
 </script>
 
 <div class="flex flex-col h-screen h-[100dvh] bg-gray-900 text-white overflow-hidden font-sans">
