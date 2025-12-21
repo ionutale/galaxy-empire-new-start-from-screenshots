@@ -32,6 +32,10 @@
     let targetPlanet = $page.url.searchParams.get('planet') || '';
     let targetMission = $page.url.searchParams.get('mission') || 'attack';
 
+    function toCamel(s: string) {
+        return s.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+    }
+
     function loadTemplate(template: any) {
         // Reset all counts first
         for (const key in shipCounts) {
@@ -103,16 +107,17 @@
             <!-- Ship Selection -->
             <div class="space-y-2 mb-6">
                 {#each shipTypes as ship}
+                    {@const shipKey = toCamel(ship.id)}
                     <div class="flex items-center justify-between bg-gray-900/50 p-2 rounded">
                         <span class="text-gray-300">{ship.name}</span>
                         <div class="flex items-center space-x-2">
-                            <span class="text-xs text-gray-500">Available: {data.ships ? data.ships[ship.id] : 0}</span>
+                            <span class="text-xs text-gray-500">Available: {data.ships ? data.ships[shipKey] : 0}</span>
                             <input 
                                 type="number" 
                                 name={ship.id} 
                                 bind:value={shipCounts[ship.id]}
                                 min="0" 
-                                max={data.ships ? data.ships[ship.id] : 0} 
+                                max={data.ships ? data.ships[shipKey] : 0} 
                                 class="w-16 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-right text-white" 
                                 placeholder="0"
                             >
