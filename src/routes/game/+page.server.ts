@@ -27,7 +27,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 
 export const actions = {
     upgrade: async ({ request, locals }) => {
-        if (!locals.user) return fail(401);
+        if (!locals.user || !locals.user.id) return fail(401);
 
         const data = await request.formData();
         const buildingType = data.get('type') as string;

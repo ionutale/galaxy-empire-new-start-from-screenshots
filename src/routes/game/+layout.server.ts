@@ -1,13 +1,13 @@
 import { redirect } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
-import { planets, users, messages } from '$lib/server/db/schema';
+import { planets, users, messages, galaxies, solarSystems, planetResources, planetBuildings, planetDefenses, planetShips, userResearch } from '$lib/server/db/schema';
 import { eq, and, asc } from 'drizzle-orm';
 import { updatePlanetResources } from '$lib/server/game';
 import { processFleets } from '$lib/server/fleet-processor';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ locals, depends, url, cookies }) => {
-    if (!locals.user) {
+    if (!locals.user || !locals.user.id) {
         throw redirect(303, '/login');
     }
 
@@ -42,8 +42,83 @@ export const load: LayoutServerLoad = async ({ locals, depends, url, cookies }) 
     const userPlanets = planetsRes;
     
     if (userPlanets.length === 0) {
-        // Should not happen if registration works correctly
-        return { user: locals.user, planets: [], currentPlanet: null, resources: null };
+        // Self-healing: Create a home planet if none exists
+        await db.transaction(async (tx) => {
+             // Initialize User Research if missing
+             await tx.insert(userResearch).values({ userId: locals.user.id }).onConflictDoNothing();
+
+             // Find a free planet slot for Home Planet
+            let galaxyId = 1;
+            let systemId = 1;
+            let planetNum = 1;
+            
+            // Try to find a random empty slot
+            for (let i = 0; i < 100; i++) {
+                const g = Math.floor(Math.random() * 3) + 1;
+                const s = Math.floor(Math.random() * 499) + 1;
+                const p = Math.floor(Math.random() * 15) + 1;
+                
+                const check = await tx.select({ id: planets.id })
+                    .from(planets)
+                    .where(and(
+                        eq(planets.galaxyId, g),
+                        eq(planets.systemId, s),
+                        eq(planets.planetNumber, p)
+                    ));
+                
+                if (check.length === 0) {
+                    galaxyId = g;
+                    systemId = s;
+                    planetNum = p;
+                    break;
+                }
+            }
+
+            // Ensure galaxy exists
+            await tx.insert(galaxies).values({ id: galaxyId, name: `Galaxy ${galaxyId}` }).onConflictDoNothing();
+            
+            // Ensure system exists
+            await tx.insert(solarSystems).values({ galaxyId, systemNumber: systemId }).onConflictDoNothing();
+
+            // Create Home Planet
+            const [newPlanet] = await tx.insert(planets).values({
+                userId: locals.user.id,
+                galaxyId,
+                systemId,
+                planetNumber: planetNum,
+                name: 'Home Planet',
+                planetType: 'terrestrial',
+                fieldsMax: 163,
+                imageVariant: 1
+            }).returning({
+                id: planets.id,
+                name: planets.name,
+                galaxyId: planets.galaxyId,
+                systemId: planets.systemId,
+                planetNumber: planets.planetNumber,
+                imageVariant: planets.imageVariant
+            });
+
+            // Initialize Planet Resources
+            await tx.insert(planetResources).values({
+                planetId: newPlanet.id,
+                metal: 30000,
+                crystal: 21000,
+                gas: 7500,
+                energy: 0
+            });
+
+            // Initialize Planet Buildings
+            await tx.insert(planetBuildings).values({ planetId: newPlanet.id });
+            
+            // Initialize Planet Defenses
+            await tx.insert(planetDefenses).values({ planetId: newPlanet.id });
+            
+            // Initialize Planet Ships
+            await tx.insert(planetShips).values({ planetId: newPlanet.id });
+            
+            userPlanets.push(newPlanet);
+        });
     }
 
     // Determine current planet

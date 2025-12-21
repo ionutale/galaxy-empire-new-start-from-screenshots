@@ -26,6 +26,12 @@
 </script>
 
 <div class="p-4 pb-20">
+    {#if !data.currentPlanet}
+        <div class="flex flex-col items-center justify-center h-full text-center p-8">
+            <h2 class="text-2xl font-bold text-red-400 mb-4">No Planet Found</h2>
+            <p class="text-gray-400">You don't seem to have any planets. Please contact support or try re-registering.</p>
+        </div>
+    {:else}
     <div class="mb-6 text-center">
         <h2 class="text-2xl font-bold text-blue-300">{data.currentPlanet.name}</h2>
         <p class="text-gray-400 text-sm">[{data.currentPlanet.galaxyId}:{data.currentPlanet.systemId}:{data.currentPlanet.planetNumber}]</p>
@@ -35,7 +41,7 @@
     <h3 class="text-xl font-bold text-gray-300 mb-4 border-b border-gray-700 pb-2">Resources</h3>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
         {#each resourceBuildings as building}
-            {@const level = data.buildings[toCamel(building.id)]}
+            {@const level = data.buildings?.[toCamel(building.id)] ?? 0}
             {@const cost = getBuildingCost(building.id, level)}
             {@const production = getProduction(building.id, level)}
             
@@ -202,4 +208,5 @@
             </div>
         {/each}
     </div>
+    {/if}
 </div>

@@ -23,12 +23,14 @@
             </div>
             
             <div>
-                <div class="flex justify-between items-center">
+                
                     <label for="password" class="block text-sm font-medium text-gray-300">Password</label>
-                    <a href="/forgot-password" class="text-xs text-blue-400 hover:text-blue-300">Forgot Password?</a>
-                </div>
+                   
                 <input type="password" id="password" name="password" required 
                     class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <div class="flex justify-between items-center"> 
+                        <a href="/forgot-password" class="text-xs text-blue-400 hover:text-blue-300">Forgot Password?</a>
+                    </div>
             </div>
 
             {#if form?.missing}

@@ -8,9 +8,9 @@ export const handle: Handle = async ({ event, resolve }) => {
         const session = await getSession(sessionId);
         if (session) {
             event.locals.user = {
-                id: session.user_id,
+                id: session.userId,
                 username: session.username,
-                darkMatter: session.dark_matter
+                darkMatter: session.darkMatter
             };
         }
     }
