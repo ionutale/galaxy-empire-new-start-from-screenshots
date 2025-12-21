@@ -201,3 +201,11 @@ export const userBoosters = pgTable('user_boosters', {
     boosterId: varchar('booster_id', { length: 50 }).notNull(),
     expiresAt: timestamp('expires_at').notNull()
 });
+
+export const autoExploreSettings = pgTable('auto_explore_settings', {
+    userId: integer('user_id').primaryKey().references(() => users.id),
+    enabled: boolean('enabled').default(false),
+    templateId: integer('template_id').references(() => fleetTemplates.id),
+    originPlanetId: integer('origin_planet_id').references(() => planets.id),
+    lastRun: timestamp('last_run').defaultNow()
+});

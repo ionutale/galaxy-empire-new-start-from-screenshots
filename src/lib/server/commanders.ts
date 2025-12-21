@@ -43,6 +43,14 @@ export const COMMANDERS: Record<string, Commander> = {
         bonusType: 'research_speed',
         bonusValue: 10,
         image: 'technocrat.png'
+    },
+    nebula_explorer: {
+        id: 'nebula_explorer',
+        name: 'Nebula Explorer',
+        description: 'Automatically sends expeditions using a selected fleet template.',
+        bonusType: 'fleet_speed', // Reusing type or add new one? The type is just for bonus calculation usually.
+        bonusValue: 0,
+        image: 'explorer.png'
     }
 };
 

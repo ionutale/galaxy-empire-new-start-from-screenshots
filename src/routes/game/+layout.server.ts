@@ -4,6 +4,7 @@ import { planets, users, messages, galaxies, solarSystems, planetResources, plan
 import { eq, and, asc } from 'drizzle-orm';
 import { updatePlanetResources } from '$lib/server/game';
 import { processFleets } from '$lib/server/fleet-processor';
+import { processAutoExplore } from '$lib/server/auto-explorer';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ locals, depends, url, cookies }) => {
@@ -16,6 +17,7 @@ export const load: LayoutServerLoad = async ({ locals, depends, url, cookies }) 
     // Trigger fleet processing on page load (Lazy approach for demo)
     // In production, use a separate worker/cron
     await processFleets();
+    await processAutoExplore();
 
     // Fetch user's planets
     const planetsRes = await db.select({

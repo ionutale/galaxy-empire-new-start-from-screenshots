@@ -37,6 +37,8 @@ export const load: PageServerLoad = async ({ parent }) => {
 };
 
 
+import { dispatchFleet } from '$lib/server/fleet-service';
+
 export const actions = {
     createTemplate: async ({ request, locals }) => {
         if (!locals.user) return fail(401);
@@ -88,120 +90,34 @@ export const actions = {
         const metal = Number(data.get('metal') || 0);
         const crystal = Number(data.get('crystal') || 0);
         const gas = Number(data.get('gas') || 0);
-        const totalResources = metal + crystal + gas;
 
         // Parse ships
         const ships: Record<string, number> = {};
-        // Using keys from SHIPS to be more comprehensive than the original list
         const shipTypes = Object.keys(SHIPS); 
-        
-        let totalShips = 0;
-        let totalCapacity = 0;
         
         for (const type of shipTypes) {
             const count = Number(data.get(type) || 0);
             if (count > 0) {
                 ships[type] = count;
-                totalShips += count;
-                totalCapacity += (SHIPS[type]?.capacity || 0) * count;
             }
         }
 
-        if (totalShips === 0) {
-            return fail(400, { error: 'No ships selected' });
-        }
-
-        if (totalResources > totalCapacity) {
-            return fail(400, { error: `Not enough cargo capacity. Capacity: ${totalCapacity}, Resources: ${totalResources}` });
-        }
-
         try {
-            await db.transaction(async (tx) => {
-                // Check if user has enough ships
-                const shipCheck = await tx.select()
-                    .from(planetShips)
-                    .where(eq(planetShips.planetId, planetId))
-                    .for('update');
-                
-                if (shipCheck.length === 0) throw new Error('Planet ships not found');
-                const availableShips = shipCheck[0];
-
-                for (const [type, count] of Object.entries(ships)) {
-                    // Convert snake_case type to camelCase key for Drizzle object
-                    const shipKey = type.replace(/_([a-z])/g, (g) => g[1].toUpperCase()) as keyof typeof planetShips;
-                    
-                    // Check if key exists on availableShips (it should)
-                    const available = availableShips[shipKey];
-                    
-                    if (typeof available !== 'number' || available < count) {
-                        throw new Error(`Not enough ${type}`);
-                    }
-                }
-
-                // Check if user has enough resources
-                const resourceCheck = await tx.select({
-                    metal: planetResources.metal,
-                    crystal: planetResources.crystal,
-                    gas: planetResources.gas
-                })
-                .from(planetResources)
-                .where(eq(planetResources.planetId, planetId))
-                .for('update');
-
-                if (resourceCheck.length === 0) throw new Error('Planet resources not found');
-                const availableResources = resourceCheck[0];
-
-                if ((availableResources.metal || 0) < metal) throw new Error('Not enough Metal');
-                if ((availableResources.crystal || 0) < crystal) throw new Error('Not enough Crystal');
-                if ((availableResources.gas || 0) < gas) throw new Error('Not enough Gas');
-
-                // Deduct ships
-                for (const [type, count] of Object.entries(ships)) {
-                    const shipKey = type.replace(/_([a-z])/g, (g) => g[1].toUpperCase()) as keyof typeof planetShips;
-                    const shipColumn = planetShips[shipKey];
-                    
-                    await tx.update(planetShips)
-                        .set({ [shipKey]: sql`${shipColumn} - ${count}` })
-                        .where(eq(planetShips.planetId, planetId));
-                }
-
-                // Deduct resources
-                await tx.update(planetResources)
-                    .set({
-                        metal: sql`${planetResources.metal} - ${metal}`,
-                        crystal: sql`${planetResources.crystal} - ${crystal}`,
-                        gas: sql`${planetResources.gas} - ${gas}`
-                    })
-                    .where(eq(planetResources.planetId, planetId));
-
-                // Calculate arrival time
-                let durationSeconds = 30; // Default 30 seconds for demo
-                
-                if (mission === 'expedition') {
-                    durationSeconds = 1800; // 30 minutes for expeditions
-                }
-
-                const arrivalTime = new Date(Date.now() + durationSeconds * 1000);
-
-                // Create fleet
-                await tx.insert(fleets).values({
-                    userId: locals.user.id,
-                    originPlanetId: planetId,
-                    targetGalaxy: galaxy,
-                    targetSystem: system,
-                    targetPlanet: planet,
-                    mission: mission,
-                    ships: ships, // Drizzle handles JSON stringification
-                    resources: { metal, crystal, gas },
-                    arrivalTime: arrivalTime,
-                    status: 'active'
-                });
-            });
+            await dispatchFleet(
+                locals.user.id,
+                planetId,
+                galaxy,
+                system,
+                planet,
+                mission,
+                ships,
+                { metal, crystal, gas }
+            );
 
             return { success: true };
 
         } catch (e: any) {
-            if (e.message.startsWith('Not enough')) {
+            if (e.message.startsWith('Not enough') || e.message.startsWith('No ships')) {
                 return fail(400, { error: e.message });
             }
             console.error(e);

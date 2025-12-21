@@ -50,6 +50,38 @@
                         </div>
                     {/if}
 
+                    {#if commander.id === 'nebula_explorer' && activeCommanders[commander.id]}
+                        <div class="mt-4 pt-4 border-t border-gray-700">
+                            <h4 class="text-sm font-bold text-purple-400 mb-2">Auto-Explore Settings</h4>
+                            <form method="POST" action="?/saveSettings" use:enhance>
+                                <div class="space-y-2">
+                                    <label class="flex items-center space-x-2 text-sm text-gray-300">
+                                        <input type="checkbox" name="enabled" checked={data.autoExploreSettings?.enabled} class="rounded bg-gray-800 border-gray-600 text-purple-500 focus:ring-purple-500" />
+                                        <span>Enable Auto-Explore</span>
+                                    </label>
+
+                                    <select name="templateId" class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-white">
+                                        <option value="">Select Template</option>
+                                        {#each data.templates as template}
+                                            <option value={template.id} selected={data.autoExploreSettings?.templateId === template.id}>{template.name}</option>
+                                        {/each}
+                                    </select>
+
+                                    <select name="originPlanetId" class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-white">
+                                        <option value="">Select Origin Planet</option>
+                                        {#each data.userPlanets as planet}
+                                            <option value={planet.id} selected={data.autoExploreSettings?.originPlanetId === planet.id}>{planet.name} [{planet.galaxyId}:{planet.systemId}:{planet.planetNumber}]</option>
+                                        {/each}
+                                    </select>
+
+                                    <button type="submit" class="w-full py-1 px-2 bg-blue-600 hover:bg-blue-500 text-white text-xs rounded transition-colors">
+                                        Save Settings
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    {/if}
+
                     <form method="POST" action="?/purchase" use:enhance>
                         <input type="hidden" name="commanderId" value={commander.id} />
                         

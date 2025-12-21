@@ -15,6 +15,13 @@
       "when": 1766311510974,
       "tag": "0001_cuddly_nomad",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1766320360478,
+      "tag": "0002_opposite_daredevil",
+      "breakpoints": true
     }
   ]
 }
