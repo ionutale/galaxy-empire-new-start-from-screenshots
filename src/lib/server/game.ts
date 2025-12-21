@@ -83,7 +83,7 @@ export async function updatePlanetResources(planetId: number) {
                 crystal: newCrystal,
                 gas: newGas,
                 energy: energy,
-                lastUpdate: new Date()
+                lastUpdate: sql`NOW()`
             })
             .where(eq(planetResources.planetId, planetId));
         
