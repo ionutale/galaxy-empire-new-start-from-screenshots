@@ -13,6 +13,7 @@ export const load: LayoutServerLoad = async ({ locals, depends, url, cookies }) 
     }
 
     depends('app:unread-messages');
+    depends('app:game-data');
 
     // Trigger fleet processing on page load (Lazy approach for demo)
     // In production, use a separate worker/cron

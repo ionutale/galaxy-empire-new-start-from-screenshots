@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount, onDestroy } from 'svelte';
-    import { goto } from '$app/navigation';
+    import { goto, invalidate } from '$app/navigation';
     import { page } from '$app/stores';
 
     let { children, data } = $props();
@@ -10,6 +10,7 @@
     let chatMessages = $state<any[]>([]);
     let newMessage = $state('');
     let chatInterval: any;
+    let gameTickInterval: any;
 
     async function fetchChat() {
         try {
@@ -19,6 +20,18 @@
             }
         } catch (e) {
             console.error('Failed to fetch chat', e);
+        }
+    }
+
+    async function runGameTick() {
+        try {
+            const res = await fetch('/api/game-tick');
+            if (res.ok) {
+                // Invalidate game data to refresh UI (resources, fleets, etc.)
+                invalidate('app:game-data');
+            }
+        } catch (e) {
+            console.error('Game tick failed', e);
         }
     }
 
@@ -44,10 +57,15 @@
     onMount(() => {
         fetchChat();
         chatInterval = setInterval(fetchChat, 5000); // Poll every 5s
+        
+        // Poll game tick every 10 seconds to process fleets and auto-explore
+        gameTickInterval = setInterval(runGameTick, 10000);
     });
 
     onDestroy(() => {
         if (chatInterval) clearInterval(chatInterval);
+        if (gameTickInterval) clearInterval(gameTickInterval);
+    });
     });
 </script>
 
