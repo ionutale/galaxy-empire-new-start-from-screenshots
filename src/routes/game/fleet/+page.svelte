@@ -27,10 +27,10 @@
     );
 
     // Get query params for pre-filling
-    let targetGalaxy = $page.url.searchParams.get('galaxy') || data.currentPlanet.galaxy_id;
-    let targetSystem = $page.url.searchParams.get('system') || data.currentPlanet.system_id;
-    let targetPlanet = $page.url.searchParams.get('planet') || '';
-    let targetMission = $page.url.searchParams.get('mission') || 'attack';
+    let targetGalaxy = $state($page.url.searchParams.get('galaxy') || data.currentPlanet.galaxy_id);
+    let targetSystem = $state($page.url.searchParams.get('system') || data.currentPlanet.system_id);
+    let targetPlanet = $state($page.url.searchParams.get('planet') || '');
+    let targetMission = $state($page.url.searchParams.get('mission') || 'attack');
 
     function toCamel(s: string) {
         return s.replace(/_([a-z])/g, (g) => g[1].toUpperCase());

@@ -245,6 +245,62 @@ export const SHIPS: Record<string, Ship> = {
         defense: 100,
         speed: 2500,
         capacity: 7500
+    },
+    large_cargo: {
+        name: 'Large Cargo',
+        cost: { metal: 6000, crystal: 6000, gas: 0 },
+        attack: 5,
+        defense: 50,
+        speed: 7500,
+        capacity: 25000
+    },
+    espionage_probe: {
+        name: 'Espionage Probe',
+        cost: { metal: 0, crystal: 1000, gas: 0 },
+        attack: 0,
+        defense: 0,
+        speed: 100000000,
+        capacity: 5
+    },
+    recycler: {
+        name: 'Recycler',
+        cost: { metal: 10000, crystal: 6000, gas: 2000 },
+        attack: 1,
+        defense: 10,
+        speed: 2000,
+        capacity: 20000
+    },
+    bomber: {
+        name: 'Bomber',
+        cost: { metal: 50000, crystal: 25000, gas: 15000 },
+        attack: 1000,
+        defense: 500,
+        speed: 4000,
+        capacity: 500
+    },
+    destroyer: {
+        name: 'Destroyer',
+        cost: { metal: 60000, crystal: 50000, gas: 15000 },
+        attack: 2000,
+        defense: 2000,
+        speed: 5000,
+        capacity: 2000
+    },
+    death_star: {
+        name: 'Death Star',
+        cost: { metal: 5000000, crystal: 4000000, gas: 1000000 },
+        attack: 200000,
+        defense: 100000,
+        speed: 100,
+        capacity: 1000000
+    },
+    battle_cruiser: {
+        name: 'Battle Cruiser',
+        cost: { metal: 30000, crystal: 40000, gas: 15000 },
+        attack: 700,
+        defense: 400,
+        speed: 10000,
+        capacity: 750
     }
 };
 
