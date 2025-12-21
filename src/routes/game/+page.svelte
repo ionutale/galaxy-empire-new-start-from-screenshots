@@ -23,6 +23,8 @@
     function toCamel(s: string) {
         return s.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
     }
+
+    let isRenaming = $state(false);
 </script>
 
 <div class="p-4 pb-20">
@@ -32,8 +34,32 @@
             <p class="text-gray-400">You don't seem to have any planets. Please contact support or try re-registering.</p>
         </div>
     {:else}
-    <div class="mb-6 text-center">
-        <h2 class="text-2xl font-bold text-blue-300">{data.currentPlanet.name}</h2>
+    <div class="mb-6 text-center relative group">
+        {#if isRenaming}
+            <form method="POST" action="?/renamePlanet" use:enhance={() => {
+                return async ({ update }) => {
+                    await update();
+                    isRenaming = false;
+                };
+            }} class="flex justify-center items-center gap-2">
+                <input type="hidden" name="planet_id" value={data.currentPlanet.id}>
+                <input 
+                    type="text" 
+                    name="name" 
+                    value={data.currentPlanet.name} 
+                    class="bg-gray-700 text-white px-2 py-1 rounded border border-blue-500 focus:outline-none"
+                    maxlength="20"
+                    autofocus
+                >
+                <button type="submit" class="text-green-400 hover:text-green-300">✓</button>
+                <button type="button" onclick={() => isRenaming = false} class="text-red-400 hover:text-red-300">✕</button>
+            </form>
+        {:else}
+            <h2 class="text-2xl font-bold text-blue-300 flex justify-center items-center gap-2">
+                {data.currentPlanet.name}
+                <button onclick={() => isRenaming = true} class="opacity-0 group-hover:opacity-100 transition-opacity text-gray-500 hover:text-white text-sm">✎</button>
+            </h2>
+        {/if}
         <p class="text-gray-400 text-sm">[{data.currentPlanet.galaxyId}:{data.currentPlanet.systemId}:{data.currentPlanet.planetNumber}]</p>
     </div>
 

@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
-import { planetBuildings, planetDefenses, planetResources } from '$lib/server/db/schema';
-import { eq, sql } from 'drizzle-orm';
+import { planetBuildings, planetDefenses, planetResources, planets } from '$lib/server/db/schema';
+import { eq, sql, and } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
 import { getBuildingCost, DEFENSES } from '$lib/game-config';
 import { updatePlanetResources } from '$lib/server/game';
@@ -96,6 +96,30 @@ export const actions = {
             console.error(e);
             return fail(500, { error: 'Internal server error' });
         }
+    },
+
+    renamePlanet: async ({ request, locals }) => {
+        if (!locals.user) return fail(401);
+
+        const data = await request.formData();
+        const planetId = Number(data.get('planet_id'));
+        const newName = data.get('name') as string;
+
+        if (!planetId || !newName) return fail(400);
+        if (newName.length > 20) return fail(400, { error: 'Name too long' });
+
+        // Verify ownership
+        const planet = await db.select({ id: planets.id })
+            .from(planets)
+            .where(and(eq(planets.id, planetId), eq(planets.userId, locals.user.id)));
+
+        if (planet.length === 0) return fail(403);
+
+        await db.update(planets)
+            .set({ name: newName })
+            .where(eq(planets.id, planetId));
+
+        return { success: true };
     },
 
     build_defense: async ({ request, locals }) => {
