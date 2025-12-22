@@ -31,6 +31,7 @@
     let targetSystem = $state($page.url.searchParams.get('system') || data.currentPlanet.system_id);
     let targetPlanet = $state($page.url.searchParams.get('planet') || '');
     let targetMission = $state($page.url.searchParams.get('mission') || 'attack');
+    let newTemplateName = $state('');
 
     function toCamel(s: string) {
         return s.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
@@ -66,14 +67,14 @@
             <h3 class="text-lg font-bold text-gray-300 mb-4">Fleet Templates</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {#each data.templates as template}
-                    <div class="bg-gray-900/50 p-3 rounded border border-gray-700 flex justify-between items-center">
-                        <div>
-                            <div class="font-bold text-blue-300">{template.name}</div>
-                            <div class="text-xs text-gray-500">
+                    <div class="bg-gray-900/50 p-3 rounded border border-gray-700 flex justify-between items-center gap-2">
+                        <div class="min-w-0 flex-1">
+                            <div class="font-bold text-blue-300 truncate">{template.name}</div>
+                            <div class="text-xs text-gray-500 truncate">
                                 {Object.entries(template.ships).map(([k, v]) => `${v} ${shipTypes.find(s => s.id === k)?.name || k}`).join(', ')}
                             </div>
                         </div>
-                        <div class="flex gap-2">
+                        <div class="flex gap-2 shrink-0">
                             <button 
                                 onclick={() => loadTemplate(template)}
                                 class="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs rounded active:scale-95 transition-transform"
@@ -128,39 +129,39 @@
 
             <!-- Save Template Section -->
             <div class="bg-gray-900/30 p-3 rounded mb-6 border border-gray-700/50">
-                <div class="flex gap-2 items-center">
+                <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
                     <span class="text-sm text-gray-400 whitespace-nowrap">Save Selection as Template:</span>
-                    <input 
-                        type="text" 
-                        id="new-template-name"
-                        placeholder="Template Name" 
-                        class="flex-1 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm"
-                    >
-                    <button 
-                        type="button"
-                        onclick={(e) => {
-                            const nameInput = document.getElementById('new-template-name') as HTMLInputElement;
-                            const name = nameInput.value;
-                            if (!name) return;
-                            
-                            const formData = new FormData();
-                            formData.append('name', name);
-                            for (const [id, count] of Object.entries(shipCounts)) {
-                                if (count > 0) formData.append(id, count.toString());
-                            }
-                            
-                            fetch('?/createTemplate', {
-                                method: 'POST',
-                                body: formData
-                            }).then(async () => {
-                                nameInput.value = '';
-                                await invalidateAll();
-                            });
-                        }}
-                        class="px-3 py-1 bg-green-700 hover:bg-green-600 text-white text-sm rounded active:scale-95 transition-transform"
-                    >
-                        Save
-                    </button>
+                    <div class="flex flex-1 gap-2">
+                        <input 
+                            type="text" 
+                            bind:value={newTemplateName}
+                            placeholder="Template Name" 
+                            class="flex-1 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm"
+                        >
+                        <button 
+                            type="button"
+                            onclick={() => {
+                                if (!newTemplateName) return;
+                                
+                                const formData = new FormData();
+                                formData.append('name', newTemplateName);
+                                for (const [id, count] of Object.entries(shipCounts)) {
+                                    if (count > 0) formData.append(id, count.toString());
+                                }
+                                
+                                fetch('?/createTemplate', {
+                                    method: 'POST',
+                                    body: formData
+                                }).then(async () => {
+                                    newTemplateName = '';
+                                    await invalidateAll();
+                                });
+                            }}
+                            class="px-3 py-1 bg-green-700 hover:bg-green-600 text-white text-sm rounded active:scale-95 transition-transform"
+                        >
+                            Save
+                        </button>
+                    </div>
                 </div>
             </div>
 
