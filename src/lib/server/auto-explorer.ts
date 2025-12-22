@@ -26,7 +26,9 @@ export async function processAutoExplore() {
         .innerJoin(planets, eq(autoExploreSettings.originPlanetId, planets.id))
         .where(eq(autoExploreSettings.enabled, true));
 
-        console.log(`[AutoExplore] Found ${activeExplorers.length} active auto-explorers`);
+        if (activeExplorers.length > 0) {
+            console.log(`[AutoExplore] Found ${activeExplorers.length} active auto-explorers`);
+        }
 
         for (const explorer of activeExplorers) {
             try {

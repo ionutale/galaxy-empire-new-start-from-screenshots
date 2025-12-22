@@ -18,7 +18,9 @@ export async function processFleets() {
                     lte(fleets.arrivalTime, new Date())
                 ));
 
-            console.log(`Processing ${fleetsRes.length} fleets...`);
+            if (fleetsRes.length > 0) {
+                console.log(`Processing ${fleetsRes.length} fleets...`);
+            }
             
             for (const fleet of fleetsRes) {
                 console.log(`Processing fleet ${fleet.id} [${fleet.status}]: ${fleet.mission}`);
