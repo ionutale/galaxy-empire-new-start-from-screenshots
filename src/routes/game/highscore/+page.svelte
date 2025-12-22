@@ -28,7 +28,7 @@
                                 <span class="text-gray-600">-</span>
                             {/if}
                         </td>
-                        <td class="p-3 text-right font-mono text-yellow-500">{player.points.toLocaleString()}</td>
+                        <td class="p-3 text-right font-mono text-yellow-500">{(player.points || 0).toLocaleString()}</td>
                     </tr>
                 {/each}
             </tbody>

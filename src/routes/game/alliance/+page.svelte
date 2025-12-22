@@ -9,7 +9,7 @@
 <div class="p-4 pb-20">
     <h2 class="text-2xl font-bold text-blue-300 mb-6">Alliance</h2>
 
-    {#if data.inAlliance}
+    {#if data.inAlliance && data.alliance}
         <div class="bg-gray-800 border border-gray-700 rounded p-6 mb-6">
             <div class="flex justify-between items-start mb-6">
                 <div>
@@ -32,7 +32,7 @@
                 </form>
             </div>
 
-            <h3 class="text-xl font-bold text-gray-300 mb-4">Members ({data.members.length})</h3>
+            <h3 class="text-xl font-bold text-gray-300 mb-4">Members ({data.members?.length || 0})</h3>
             <div class="overflow-x-auto">
                 <table class="w-full text-left">
                     <thead>
@@ -86,20 +86,9 @@
             <!-- Join Alliance -->
             <div class="bg-gray-800 border border-gray-700 rounded p-6">
                 <h3 class="text-xl font-bold text-white mb-4">Join Alliance</h3>
-                {#if data.alliances.length === 0}={() => {
-                                    loading[alliance.id] = true;
-                                    return async ({ update }) => {
-                                        loading[alliance.id] = false;
-                                        await update();
-                                    };
-                                }}>
-                                    <input type="hidden" name="allianceId" value={alliance.id}>
-                                    <button disabled={loading[alliance.id]} class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-sm transition-transform active:scale-95 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
-                                        {#if loading[alliance.id]}
-                                            <Spinner size="sm" class="mr-2" />
-                                        {/if}
-                                        Join
-                                    
+                {#if !data.alliances || data.alliances.length === 0}
+                    <p class="text-gray-400">No alliances found.</p>
+                {:else}
                     <div class="space-y-2">
                         {#each data.alliances as alliance}
                             <div class="flex justify-between items-center bg-gray-900 p-3 rounded">

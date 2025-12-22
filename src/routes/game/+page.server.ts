@@ -42,8 +42,8 @@ export const actions = {
             await db.transaction(async (tx) => {
                 // Get current level and resources
                 // We need to map buildingType (snake_case) to column (camelCase)
-                const buildingKey = buildingType.replace(/_([a-z])/g, (g) => g[1].toUpperCase()) as keyof typeof planetBuildings;
-                const buildingColumn = planetBuildings[buildingKey];
+                const buildingKey = buildingType.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+                const buildingColumn = (planetBuildings as any)[buildingKey];
                 
                 if (!buildingColumn) throw new Error('Invalid building type column');
 
@@ -174,8 +174,8 @@ export const actions = {
                 }
 
                 // Check max limit (for shields)
-                const defenseKey = defenseType.replace(/_([a-z])/g, (g) => g[1].toUpperCase()) as keyof typeof planetDefenses;
-                const defenseColumn = planetDefenses[defenseKey];
+                const defenseKey = defenseType.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+                const defenseColumn = (planetDefenses as any)[defenseKey];
                 
                 if (!defenseColumn) throw new Error('Invalid defense column');
 

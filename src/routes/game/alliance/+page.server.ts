@@ -62,6 +62,7 @@ export const actions: Actions = {
         const tag = data.get('tag') as string;
 
         if (!locals.user) return fail(401, { error: 'Unauthorized' });
+        const userId = locals.user.id;
         if (!name || !tag) return fail(400, { error: 'Name and Tag required' });
 
         try {
@@ -71,7 +72,7 @@ export const actions: Actions = {
                     .values({
                         name,
                         tag,
-                        ownerId: locals.user.id
+                        ownerId: userId
                     })
                     .returning({ id: alliances.id });
                 
@@ -80,7 +81,7 @@ export const actions: Actions = {
                 // Update user
                 await tx.update(users)
                     .set({ allianceId })
-                    .where(eq(users.id, locals.user.id));
+                    .where(eq(users.id, userId));
             });
 
             return { success: true };

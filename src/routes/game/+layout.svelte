@@ -125,19 +125,19 @@
         {#if data.resources}
             <div class="flex flex-col items-center">
                 <span class="text-gray-400 mb-1">Metal</span>
-                <span class="font-mono font-bold text-gray-200">{Math.floor(data.resources.metal).toLocaleString()}</span>
+                <span class="font-mono font-bold text-gray-200">{Math.floor(data.resources.metal || 0).toLocaleString()}</span>
             </div>
             <div class="flex flex-col items-center">
                 <span class="text-blue-400 mb-1">Crystal</span>
-                <span class="font-mono font-bold text-blue-200">{Math.floor(data.resources.crystal).toLocaleString()}</span>
+                <span class="font-mono font-bold text-blue-200">{Math.floor(data.resources.crystal || 0).toLocaleString()}</span>
             </div>
             <div class="flex flex-col items-center">
                 <span class="text-purple-400 mb-1">Gas</span>
-                <span class="font-mono font-bold text-purple-200">{Math.floor(data.resources.gas).toLocaleString()}</span>
+                <span class="font-mono font-bold text-purple-200">{Math.floor(data.resources.gas || 0).toLocaleString()}</span>
             </div>
             <div class="flex flex-col items-center">
                 <span class="text-yellow-400 mb-1">Energy</span>
-                <span class="font-mono font-bold text-yellow-200">{data.resources.energy}</span>
+                <span class="font-mono font-bold text-yellow-200">{data.resources.energy || 0}</span>
             </div>
             <div class="flex flex-col items-center">
                 <span class="text-purple-600 mb-1">Dark Matter</span>

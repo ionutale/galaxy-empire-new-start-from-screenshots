@@ -44,8 +44,8 @@ export async function dispatchFleet(
         const availableShips = shipCheck[0];
 
         for (const [type, count] of Object.entries(ships)) {
-            const shipKey = type.replace(/_([a-z])/g, (g) => g[1].toUpperCase()) as keyof typeof planetShips;
-            const available = availableShips[shipKey];
+            const shipKey = type.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+            const available = (availableShips as any)[shipKey];
             
             if (typeof available !== 'number' || available < count) {
                 throw new Error(`Not enough ${type}`);

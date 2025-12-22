@@ -11,41 +11,48 @@
     let amounts = $state(Object.fromEntries(shipTypes.map(type => [type, 1])));
     let loading = $state<Record<string, boolean>>({});
 
+    let resources = $derived({
+        metal: data.resources?.metal || 0,
+        crystal: data.resources?.crystal || 0,
+        gas: data.resources?.gas || 0,
+        energy: data.resources?.energy || 0
+    });
+    let ships = $derived(data.ships || {}) as any;
+    let shipyardLevel = $derived(data.shipyardLevel || 0);
+
     function canBuild(type: string) {
         const ship = SHIPS[type as keyof typeof SHIPS];
         const amount = amounts[type] || 1;
         const cost = {
             metal: ship.cost.metal * amount,
             crystal: ship.cost.crystal * amount,
-            gas: ship.cost.gas * amount
+            gas: (ship.cost.gas || 0) * amount
         };
         
-        if (!data.resources) return false;
-        
-        return data.resources.metal >= cost.metal && 
-               data.resources.crystal >= cost.crystal && 
-               (cost.gas === 0 || data.resources.gas >= cost.gas);
+        return resources.metal >= cost.metal && 
+               resources.crystal >= cost.crystal && 
+               (cost.gas === 0 || resources.gas >= cost.gas);
     }
 </script>
 
 <div class="p-4 pb-20">
     <h2 class="text-2xl font-bold text-blue-300 mb-6">Shipyard</h2>
 
-    {#if data.shipyardLevel === 0}
+    {#if shipyardLevel === 0}
         <div class="bg-red-900/50 border border-red-500 p-4 rounded text-center text-red-200 mb-6">
-            You need a Shipyard to build ships. <a href="/game/facilities" class="underline font-bold hover:text-white">Build one in the Facilities menu.</a>
+            You need a Shipyard to build ships. <a href="/game" class="underline font-bold hover:text-white">Build one in the Facilities menu.</a>
         </div>
     {/if}
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 {data.shipyardLevel === 0 ? 'opacity-50 pointer-events-none grayscale' : ''}">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 {shipyardLevel === 0 ? 'opacity-50 pointer-events-none grayscale' : ''}">
         {#each shipTypes as type}
             {@const ship = SHIPS[type as keyof typeof SHIPS]}
-            {@const count = data.ships ? data.ships[type] : 0}
+            {@const count = ships[type] || 0}
             {@const amount = amounts[type] || 1}
             {@const totalCost = {
                 metal: ship.cost.metal * amount,
                 crystal: ship.cost.crystal * amount,
-                gas: ship.cost.gas * amount
+                gas: (ship.cost.gas || 0) * amount
             }}
             
             <div class="bg-gray-800 border border-gray-700 rounded-lg p-4 flex flex-col shadow-lg">
@@ -64,17 +71,17 @@
                 <div class="mt-auto">
                     <div class="text-xs text-gray-500 mb-2 space-x-2">
                         {#if totalCost.metal > 0}
-                            <span class={data.resources.metal < totalCost.metal ? 'text-red-500' : ''}>
+                            <span class={resources.metal < totalCost.metal ? 'text-red-500' : ''}>
                                 M: {totalCost.metal.toLocaleString()}
                             </span>
                         {/if}
                         {#if totalCost.crystal > 0}
-                            <span class={data.resources.crystal < totalCost.crystal ? 'text-red-500' : ''}>
+                            <span class={resources.crystal < totalCost.crystal ? 'text-red-500' : ''}>
                                 C: {totalCost.crystal.toLocaleString()}
                             </span>
                         {/if}
                         {#if totalCost.gas > 0}
-                            <span class={data.resources.gas < totalCost.gas ? 'text-red-500' : ''}>
+                            <span class={resources.gas < totalCost.gas ? 'text-red-500' : ''}>
                                 G: {totalCost.gas.toLocaleString()}
                             </span>
                         {/if}
@@ -95,12 +102,12 @@
                             min="1" 
                             bind:value={amounts[type]} 
                             class="w-16 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-center" 
-                            disabled={data.shipyardLevel === 0}
+                            disabled={shipyardLevel === 0}
                         >
                         <button 
                             type="submit"
                             class="flex-1 bg-blue-600 hover:bg-blue-500 rounded text-sm font-bold transition disabled:bg-gray-600 disabled:cursor-not-allowed active:scale-95 transform flex items-center justify-center disabled:opacity-50"
-                            disabled={data.shipyardLevel === 0 || !canBuild(type) || loading[type]}
+                            disabled={shipyardLevel === 0 || !canBuild(type) || loading[type]}
                         >
                             {#if loading[type]}
                                 <Spinner size="sm" class="mr-2" />

@@ -44,11 +44,13 @@ export const load: LayoutServerLoad = async ({ locals, depends, url, cookies }) 
 
     const userPlanets = planetsRes;
     
+    const userId = locals.user.id;
+
     if (userPlanets.length === 0) {
         // Self-healing: Create a home planet if none exists
         await db.transaction(async (tx) => {
              // Initialize User Research if missing
-             await tx.insert(userResearch).values({ userId: locals.user.id }).onConflictDoNothing();
+             await tx.insert(userResearch).values({ userId }).onConflictDoNothing();
 
              // Find a free planet slot for Home Planet
             let galaxyId = 1;
@@ -85,7 +87,7 @@ export const load: LayoutServerLoad = async ({ locals, depends, url, cookies }) 
 
             // Create Home Planet
             const [newPlanet] = await tx.insert(planets).values({
-                userId: locals.user.id,
+                userId,
                 galaxyId,
                 systemId,
                 planetNumber: planetNum,

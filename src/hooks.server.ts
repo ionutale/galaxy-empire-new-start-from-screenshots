@@ -34,11 +34,11 @@ export const handle: Handle = async ({ event, resolve }) => {
 
     if (sessionId) {
         const session = await getSession(sessionId);
-        if (session) {
+        if (session && session.userId) {
             event.locals.user = {
                 id: session.userId,
                 username: session.username,
-                darkMatter: session.darkMatter
+                darkMatter: session.darkMatter || 0
             };
         }
     }

@@ -23,11 +23,11 @@ export async function processFleets() {
             }
             
             for (const fleet of fleetsRes) {
-                console.log(`Processing fleet ${fleet.id} [${fleet.status}]: ${fleet.mission}`);
+                // console.log(`Processing fleet ${fleet.id} [${fleet.status}]: ${fleet.mission}`);
                 try {
                     // Nested transaction acts as SAVEPOINT
                     await tx.transaction(async (subTx) => {
-                        usersToUpdate.add(fleet.userId);
+                        if (fleet.userId) usersToUpdate.add(fleet.userId);
                         if (fleet.status === 'returning') {
                             await processReturningFleet(subTx, fleet);
                         } else {

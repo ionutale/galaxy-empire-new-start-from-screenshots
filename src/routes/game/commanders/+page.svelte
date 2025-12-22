@@ -3,11 +3,14 @@
     import type { PageData } from './$types';
     import Spinner from '$lib/components/Spinner.svelte';
 
-    export let data: PageData;
+    let { data }: { data: PageData } = $props();
 
-    const { commanders, durationCosts, activeCommanders, darkMatter } = data;
-    
-    let selectedDuration = 7;
+    let commanders = $derived(data.commanders);
+    let durationCosts = $derived(data.durationCosts) as any;
+    let activeCommanders = $derived(data.activeCommanders);
+    let darkMatter = $derived(data.darkMatter);
+
+    let selectedDuration = $state(7);
     let loading = $state<Record<string, boolean>>({});
     let savingSettings = $state(false);
 
@@ -117,7 +120,7 @@
                             <button 
                                 type="submit" 
                                 class="w-full py-2 px-4 bg-purple-600 hover:bg-purple-500 text-white rounded font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transform flex items-center justify-center"
-                                disabled={darkMatter < durationCosts[selectedDuration] || loading[commander.id]}
+                                disabled={darkMatter < durationCosts[selectedDuration as any] || loading[commander.id]}
                             >
                                 {#if loading[commander.id]}
                                     <Spinner size="sm" class="mr-2" />

@@ -3,9 +3,12 @@
     import type { PageData } from './$types';
     import Spinner from '$lib/components/Spinner.svelte';
 
-    export let data: PageData;
+    let { data }: { data: PageData } = $props();
 
-    const { shopItems, activeBoosters, darkMatter } = data;
+    let shopItems = $derived(data.shopItems);
+    let activeBoosters = $derived(data.activeBoosters);
+    let darkMatter = $derived(data.darkMatter);
+
     let loading = $state<Record<string, boolean>>({});
 
     function formatDate(dateStr: string | Date) {

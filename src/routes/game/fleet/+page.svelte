@@ -26,10 +26,11 @@
     let shipCounts = $state(
         Object.fromEntries(shipTypes.map(s => [s.id, 0]))
     );
+    let ships = $derived(data.ships || {}) as any;
 
     // Get query params for pre-filling
-    let targetGalaxy = $state($page.url.searchParams.get('galaxy') || data.currentPlanet.galaxy_id);
-    let targetSystem = $state($page.url.searchParams.get('system') || data.currentPlanet.system_id);
+    let targetGalaxy = $state($page.url.searchParams.get('galaxy') || data.currentPlanet.galaxyId);
+    let targetSystem = $state($page.url.searchParams.get('system') || data.currentPlanet.systemId);
     let targetPlanet = $state($page.url.searchParams.get('planet') || '');
     let targetMission = $state($page.url.searchParams.get('mission') || 'attack');
     let newTemplateName = $state('');
@@ -103,9 +104,7 @@
                             </form>
                         </div>
                     </div>
-            loading = true;
-            return async ({ update }) => {
-                loading = false;
+                {/each}
             </div>
         </div>
     {/if}
@@ -128,13 +127,13 @@
                     <div class="flex items-center justify-between bg-gray-900/50 p-2 rounded">
                         <span class="text-gray-300">{ship.name}</span>
                         <div class="flex items-center space-x-2">
-                            <span class="text-xs text-gray-500">Available: {data.ships ? data.ships[shipKey] : 0}</span>
+                            <span class="text-xs text-gray-500">Available: {ships[shipKey] || 0}</span>
                             <input 
                                 type="number" 
                                 name={ship.id} 
                                 bind:value={shipCounts[ship.id]}
                                 min="0" 
-                                max={data.ships ? data.ships[shipKey] : 0} 
+                                max={ships[shipKey] || 0} 
                                 class="w-16 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-right text-white" 
                                 placeholder="0"
                             >

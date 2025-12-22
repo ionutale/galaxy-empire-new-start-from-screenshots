@@ -39,8 +39,9 @@ export const actions: Actions = {
         }
 
         try {
-            const result = await purchaseShopItem(locals.user.id, itemId);
-            return { success: true, ...result };
+            const userId = locals.user.id;
+            const result = await purchaseShopItem(userId, itemId);
+            return result;
         } catch (e: any) {
             return fail(400, { error: e.message });
         }

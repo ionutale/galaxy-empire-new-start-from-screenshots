@@ -6,6 +6,16 @@
     let { data } = $props();
     let loading = $state<Record<string, boolean>>({});
 
+    let resources = $derived({
+        metal: data.resources?.metal || 0,
+        crystal: data.resources?.crystal || 0,
+        gas: data.resources?.gas || 0,
+        energy: data.resources?.energy || 0
+    });
+
+    let buildings = $derived(data.buildings || {}) as any;
+    let defenses = $derived(data.defenses || {}) as any;
+
     const resourceBuildings = [
         { id: 'metal_mine', name: 'Metal Mine', icon: '⛏️' },
         { id: 'crystal_mine', name: 'Crystal Mine', icon: '💎' },
@@ -77,7 +87,7 @@
     <h3 class="text-xl font-bold text-gray-300 mb-4 border-b border-gray-700 pb-2">Resources</h3>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
         {#each resourceBuildings as building}
-            {@const level = data.buildings?.[toCamel(building.id)] ?? 0}
+            {@const level = buildings?.[toCamel(building.id)] ?? 0}
             {@const cost = getBuildingCost(building.id, level)}
             {@const production = getProduction(building.id, level)}
             
@@ -102,17 +112,17 @@
                     <div class="text-xs text-gray-400 mb-2 flex flex-wrap gap-2">
                         {#if cost}
                             {#if cost.metal > 0}
-                                <span class={data.resources.metal < cost.metal ? 'text-red-400' : 'text-gray-300'}>
+                                <span class={resources.metal < cost.metal ? 'text-red-400' : 'text-gray-300'}>
                                     Metal: {cost.metal.toLocaleString()}
                                 </span>
                             {/if}
                             {#if cost.crystal > 0}
-                                <span class={data.resources.crystal < cost.crystal ? 'text-red-400' : 'text-gray-300'}>
+                                <span class={resources.crystal < cost.crystal ? 'text-red-400' : 'text-gray-300'}>
                                     Crystal: {cost.crystal.toLocaleString()}
                                 </span>
                             {/if}
                             {#if (cost.gas || 0) > 0}
-                                <span class={data.resources.gas < (cost.gas || 0) ? 'text-red-400' : 'text-gray-300'}>
+                                <span class={resources.gas < (cost.gas || 0) ? 'text-red-400' : 'text-gray-300'}>
                                     Gas: {(cost.gas || 0).toLocaleString()}
                                 </span>
                             {/if}
@@ -130,7 +140,7 @@
                         <input type="hidden" name="planet_id" value={data.currentPlanet.id}>
                         <button 
                             type="submit"
-                            disabled={!cost || data.resources.metal < cost.metal || data.resources.crystal < cost.crystal || ((cost.gas || 0) > 0 && data.resources.gas < (cost.gas || 0)) || loading[building.id]}
+                            disabled={!cost || resources.metal < cost.metal || resources.crystal < cost.crystal || ((cost.gas || 0) > 0 && resources.gas < (cost.gas || 0)) || loading[building.id]}
                             class="w-full py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed rounded text-sm font-bold transition-transform active:scale-95 flex items-center justify-center disabled:opacity-50"
                         >
                             {#if loading[building.id]}
@@ -148,7 +158,7 @@
     <h3 class="text-xl font-bold text-gray-300 mb-4 border-b border-gray-700 pb-2">Facilities</h3>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {#each facilityBuildings as building}
-            {@const level = data.buildings[toCamel(building.id)]}
+            {@const level = buildings[toCamel(building.id)]}
             {@const cost = getBuildingCost(building.id, level)}
             
             <div class="bg-gray-800/80 border border-gray-700 rounded-lg p-4 flex flex-col shadow-lg backdrop-blur-sm">
@@ -166,17 +176,17 @@
                     <div class="text-xs text-gray-400 mb-2 flex flex-wrap gap-2">
                         {#if cost}
                             {#if cost.metal > 0}
-                                <span class={data.resources.metal < cost.metal ? 'text-red-400' : 'text-gray-300'}>
+                                <span class={resources.metal < cost.metal ? 'text-red-400' : 'text-gray-300'}>
                                     Metal: {cost.metal.toLocaleString()}
                                 </span>
                             {/if}
                             {#if cost.crystal > 0}
-                                <span class={data.resources.crystal < cost.crystal ? 'text-red-400' : 'text-gray-300'}>
+                                <span class={resources.crystal < cost.crystal ? 'text-red-400' : 'text-gray-300'}>
                                     Crystal: {cost.crystal.toLocaleString()}
                                 </span>
                             {/if}
                             {#if (cost.gas || 0) > 0}
-                                <span class={data.resources.gas < (cost.gas || 0) ? 'text-red-400' : 'text-gray-300'}>
+                                <span class={resources.gas < (cost.gas || 0) ? 'text-red-400' : 'text-gray-300'}>
                                     Gas: {(cost.gas || 0).toLocaleString()}
                                 </span>
                             {/if}
@@ -194,7 +204,7 @@
                         <input type="hidden" name="planet_id" value={data.currentPlanet.id}>
                         <button 
                             type="submit"
-                            disabled={!cost || data.resources.metal < cost.metal || data.resources.crystal < cost.crystal || ((cost.gas || 0) > 0 && data.resources.gas < (cost.gas || 0)) || loading[building.id]}
+                            disabled={!cost || resources.metal < cost.metal || resources.crystal < cost.crystal || ((cost.gas || 0) > 0 && resources.gas < (cost.gas || 0)) || loading[building.id]}
                             class="w-full py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed rounded text-sm font-bold transition-transform active:scale-95 flex items-center justify-center disabled:opacity-50"
                         >
                             {#if loading[building.id]}
@@ -211,16 +221,16 @@
     <!-- Defenses Section -->
     <h3 class="text-xl font-bold text-gray-300 mb-4 border-b border-gray-700 pb-2 mt-8">Defenses</h3>
     
-    {#if data.buildings.shipyard === 0}
+    {#if buildings.shipyard === 0}
         <div class="bg-red-900/50 border border-red-500 p-4 rounded text-center text-red-200 mb-6">
             You need a Shipyard to build defenses. Build one in the Facilities section above.
         </div>
     {/if}
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 {data.buildings.shipyard === 0 ? 'opacity-50 pointer-events-none grayscale' : ''}">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 {buildings.shipyard === 0 ? 'opacity-50 pointer-events-none grayscale' : ''}">
         {#each defenseTypes as type}
             {@const defense = DEFENSES[type as keyof typeof DEFENSES]}
-            {@const count = data.defenses ? data.defenses[toCamel(type)] : 0}
+            {@const count = defenses[toCamel(type)] || 0}
             
             <div class="bg-gray-800 border border-gray-700 rounded-lg p-4 flex flex-col shadow-lg">
                 <div class="flex justify-between items-start mb-2">
@@ -254,11 +264,11 @@
                         {#if defense.max && count >= defense.max}
                             <button disabled class="w-full bg-gray-600 text-gray-400 rounded text-sm font-bold py-1">Max Reached</button>
                         {:else}
-                            <input type="number" name="amount" min="1" value="1" class="w-16 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-center" disabled={data.buildings.shipyard === 0}>
+                            <input type="number" name="amount" min="1" value="1" class="w-16 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-center" disabled={buildings.shipyard === 0}>
                             <button 
                                 type="submit"
                                 class="flex-1 bg-blue-600 hover:bg-blue-500 rounded text-sm font-bold transition disabled:bg-gray-600 disabled:cursor-not-allowed active:scale-95 transform flex items-center justify-center disabled:opacity-50"
-                                disabled={data.buildings.shipyard === 0 || loading[type]}
+                                disabled={buildings.shipyard === 0 || loading[type]}
                             >
                                 {#if loading[type]}
                                     <Spinner size="sm" class="mr-2" />

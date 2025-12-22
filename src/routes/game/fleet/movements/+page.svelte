@@ -91,7 +91,7 @@
                         <div class="text-right">
                             <div class="text-xs text-gray-400 uppercase tracking-wide mb-1">Arrival</div>
                             <div class="font-mono text-blue-300">
-                                {new Date(fleet.arrivalTime).toLocaleTimeString()}
+                                {fleet.arrivalTime ? new Date(fleet.arrivalTime).toLocaleTimeString() : 'Unknown'}
                             </div>
                         </div>
                     </div>

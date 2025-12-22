@@ -53,8 +53,9 @@ export const actions: Actions = {
         }
 
         try {
-            const result = await purchaseCommander(locals.user.id, commanderId, duration);
-            return { success: true, ...result };
+            const userId = locals.user.id;
+            const result = await purchaseCommander(userId, commanderId, duration);
+            return result;
         } catch (e: any) {
             return fail(400, { error: e.message });
         }

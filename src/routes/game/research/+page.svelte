@@ -6,6 +6,16 @@
     let { data } = $props();
     let loading = $state<Record<string, boolean>>({});
     
+    let resources = $derived({
+        metal: data.resources?.metal || 0,
+        crystal: data.resources?.crystal || 0,
+        gas: data.resources?.gas || 0,
+        energy: data.resources?.energy || 0
+    });
+    let userResearch = $derived(data.userResearch || {}) as any;
+    let researchLabLevel = $derived(data.researchLabLevel || 0);
+    let techs = $derived(data.techs || {});
+
     // Helper to format numbers
     const f = (n: number) => Math.floor(n).toLocaleString();
 
@@ -17,15 +27,15 @@
 <div class="p-4 pb-20">
     <h2 class="text-2xl font-bold text-blue-300 mb-6">Research Lab</h2>
 
-    {#if data.researchLabLevel === 0}
+    {#if researchLabLevel === 0}
         <div class="bg-red-900/50 border border-red-500 p-4 rounded text-center text-red-200 mb-6">
             You need a Research Lab to conduct research. <a href="/game" class="underline font-bold hover:text-white">Build one in the Facilities menu.</a>
         </div>
     {/if}
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 {data.researchLabLevel === 0 ? 'opacity-50 pointer-events-none grayscale' : ''}">
-        {#each Object.entries(data.techs) as [id, tech]}
-            {@const currentLevel = data.userResearch[toCamel(id)] || 0}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 {researchLabLevel === 0 ? 'opacity-50 pointer-events-none grayscale' : ''}">
+        {#each Object.entries(techs) as [id, tech]}
+            {@const currentLevel = userResearch[toCamel(id)] || 0}
             {@const cost = getResearchCost(id, currentLevel)}
             
             <div class="bg-gray-800 border border-gray-700 rounded p-4 flex flex-col justify-between">
@@ -41,25 +51,25 @@
                             {#if cost.metal > 0}
                                 <div class="flex justify-between">
                                     <span class="text-gray-500">Metal:</span>
-                                    <span class={data.resources.metal < cost.metal ? 'text-red-500' : 'text-gray-300'}>{f(cost.metal)}</span>
+                                    <span class={resources.metal < cost.metal ? 'text-red-500' : 'text-gray-300'}>{f(cost.metal)}</span>
                                 </div>
                             {/if}
                             {#if cost.crystal > 0}
                                 <div class="flex justify-between">
                                     <span class="text-gray-500">Crystal:</span>
-                                    <span class={data.resources.crystal < cost.crystal ? 'text-red-500' : 'text-gray-300'}>{f(cost.crystal)}</span>
+                                    <span class={resources.crystal < cost.crystal ? 'text-red-500' : 'text-gray-300'}>{f(cost.crystal)}</span>
                                 </div>
                             {/if}
                             {#if (cost.gas || 0) > 0}
                                 <div class="flex justify-between">
                                     <span class="text-gray-500">Gas:</span>
-                                    <span class={data.resources.gas < (cost.gas || 0) ? 'text-red-500' : 'text-gray-300'}>{f(cost.gas || 0)}</span>
+                                    <span class={resources.gas < (cost.gas || 0) ? 'text-red-500' : 'text-gray-300'}>{f(cost.gas || 0)}</span>
                                 </div>
                             {/if}
                             {#if (cost.energy || 0) > 0}
                                 <div class="flex justify-between">
                                     <span class="text-gray-500">Energy:</span>
-                                    <span class={data.resources.energy < (cost.energy || 0) ? 'text-red-500' : 'text-gray-300'}>{f(cost.energy || 0)}</span>
+                                    <span class={resources.energy < (cost.energy || 0) ? 'text-red-500' : 'text-gray-300'}>{f(cost.energy || 0)}</span>
                                 </div>
                             {/if}
                         {/if}
@@ -78,10 +88,10 @@
                     <button 
                         type="submit" 
                         class="w-full py-2 rounded font-bold transition-colors active:scale-95 transform flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed
-                            {cost && data.resources.metal >= cost.metal && data.resources.crystal >= cost.crystal && data.resources.gas >= (cost.gas || 0) && data.resources.energy >= (cost.energy || 0) && data.researchLabLevel > 0
+                            {cost && resources.metal >= cost.metal && resources.crystal >= cost.crystal && resources.gas >= (cost.gas || 0) && resources.energy >= (cost.energy || 0) && researchLabLevel > 0
                                 ? 'bg-green-600 hover:bg-green-500 text-white' 
                                 : 'bg-gray-600 text-gray-400 cursor-not-allowed'}"
-                        disabled={!cost || !(data.resources.metal >= cost.metal && data.resources.crystal >= cost.crystal && data.resources.gas >= (cost.gas || 0) && data.resources.energy >= (cost.energy || 0)) || data.researchLabLevel === 0 || loading[id]}
+                        disabled={!cost || !(resources.metal >= cost.metal && resources.crystal >= cost.crystal && resources.gas >= (cost.gas || 0) && resources.energy >= (cost.energy || 0)) || researchLabLevel === 0 || loading[id]}
                     >
                         {#if loading[id]}
                             <Spinner size="sm" class="mr-2" />

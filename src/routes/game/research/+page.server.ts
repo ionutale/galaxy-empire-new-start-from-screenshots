@@ -38,12 +38,13 @@ export const actions: Actions = {
         const planetId = Number(data.get('planetId'));
 
         if (!locals.user) return fail(401, { error: 'Unauthorized' });
+        const userId = locals.user.id;
         if (!RESEARCH[techId as keyof typeof RESEARCH]) return fail(400, { error: 'Invalid tech' });
 
         try {
             await db.transaction(async (tx) => {
                 // Get current levels
-                const res = await tx.select().from(userResearch).where(eq(userResearch.userId, locals.user.id));
+                const res = await tx.select().from(userResearch).where(eq(userResearch.userId, userId));
                 const currentLevel = (res[0] as any)[toCamel(techId)] || 0;
                 const nextLevel = currentLevel + 1;
 
@@ -60,7 +61,7 @@ export const actions: Actions = {
                 const resources = planetRes[0];
                 if (!resources) throw new Error('Planet not found');
 
-                if (resources.metal < cost.metal || resources.crystal < cost.crystal || resources.gas < (cost.gas || 0)) {
+                if ((resources.metal || 0) < cost.metal || (resources.crystal || 0) < cost.crystal || (resources.gas || 0) < (cost.gas || 0)) {
                     throw new Error('Not enough resources');
                 }
 
@@ -85,11 +86,11 @@ export const actions: Actions = {
                 // Upgrade tech
                 await tx.update(userResearch)
                     .set({ [toCamel(techId)]: nextLevel })
-                    .where(eq(userResearch.userId, locals.user.id));
+                    .where(eq(userResearch.userId, userId));
             });
             
             // Update points
-            await updateUserPoints(locals.user.id);
+            await updateUserPoints(userId);
 
             return { success: true, message: `Research successful` };
 

@@ -33,9 +33,12 @@ export async function processAutoExplore() {
         for (const explorer of activeExplorers) {
             try {
                 // 2. Dispatch Fleets until ships run out (Ignoring fleet slots for Nebula Explorer)
-                console.log(`[AutoExplore] Processing user ${explorer.userId}...`);
+                // console.log(`[AutoExplore] Processing user ${explorer.userId}...`);
 
-                while (true) {
+                let dispatchedCount = 0;
+                const MAX_DISPATCH_PER_TICK = 5; // Limit to 5 fleets per tick to prevent blocking
+
+                while (dispatchedCount < MAX_DISPATCH_PER_TICK) {
                     // Target: Random coordinates? Or specific expedition slot (16)?
                     // Usually expeditions go to slot 16 of the current system.
                     const targetGalaxy = explorer.galaxy;
@@ -57,6 +60,7 @@ export async function processAutoExplore() {
                         );
 
                         console.log(`[AutoExplore] Auto-dispatched expedition for user ${explorer.userId}`);
+                        dispatchedCount++;
                     } catch (dispatchErr: any) {
                         if (dispatchErr.message.startsWith('Not enough')) {
                             console.log(`[AutoExplore] Auto-explore stopped for user ${explorer.userId}: Not enough ships (${dispatchErr.message})`);
