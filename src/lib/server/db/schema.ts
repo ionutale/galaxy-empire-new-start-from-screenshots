@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, timestamp, boolean, doublePrecision, jsonb, unique, primaryKey, varchar } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, integer, timestamp, boolean, doublePrecision, jsonb, unique, primaryKey, varchar, index } from 'drizzle-orm/pg-core';
 
 // 1. Users & Auth
 export const users = pgTable('users', {
@@ -119,7 +119,11 @@ export const fleets = pgTable('fleets', {
     arrivalTime: timestamp('arrival_time'),
     returnTime: timestamp('return_time'),
     status: varchar('status', { length: 20 }).default('active')
-});
+}, (t) => ({
+    userIdIdx: index('fleets_user_id_idx').on(t.userId),
+    statusArrivalTimeIdx: index('fleets_status_arrival_time_idx').on(t.status, t.arrivalTime),
+    originPlanetIdIdx: index('fleets_origin_planet_id_idx').on(t.originPlanetId)
+}));
 
 export const planetShips = pgTable('planet_ships', {
     planetId: integer('planet_id').primaryKey().references(() => planets.id),
