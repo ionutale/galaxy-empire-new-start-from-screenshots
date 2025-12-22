@@ -1,8 +1,11 @@
 <script lang="ts">
     import type { ActionData } from './$types';
     import { page } from '$app/stores';
+    import { enhance } from '$app/forms';
+    import Spinner from '$lib/components/Spinner.svelte';
     
     let { form }: { form: ActionData } = $props();
+    let loading = $state(false);
 </script>
 
 <div class="min-h-screen flex items-center justify-center bg-gray-900 text-white">
@@ -15,7 +18,13 @@
             </div>
         {/if}
 
-        <form method="POST" class="space-y-4">
+        <form method="POST" class="space-y-4" use:enhance={() => {
+            loading = true;
+            return async ({ update }) => {
+                loading = false;
+                await update();
+            };
+        }}>
             <div>
                 <label for="username" class="block text-sm font-medium text-gray-300">Username</label>
                 <input type="text" id="username" name="username" required 
@@ -39,8 +48,11 @@
             
             {#if form?.invalid}
                 <p class="text-red-500 text-sm">Invalid username or password.</p>
-            {/if}
-            
+            {/if}disabled={loading}
+                class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 rounded-md text-white font-bold transition-transform active:scale-95 duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+                {#if loading}
+                    <Spinner size="sm" class="mr-2" />
+                {/if}
             {#if form?.error}
                 <p class="text-red-500 text-sm">{form.error}</p>
             {/if}

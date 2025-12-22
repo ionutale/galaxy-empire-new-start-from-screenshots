@@ -1,7 +1,9 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
+    import Spinner from '$lib/components/Spinner.svelte';
     
     let { data, form } = $props();
+    let loading = $state<Record<string, boolean>>({});
 
     const avatars = [
         { id: 1, icon: '👨‍🚀', name: 'Commander' },
@@ -32,7 +34,13 @@
     <div class="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-6 shadow-lg">
         <h3 class="text-xl font-bold text-gray-200 mb-4">Profile</h3>
         
-        <form method="POST" action="?/updateProfile" use:enhance class="space-y-4">
+        <form method="POST" action="?/updateProfile" use:enhance={() => {
+            loading['profile'] = true;
+            return async ({ update }) => {
+                loading['profile'] = false;
+                await update();
+            };
+        }} class="space-y-4">
             <div>
                 <label class="block text-gray-400 text-sm mb-2" for="email">Email Address</label>
                 <input 
@@ -59,24 +67,24 @@
                             >
                             <div class="flex flex-col items-center p-2 rounded border border-gray-700 bg-gray-700/50 peer-checked:bg-blue-600 peer-checked:border-blue-400 hover:bg-gray-600 transition">
                                 <span class="text-2xl mb-1">{avatar.icon}</span>
-                                <span class="text-[10px] text-gray-300">{avatar.name}</span>
+                                <span class="text-10px text-gray-300">{avatar.name}</span>
                             </div>
                         </label>
                     {/each}
                 </div>
             </div>
 
-            <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded transition w-full sm:w-auto active:scale-95 transform">
-                Save Profile
-            </button>
-        </form>
-    </div>
-
-    <!-- Password Settings -->
-    <div class="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-6 shadow-lg">
-        <h3 class="text-xl font-bold text-gray-200 mb-4">Change Password</h3>
-        
-        <form method="POST" action="?/changePassword" use:enhance class="space-y-4">
+            <button type="submit" disabled={loading['profile']} class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded transition w-full sm:w-auto active:scale-95 transform flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+                {#if loading['profile']}
+                    <Spinner size="sm" class="mr-2" />
+                {/if}
+                Save Profile={() => {
+            loading['password'] = true;
+            return async ({ update }) => {
+                loading['password'] = false;
+                await update();
+            };
+        }} class="space-y-4">
             <!-- Hidden username field for accessibility/password managers -->
             <input type="text" name="username" autocomplete="username" class="hidden" aria-hidden="true" value={data.profile.email}>
 
@@ -105,6 +113,18 @@
             <div>
                 <label class="block text-gray-400 text-sm mb-2" for="confirm_password">Confirm New Password</label>
                 <input 
+                    type="password" 
+                    name="confirm_password" 
+                    id="confirm_password" 
+                    autocomplete="new-password"
+                    class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                >
+            </div>
+
+            <button type="submit" disabled={loading['password']} class="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded transition w-full sm:w-auto active:scale-95 transform flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+                {#if loading['password']}
+                    <Spinner size="sm" class="mr-2" />
+                {/if}
                     type="password" 
                     name="confirm_password" 
                     id="confirm_password" 

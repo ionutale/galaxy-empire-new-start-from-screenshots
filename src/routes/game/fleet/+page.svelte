@@ -2,6 +2,7 @@
     import { enhance } from '$app/forms';
     import { page } from '$app/stores';
     import { invalidateAll } from '$app/navigation';
+    import Spinner from '$lib/components/Spinner.svelte';
     
     let { data } = $props();
 
@@ -32,6 +33,9 @@
     let targetPlanet = $state($page.url.searchParams.get('planet') || '');
     let targetMission = $state($page.url.searchParams.get('mission') || 'attack');
     let newTemplateName = $state('');
+    let loading = $state(false);
+    let deletingTemplate = $state<Record<string, boolean>>({});
+    let savingTemplate = $state(false);
 
     function toCamel(s: string) {
         return s.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
@@ -81,15 +85,27 @@
                             >
                                 Load
                             </button>
-                            <form method="POST" action="?/deleteTemplate" use:enhance>
+                            <form method="POST" action="?/deleteTemplate" use:enhance={() => {
+                                deletingTemplate[template.id] = true;
+                                return async ({ update }) => {
+                                    deletingTemplate[template.id] = false;
+                                    await update();
+                                };
+                            }}>
                                 <input type="hidden" name="id" value={template.id}>
-                                <button type="submit" class="px-2 py-1 bg-red-900/50 hover:bg-red-800 text-red-200 text-xs rounded border border-red-800 active:scale-95 transition-transform">
-                                    ✕
+                                <button type="submit" disabled={deletingTemplate[template.id]} class="px-2 py-1 bg-red-900/50 hover:bg-red-800 text-red-200 text-xs rounded border border-red-800 active:scale-95 transition-transform flex items-center justify-center disabled:opacity-50">
+                                    {#if deletingTemplate[template.id]}
+                                        <Spinner size="sm" />
+                                    {:else}
+                                        ✕
+                                    {/if}
                                 </button>
                             </form>
                         </div>
                     </div>
-                {/each}
+            loading = true;
+            return async ({ update }) => {
+                loading = false;
             </div>
         </div>
     {/if}
@@ -140,8 +156,10 @@
                         >
                         <button 
                             type="button"
+                            disabled={savingTemplate}
                             onclick={() => {
                                 if (!newTemplateName) return;
+                                savingTemplate = true;
                                 
                                 const formData = new FormData();
                                 formData.append('name', newTemplateName);
@@ -155,10 +173,14 @@
                                 }).then(async () => {
                                     newTemplateName = '';
                                     await invalidateAll();
+                                    savingTemplate = false;
                                 });
                             }}
-                            class="px-3 py-1 bg-green-700 hover:bg-green-600 text-white text-sm rounded active:scale-95 transition-transform"
+                            class="px-3 py-1 bg-green-700 hover:bg-green-600 text-white text-sm rounded active:scale-95 transition-transform flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                         >
+                            {#if savingTemplate}
+                                <Spinner size="sm" class="mr-2" />
+                            {/if}
                             Save
                         </button>
                     </div>
@@ -213,7 +235,10 @@
                 </select>
             </div>
 
-            <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded font-bold text-white transition-transform active:scale-95">
+            <button type="submit" disabled={loading} class="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded font-bold text-white transition-transform active:scale-95 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+                {#if loading}
+                    <Spinner size="sm" class="mr-2" />
+                {/if}
                 Send Fleet
             </button>
         </form>

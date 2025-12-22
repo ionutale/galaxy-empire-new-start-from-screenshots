@@ -1,8 +1,10 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
     import { getBuildingCost, getProduction, DEFENSES } from '$lib/game-config';
+    import Spinner from '$lib/components/Spinner.svelte';
     
     let { data } = $props();
+    let loading = $state<Record<string, boolean>>({});
 
     const resourceBuildings = [
         { id: 'metal_mine', name: 'Metal Mine', icon: '⛏️' },
@@ -37,7 +39,9 @@
     <div class="mb-6 text-center relative group">
         {#if isRenaming}
             <form method="POST" action="?/renamePlanet" use:enhance={() => {
+                loading['rename'] = true;
                 return async ({ update }) => {
+                    loading['rename'] = false;
                     await update();
                     isRenaming = false;
                 };
@@ -51,7 +55,13 @@
                     maxlength="20"
                     autofocus
                 >
-                <button type="submit" class="text-green-400 hover:text-green-300">✓</button>
+                <button type="submit" disabled={loading['rename']} class="text-green-400 hover:text-green-300 disabled:opacity-50">
+                    {#if loading['rename']}
+                        <Spinner size="sm" />
+                    {:else}
+                        ✓
+                    {/if}
+                </button>
                 <button type="button" onclick={() => isRenaming = false} class="text-red-400 hover:text-red-300">✕</button>
             </form>
         {:else}
@@ -109,14 +119,23 @@
                         {/if}
                     </div>
                     
-                    <form method="POST" action="?/upgrade" use:enhance>
+                    <form method="POST" action="?/upgrade" use:enhance={() => {
+                        loading[building.id] = true;
+                        return async ({ update }) => {
+                            loading[building.id] = false;
+                            await update();
+                        };
+                    }}>
                         <input type="hidden" name="type" value={building.id}>
                         <input type="hidden" name="planet_id" value={data.currentPlanet.id}>
                         <button 
                             type="submit"
-                            disabled={!cost || data.resources.metal < cost.metal || data.resources.crystal < cost.crystal || ((cost.gas || 0) > 0 && data.resources.gas < (cost.gas || 0))}
-                            class="w-full py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed rounded text-sm font-bold transition-transform active:scale-95"
+                            disabled={!cost || data.resources.metal < cost.metal || data.resources.crystal < cost.crystal || ((cost.gas || 0) > 0 && data.resources.gas < (cost.gas || 0)) || loading[building.id]}
+                            class="w-full py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed rounded text-sm font-bold transition-transform active:scale-95 flex items-center justify-center disabled:opacity-50"
                         >
+                            {#if loading[building.id]}
+                                <Spinner size="sm" class="mr-2" />
+                            {/if}
                             Upgrade to Level {level + 1}
                         </button>
                     </form>
@@ -164,14 +183,23 @@
                         {/if}
                     </div>
                     
-                    <form method="POST" action="?/upgrade" use:enhance>
+                    <form method="POST" action="?/upgrade" use:enhance={() => {
+                        loading[building.id] = true;
+                        return async ({ update }) => {
+                            loading[building.id] = false;
+                            await update();
+                        };
+                    }}>
                         <input type="hidden" name="type" value={building.id}>
                         <input type="hidden" name="planet_id" value={data.currentPlanet.id}>
                         <button 
                             type="submit"
-                            disabled={!cost || data.resources.metal < cost.metal || data.resources.crystal < cost.crystal || ((cost.gas || 0) > 0 && data.resources.gas < (cost.gas || 0))}
-                            class="w-full py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed rounded text-sm font-bold transition-transform active:scale-95"
+                            disabled={!cost || data.resources.metal < cost.metal || data.resources.crystal < cost.crystal || ((cost.gas || 0) > 0 && data.resources.gas < (cost.gas || 0)) || loading[building.id]}
+                            class="w-full py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed rounded text-sm font-bold transition-transform active:scale-95 flex items-center justify-center disabled:opacity-50"
                         >
+                            {#if loading[building.id]}
+                                <Spinner size="sm" class="mr-2" />
+                            {/if}
                             Upgrade to Level {level + 1}
                         </button>
                     </form>
@@ -213,7 +241,13 @@
                         {#if (defense.cost.gas || 0) > 0}<span>G: {(defense.cost.gas || 0).toLocaleString()}</span>{/if}
                     </div>
                     
-                    <form method="POST" action="?/build_defense" use:enhance class="flex space-x-2">
+                    <form method="POST" action="?/build_defense" use:enhance={() => {
+                        loading[type] = true;
+                        return async ({ update }) => {
+                            loading[type] = false;
+                            await update();
+                        };
+                    }} class="flex space-x-2">
                         <input type="hidden" name="type" value={type}>
                         <input type="hidden" name="planet_id" value={data.currentPlanet.id}>
                         
@@ -223,9 +257,12 @@
                             <input type="number" name="amount" min="1" value="1" class="w-16 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-center" disabled={data.buildings.shipyard === 0}>
                             <button 
                                 type="submit"
-                                class="flex-1 bg-blue-600 hover:bg-blue-500 rounded text-sm font-bold transition disabled:bg-gray-600 disabled:cursor-not-allowed active:scale-95 transform"
-                                disabled={data.buildings.shipyard === 0}
+                                class="flex-1 bg-blue-600 hover:bg-blue-500 rounded text-sm font-bold transition disabled:bg-gray-600 disabled:cursor-not-allowed active:scale-95 transform flex items-center justify-center disabled:opacity-50"
+                                disabled={data.buildings.shipyard === 0 || loading[type]}
                             >
+                                {#if loading[type]}
+                                    <Spinner size="sm" class="mr-2" />
+                                {/if}
                                 Build
                             </button>
                         {/if}

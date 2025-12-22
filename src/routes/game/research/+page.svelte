@@ -1,8 +1,10 @@
 <script lang="ts">
     import { getResearchCost } from '$lib/game-config';
     import { enhance } from '$app/forms';
+    import Spinner from '$lib/components/Spinner.svelte';
 
     let { data } = $props();
+    let loading = $state<Record<string, boolean>>({});
     
     // Helper to format numbers
     const f = (n: number) => Math.floor(n).toLocaleString();
@@ -64,17 +66,26 @@
                     </div>
                 </div>
 
-                <form method="POST" action="?/research" use:enhance>
+                <form method="POST" action="?/research" use:enhance={() => {
+                    loading[id] = true;
+                    return async ({ update }) => {
+                        loading[id] = false;
+                        await update();
+                    };
+                }}>
                     <input type="hidden" name="techId" value={id}>
                     <input type="hidden" name="planetId" value={data.currentPlanet.id}>
                     <button 
                         type="submit" 
-                        class="w-full py-2 rounded font-bold transition-colors active:scale-95 transform
+                        class="w-full py-2 rounded font-bold transition-colors active:scale-95 transform flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed
                             {cost && data.resources.metal >= cost.metal && data.resources.crystal >= cost.crystal && data.resources.gas >= (cost.gas || 0) && data.resources.energy >= (cost.energy || 0) && data.researchLabLevel > 0
                                 ? 'bg-green-600 hover:bg-green-500 text-white' 
                                 : 'bg-gray-600 text-gray-400 cursor-not-allowed'}"
-                        disabled={!cost || !(data.resources.metal >= cost.metal && data.resources.crystal >= cost.crystal && data.resources.gas >= (cost.gas || 0) && data.resources.energy >= (cost.energy || 0)) || data.researchLabLevel === 0}
+                        disabled={!cost || !(data.resources.metal >= cost.metal && data.resources.crystal >= cost.crystal && data.resources.gas >= (cost.gas || 0) && data.resources.energy >= (cost.energy || 0)) || data.researchLabLevel === 0 || loading[id]}
                     >
+                        {#if loading[id]}
+                            <Spinner size="sm" class="mr-2" />
+                        {/if}
                         Research
                     </button>
                 </form>

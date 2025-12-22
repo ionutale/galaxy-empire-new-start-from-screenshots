@@ -1,12 +1,15 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
     import type { PageData } from './$types';
+    import Spinner from '$lib/components/Spinner.svelte';
 
     export let data: PageData;
 
     const { commanders, durationCosts, activeCommanders, darkMatter } = data;
     
     let selectedDuration = 7;
+    let loading = $state<Record<string, boolean>>({});
+    let savingSettings = $state(false);
 
     function formatDate(dateStr: string | Date) {
         return new Date(dateStr).toLocaleDateString() + ' ' + new Date(dateStr).toLocaleTimeString();
@@ -53,7 +56,13 @@
                     {#if commander.id === 'nebula_explorer' && activeCommanders[commander.id]}
                         <div class="mt-4 pt-4 border-t border-gray-700">
                             <h4 class="text-sm font-bold text-purple-400 mb-2">Auto-Explore Settings</h4>
-                            <form method="POST" action="?/saveSettings" use:enhance>
+                            <form method="POST" action="?/saveSettings" use:enhance={() => {
+                                savingSettings = true;
+                                return async ({ update }) => {
+                                    savingSettings = false;
+                                    await update();
+                                };
+                            }}>
                                 <div class="space-y-2">
                                     <label class="flex items-center space-x-2 text-sm text-gray-300">
                                         <input type="checkbox" name="enabled" checked={data.autoExploreSettings?.enabled} class="rounded bg-gray-800 border-gray-600 text-purple-500 focus:ring-purple-500" />
@@ -74,7 +83,10 @@
                                         {/each}
                                     </select>
 
-                                    <button type="submit" class="w-full py-1 px-2 bg-blue-600 hover:bg-blue-500 text-white text-xs rounded transition-colors">
+                                    <button type="submit" disabled={savingSettings} class="w-full py-1 px-2 bg-blue-600 hover:bg-blue-500 text-white text-xs rounded transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+                                        {#if savingSettings}
+                                            <Spinner size="sm" class="mr-2" />
+                                        {/if}
                                         Save Settings
                                     </button>
                                 </div>
@@ -82,7 +94,13 @@
                         </div>
                     {/if}
 
-                    <form method="POST" action="?/purchase" use:enhance>
+                    <form method="POST" action="?/purchase" use:enhance={() => {
+                        loading[commander.id] = true;
+                        return async ({ update }) => {
+                            loading[commander.id] = false;
+                            await update();
+                        };
+                    }}>
                         <input type="hidden" name="commanderId" value={commander.id} />
                         
                         <div class="space-y-3 mt-4">
@@ -98,9 +116,12 @@
 
                             <button 
                                 type="submit" 
-                                class="w-full py-2 px-4 bg-purple-600 hover:bg-purple-500 text-white rounded font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transform"
-                                disabled={darkMatter < durationCosts[selectedDuration]}
+                                class="w-full py-2 px-4 bg-purple-600 hover:bg-purple-500 text-white rounded font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transform flex items-center justify-center"
+                                disabled={darkMatter < durationCosts[selectedDuration] || loading[commander.id]}
                             >
+                                {#if loading[commander.id]}
+                                    <Spinner size="sm" class="mr-2" />
+                                {/if}
                                 {activeCommanders[commander.id] ? 'Extend' : 'Recruit'}
                             </button>
                         </div>

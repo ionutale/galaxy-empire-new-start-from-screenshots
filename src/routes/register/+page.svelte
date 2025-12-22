@@ -1,14 +1,23 @@
 <script lang="ts">
     import type { ActionData } from './$types';
+    import { enhance } from '$app/forms';
+    import Spinner from '$lib/components/Spinner.svelte';
     
     let { form }: { form: ActionData } = $props();
+    let loading = $state(false);
 </script>
 
 <div class="min-h-screen flex items-center justify-center bg-gray-900 text-white">
     <div class="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md border border-gray-700">
         <h1 class="text-3xl font-bold mb-6 text-center text-blue-400">Join the Empire</h1>
         
-        <form method="POST" class="space-y-4">
+        <form method="POST" class="space-y-4" use:enhance={() => {
+            loading = true;
+            return async ({ update }) => {
+                loading = false;
+                await update();
+            };
+        }}>
             <div>
                 <label for="username" class="block text-sm font-medium text-gray-300">Username</label>
                 <input type="text" id="username" name="username" required 
@@ -39,8 +48,11 @@
                 <p class="text-red-500 text-sm">{form.error}</p>
             {/if}
 
-            <button type="submit" 
-                class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 rounded-md text-white font-bold transition-transform active:scale-95 duration-200">
+            <button type="submit" disabled={loading}
+                class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 rounded-md text-white font-bold transition-transform active:scale-95 duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+                {#if loading}
+                    <Spinner size="sm" class="mr-2" />
+                {/if}
                 Register
             </button>
         </form>

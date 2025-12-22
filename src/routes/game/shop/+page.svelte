@@ -1,10 +1,12 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
     import type { PageData } from './$types';
+    import Spinner from '$lib/components/Spinner.svelte';
 
     export let data: PageData;
 
     const { shopItems, activeBoosters, darkMatter } = data;
+    let loading = $state<Record<string, boolean>>({});
 
     function formatDate(dateStr: string | Date) {
         return new Date(dateStr).toLocaleDateString() + ' ' + new Date(dateStr).toLocaleTimeString();
@@ -49,14 +51,23 @@
                         </div>
                     {/if}
 
-                    <form method="POST" action="?/purchase" use:enhance>
+                    <form method="POST" action="?/purchase" use:enhance={() => {
+                        loading[item.id] = true;
+                        return async ({ update }) => {
+                            loading[item.id] = false;
+                            await update();
+                        };
+                    }}>
                         <input type="hidden" name="itemId" value={item.id} />
                         
                         <button 
                             type="submit" 
-                            class="w-full mt-4 py-2 px-4 bg-yellow-600 hover:bg-yellow-500 text-white rounded font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transform"
-                            disabled={darkMatter < item.cost}
+                            class="w-full mt-4 py-2 px-4 bg-yellow-600 hover:bg-yellow-500 text-white rounded font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transform flex items-center justify-center"
+                            disabled={darkMatter < item.cost || loading[item.id]}
                         >
+                            {#if loading[item.id]}
+                                <Spinner size="sm" class="mr-2" />
+                            {/if}
                             {activeBoosters[item.id] ? 'Extend' : 'Purchase'}
                         </button>
                     </form>

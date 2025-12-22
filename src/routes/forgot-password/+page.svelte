@@ -1,5 +1,9 @@
 <script lang="ts">
+    import { enhance } from '$app/forms';
+    import Spinner from '$lib/components/Spinner.svelte';
+
     let { form } = $props();
+    let loading = $state(false);
 </script>
 
 <div class="min-h-screen flex items-center justify-center bg-gray-900 text-white p-4">
@@ -18,7 +22,13 @@
                 Enter your email address and we'll send you a link to reset your password.
             </p>
 
-            <form method="POST" class="space-y-6">
+            <form method="POST" class="space-y-6" use:enhance={() => {
+                loading = true;
+                return async ({ update }) => {
+                    loading = false;
+                    await update();
+                };
+            }}>
                 <div>
                     <label for="email" class="block text-sm font-medium text-gray-400 mb-1">Email Address</label>
                     <input 
@@ -31,9 +41,12 @@
                 </div>
 
                 <button 
-                    type="submit" 
-                    class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded transition-transform active:scale-95 duration-200"
+                    type="submit" disabled={loading}
+                    class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded transition-transform active:scale-95 duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                 >
+                    {#if loading}
+                        <Spinner size="sm" class="mr-2" />
+                    {/if}
                     Send Reset Link
                 </button>
             </form>

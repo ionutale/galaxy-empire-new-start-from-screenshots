@@ -1,6 +1,7 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
     import { SHIPS } from '$lib/game-config';
+    import Spinner from '$lib/components/Spinner.svelte';
     
     let { data } = $props();
 
@@ -8,6 +9,7 @@
     
     // Track input amounts
     let amounts = $state(Object.fromEntries(shipTypes.map(type => [type, 1])));
+    let loading = $state<Record<string, boolean>>({});
 
     function canBuild(type: string) {
         const ship = SHIPS[type as keyof typeof SHIPS];
@@ -78,7 +80,13 @@
                         {/if}
                     </div>
                     
-                    <form method="POST" action="?/build" use:enhance class="flex space-x-2">
+                    <form method="POST" action="?/build" use:enhance={() => {
+                        loading[type] = true;
+                        return async ({ update }) => {
+                            loading[type] = false;
+                            await update();
+                        };
+                    }} class="flex space-x-2">
                         <input type="hidden" name="type" value={type}>
                         <input type="hidden" name="planet_id" value={data.currentPlanet.id}>
                         <input 
@@ -91,9 +99,12 @@
                         >
                         <button 
                             type="submit"
-                            class="flex-1 bg-blue-600 hover:bg-blue-500 rounded text-sm font-bold transition disabled:bg-gray-600 disabled:cursor-not-allowed active:scale-95 transform"
-                            disabled={data.shipyardLevel === 0 || !canBuild(type)}
+                            class="flex-1 bg-blue-600 hover:bg-blue-500 rounded text-sm font-bold transition disabled:bg-gray-600 disabled:cursor-not-allowed active:scale-95 transform flex items-center justify-center disabled:opacity-50"
+                            disabled={data.shipyardLevel === 0 || !canBuild(type) || loading[type]}
                         >
+                            {#if loading[type]}
+                                <Spinner size="sm" class="mr-2" />
+                            {/if}
                             Build
                         </button>
                     </form>
