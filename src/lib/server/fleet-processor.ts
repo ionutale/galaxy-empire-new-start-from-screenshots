@@ -269,17 +269,58 @@ async function processArrivingFleet(tx: any, fleet: any) {
             // Looting (if attacker won)
             let lootMsg = '';
             if (result.winner === 'attacker' && !fleetDestroyed) {
-                 const resUpdate = await tx.update(planetResources)
-                     .set({
-                         metal: sql`${planetResources.metal} / 2`,
-                         crystal: sql`${planetResources.crystal} / 2`,
-                         gas: sql`${planetResources.gas} / 2`
-                     })
-                     .where(eq(planetResources.planetId, targetPlanet.id))
-                     .returning({ metal: planetResources.metal, crystal: planetResources.crystal, gas: planetResources.gas });
-                 
-                 const stolen = resUpdate[0];
-                 lootMsg = `Stolen: Metal ${Math.floor(stolen.metal)}, Crystal ${Math.floor(stolen.crystal)}, Gas ${Math.floor(stolen.gas)}.`;
+                // Calculate fleet capacity
+                let fleetCapacity = 0;
+                for (const [type, count] of Object.entries(remainingFleet)) {
+                    const shipInfo = SHIPS[type as keyof typeof SHIPS];
+                    if (shipInfo) {
+                        fleetCapacity += shipInfo.capacity * (count as number);
+                    }
+                }
+
+                // Fetch current resources
+                const targetResourcesRes = await tx.select({
+                    metal: planetResources.metal,
+                    crystal: planetResources.crystal,
+                    gas: planetResources.gas
+                })
+                .from(planetResources)
+                .where(eq(planetResources.planetId, targetPlanet.id));
+
+                const targetRes = targetResourcesRes[0] || { metal: 0, crystal: 0, gas: 0 };
+                
+                const lootableMetal = Math.floor((targetRes.metal || 0) / 2);
+                const lootableCrystal = Math.floor((targetRes.crystal || 0) / 2);
+                const lootableGas = Math.floor((targetRes.gas || 0) / 2);
+                
+                const totalLootable = lootableMetal + lootableCrystal + lootableGas;
+                
+                let stolenMetal = lootableMetal;
+                let stolenCrystal = lootableCrystal;
+                let stolenGas = lootableGas;
+
+                if (totalLootable > fleetCapacity) {
+                    const ratio = fleetCapacity / totalLootable;
+                    stolenMetal = Math.floor(lootableMetal * ratio);
+                    stolenCrystal = Math.floor(lootableCrystal * ratio);
+                    stolenGas = Math.floor(lootableGas * ratio);
+                }
+
+                // Update planet resources
+                await tx.update(planetResources)
+                    .set({
+                        metal: sql`${planetResources.metal} - ${stolenMetal}`,
+                        crystal: sql`${planetResources.crystal} - ${stolenCrystal}`,
+                        gas: sql`${planetResources.gas} - ${stolenGas}`
+                    })
+                    .where(eq(planetResources.planetId, targetPlanet.id));
+
+                // Update fleet resources
+                await tx.update(fleets)
+                    .set({ resources: { metal: stolenMetal, crystal: stolenCrystal, gas: stolenGas } })
+                    .where(eq(fleets.id, fleet.id));
+
+                lootMsg = `Stolen: Metal ${stolenMetal}, Crystal ${stolenCrystal}, Gas ${stolenGas}.`;
             }
 
             // Send Reports
