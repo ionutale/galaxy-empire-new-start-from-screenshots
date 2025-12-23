@@ -1,5 +1,5 @@
 import { db } from './db';
-import { planetShips, fleets, planetResources } from './db/schema';
+import { planetShips, fleets, planetResources, userResearch } from './db/schema';
 import { eq, sql, and, inArray } from 'drizzle-orm';
 import { SHIPS } from '$lib/game-config';
 
@@ -34,6 +34,27 @@ export async function dispatchFleet(
     }
 
     return await db.transaction(async (tx) => {
+        // Check max fleets limit (Computer Technology)
+        const researchRes = await tx.select({ computerTech: userResearch.computerTech })
+            .from(userResearch)
+            .where(eq(userResearch.userId, userId));
+        
+        const computerTechLevel = researchRes[0]?.computerTech || 0;
+        const maxFleets = 1 + computerTechLevel;
+
+        const activeFleetsRes = await tx.select({ count: sql<number>`count(*)` })
+            .from(fleets)
+            .where(and(
+                eq(fleets.userId, userId),
+                inArray(fleets.status, ['active', 'returning'])
+            ));
+            
+        const activeFleets = Number(activeFleetsRes[0].count);
+
+        if (activeFleets >= maxFleets) {
+             throw new Error(`Max fleet limit reached (${maxFleets}). Upgrade Computer Technology to increase limit.`);
+        }
+
         if (mission === 'expedition') {
             const activeExpeditions = await tx.select({ count: sql<number>`count(*)` })
                 .from(fleets)
