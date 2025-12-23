@@ -1,6 +1,6 @@
 import { db } from './db';
 import { planetShips, fleets, planetResources } from './db/schema';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, and, inArray } from 'drizzle-orm';
 import { SHIPS } from '$lib/game-config';
 
 export async function dispatchFleet(
@@ -34,6 +34,20 @@ export async function dispatchFleet(
     }
 
     return await db.transaction(async (tx) => {
+        if (mission === 'expedition') {
+            const activeExpeditions = await tx.select({ count: sql<number>`count(*)` })
+                .from(fleets)
+                .where(and(
+                    eq(fleets.originPlanetId, planetId),
+                    eq(fleets.mission, 'expedition'),
+                    inArray(fleets.status, ['active', 'returning'])
+                ));
+            
+            if (Number(activeExpeditions[0].count) >= 6) {
+                throw new Error('Max expedition limit reached (6)');
+            }
+        }
+
         // Check if user has enough ships
         const shipCheck = await tx.select()
             .from(planetShips)

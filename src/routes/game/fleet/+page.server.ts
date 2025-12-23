@@ -117,7 +117,7 @@ export const actions = {
             return { success: true };
 
         } catch (e: any) {
-            if (e.message.startsWith('Not enough') || e.message.startsWith('No ships')) {
+            if (e.message.startsWith('Not enough') || e.message.startsWith('No ships') || e.message.includes('Max expedition limit')) {
                 return fail(400, { error: e.message });
             }
             console.error(e);
