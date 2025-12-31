@@ -219,6 +219,10 @@
             <span class="text-xl mb-1">🚀</span>
             <span class="text-[10px] uppercase tracking-wide">Fleet</span>
         </a>
+        <a href="/game/fleet/movements" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem] active:scale-95 transform">
+            <span class="text-xl mb-1">📡</span>
+            <span class="text-[10px] uppercase tracking-wide">Movements</span>
+        </a>
         <a href="/game/system" class="flex flex-col items-center p-2 hover:bg-gray-700 rounded-lg transition min-w-[4rem] active:scale-95 transform">
             <span class="text-xl mb-1">☀️</span>
             <span class="text-[10px] uppercase tracking-wide">Galaxy</span>

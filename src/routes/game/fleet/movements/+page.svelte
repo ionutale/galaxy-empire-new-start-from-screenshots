@@ -8,16 +8,25 @@
     let interval: any;
     let reloading = false;
 
+    let extraFleets = $state<any[]>([]);
+    let loadingMore = $state(false);
+    let hasMore = $state(true);
+
+    let allFleets = $derived([...data.fleets, ...extraFleets]);
+
     // TODO: Optimize this with server-sent events or websockets
     onMount(() => {
         interval = setInterval(async () => {
             now = Date.now();
 
             if (!reloading) {
-                const shouldReload = data.fleets.some((f: any) => new Date(f.arrivalTime).getTime() <= now);
+                const shouldReload = allFleets.some((f: any) => new Date(f.arrivalTime).getTime() <= now);
                 if (shouldReload) {
                     reloading = true;
                     await invalidateAll();
+                    // Reset extra fleets on reload as the page data refreshes
+                    extraFleets = [];
+                    hasMore = true;
                     reloading = false;
                 }
             }
@@ -27,6 +36,28 @@
     onDestroy(() => {
         if (interval) clearInterval(interval);
     });
+
+    async function loadMore() {
+        if (loadingMore) return;
+        loadingMore = true;
+        try {
+            const currentCount = allFleets.length;
+            const res = await fetch(`/api/fleet/movements?offset=${currentCount}&limit=25`);
+            if (res.ok) {
+                const result = await res.json();
+                if (result.fleets.length < 25) {
+                    hasMore = false;
+                }
+                if (result.fleets.length > 0) {
+                    extraFleets.push(...result.fleets);
+                }
+            }
+        } catch (e) {
+            console.error('Failed to load fleets', e);
+        } finally {
+            loadingMore = false;
+        }
+    }
 
     function getProgress(fleet: any) {
         const start = new Date(fleet.departureTime).getTime();
@@ -61,14 +92,14 @@
         </a>
     </div>
 
-    {#if data.fleets.length === 0}
+    {#if allFleets.length === 0}
         <div class="p-8 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-400 text-center">
             <div class="text-4xl mb-2">📡</div>
             No active fleet movements detected.
         </div>
     {:else}
         <div class="space-y-3">
-            {#each data.fleets as fleet}
+            {#each allFleets as fleet}
                 <div id="fleet-{fleet.id}" class="bg-gray-800 border border-gray-700 p-4 rounded-lg shadow-lg flex flex-col gap-4">
                     <div class="flex justify-between items-start">
                         <div>
@@ -114,5 +145,17 @@
                 </div>
             {/each}
         </div>
+
+        {#if hasMore && allFleets.length >= 25}
+            <div class="mt-6 text-center">
+                <button 
+                    class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded disabled:opacity-50"
+                    onclick={loadMore}
+                    disabled={loadingMore}
+                >
+                    {loadingMore ? 'Loading...' : 'Load More'}
+                </button>
+            </div>
+        {/if}
     {/if}
 </div>

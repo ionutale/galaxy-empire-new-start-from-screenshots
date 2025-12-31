@@ -1,16 +1,17 @@
+import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { fleets, planets } from '$lib/server/db/schema';
 import { eq, and, notInArray, asc } from 'drizzle-orm';
-import type { PageServerLoad } from './$types';
+import type { RequestHandler } from './$types';
 
-export const load: PageServerLoad = async ({ parent }) => {
-    const { currentPlanet, user } = await parent();
-
-    if (!currentPlanet) {
-        return { fleets: [] };
+export const GET: RequestHandler = async ({ locals, url }) => {
+    if (!locals.user) {
+        return json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Fetch active fleets (own fleets)
+    const limit = Number(url.searchParams.get('limit')) || 25;
+    const offset = Number(url.searchParams.get('offset')) || 0;
+
     const fleetsRes = await db.select({
         id: fleets.id,
         userId: fleets.userId,
@@ -32,13 +33,12 @@ export const load: PageServerLoad = async ({ parent }) => {
     .from(fleets)
     .innerJoin(planets, eq(fleets.originPlanetId, planets.id))
     .where(and(
-        eq(fleets.userId, user.id),
+        eq(fleets.userId, locals.user.id),
         notInArray(fleets.status, ['completed', 'destroyed'])
     ))
     .orderBy(asc(fleets.arrivalTime))
-    .limit(25);
+    .limit(limit)
+    .offset(offset);
 
-    return {
-        fleets: fleetsRes
-    };
+    return json({ fleets: fleetsRes });
 };

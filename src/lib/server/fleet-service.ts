@@ -64,8 +64,8 @@ export async function dispatchFleet(
                     inArray(fleets.status, ['active', 'returning'])
                 ));
             
-            if (Number(activeExpeditions[0].count) >= 6) {
-                throw new Error('Max expedition limit reached (6)');
+            if (Number(activeExpeditions[0].count) >= 18) {
+                throw new Error('Max expedition limit reached (18)');
             }
         }
 
