@@ -9,7 +9,7 @@ export const load: PageServerLoad = async ({ locals }) => {
         .from(messages)
         .where(eq(messages.userId, locals.user.id))
         .orderBy(desc(messages.createdAt))
-        .limit(50);
+        .limit(25);
 
     // Mark as read (simplified: mark all as read on open)
     await db.update(messages)
