@@ -180,7 +180,11 @@ export const messages = pgTable('messages', {
     content: text('content'),
     isRead: boolean('is_read').default(false),
     createdAt: timestamp('created_at').defaultNow()
-});
+}, (t) => ({
+    userIdIdx: index('messages_user_id_idx').on(t.userId),
+    userIdReadIdx: index('messages_user_id_read_idx').on(t.userId, t.isRead),
+    userIdCreatedIdx: index('messages_user_id_created_idx').on(t.userId, t.createdAt)
+}));
 
 export const chatMessages = pgTable('chat_messages', {
     id: serial('id').primaryKey(),
