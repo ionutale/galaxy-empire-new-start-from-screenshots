@@ -230,7 +230,37 @@ This document outlines the remaining features and systems that need to be implem
 
 ## 🔧 **Priority 6: Technical Infrastructure**
 
-### 6.1 Real-time Updates
+### 6.1 Database Logic Migration & Optimization
+**Status:** In Progress (Tick system moved to stored procedures)
+
+**Recent Progress:**
+- [x] Game tick system migrated to stored procedures
+- [x] Resource production calculations moved to database
+
+**Remaining Components:**
+- [ ] Fleet movement logic migration to stored procedures
+- [ ] Combat calculations stored procedures
+- [ ] Building queue processing stored procedures
+- [ ] Research queue processing stored procedures
+- [ ] Espionage mission processing stored procedures
+- [ ] Database-side validation procedures
+- [ ] Automated cleanup procedures (old fleets, expired messages)
+
+**Files to Create/Modify:**
+- `drizzle/stored-procedures/fleet-movement.sql` - Fleet movement calculations
+- `drizzle/stored-procedures/combat-engine.sql` - Combat processing
+- `drizzle/stored-procedures/building-queue.sql` - Building queue management
+- `drizzle/stored-procedures/research-queue.sql` - Research processing
+- `drizzle/stored-procedures/cleanup-tasks.sql` - Maintenance procedures
+- `src/lib/server/db-procedures.ts` - Procedure calling wrapper
+
+**Benefits:**
+- Improved performance (calculations closer to data)
+- Better transaction consistency
+- Reduced network overhead
+- Easier maintenance and debugging
+
+### 6.2 Real-time Updates
 **Status:** Not implemented
 
 **Missing Components:**
@@ -245,22 +275,23 @@ This document outlines the remaining features and systems that need to be implem
 - `src/lib/server/websocket-service.ts` - WebSocket handling
 - Client-side WebSocket integration
 
-### 6.2 Caching & Performance
+### 6.3 Caching & Performance
 **Status:** Basic caching exists
 
 **Missing Components:**
 - [ ] Redis caching for frequently accessed data
-- [ ] Database query optimization
+- [ ] Database query optimization and indexing
 - [ ] API response caching
 - [ ] Static asset optimization
 - [ ] Database connection pooling improvements
+- [ ] Query result caching for expensive calculations
 
 **Files to Create/Modify:**
 - `src/lib/server/cache.ts` - Caching layer
 - Database indexes optimization
 - Performance monitoring
 
-### 6.3 Error Handling & Logging
+### 6.4 Error Handling & Logging
 **Status:** Basic error handling exists
 
 **Missing Components:**
@@ -269,6 +300,7 @@ This document outlines the remaining features and systems that need to be implem
 - [ ] Error recovery mechanisms
 - [ ] Monitoring and alerting
 - [ ] Debug logging for troubleshooting
+- [ ] Database error handling and rollback mechanisms
 
 **Files to Create/Modify:**
 - `src/lib/server/error-handler.ts` - Error handling
@@ -353,8 +385,13 @@ This document outlines the remaining features and systems that need to be implem
 
 ## 📋 **Implementation Order Recommendation**
 
+**Current Focus (Database Logic Migration):**
+- Database stored procedures for fleet movement
+- Combat calculations moved to database
+- Building and research queue processing procedures
+
 1. **Phase 1 (Core Gameplay)**: Building system, research, ship construction
-2. **Phase 2 (Combat & Movement)**: Complete fleet system, combat reports
+2. **Phase 2 (Database Migration)**: Move remaining logic to stored procedures
 3. **Phase 3 (Universe)**: Galaxy navigation, planet management
 4. **Phase 4 (Social)**: Alliances, messaging, chat
 5. **Phase 5 (Progression)**: Officers, shop, rankings
@@ -365,12 +402,16 @@ This document outlines the remaining features and systems that need to be implem
 
 ## 📈 **Estimated Timeline**
 
-- **Phase 1-3**: 3-4 months (Core gameplay loop)
-- **Phase 4-5**: 2-3 months (Social features)
-- **Phase 6-7**: 1-2 months (Technical polish)
-- **Phase 8-9**: 1 month (Production readiness)
+- **Database Migration Phase**: 2-3 weeks (Move logic to stored procedures)
+- **Phase 1**: 2-3 months (Building system, research, ship construction)
+- **Phase 2**: 1 month (Complete database migration)
+- **Phase 3**: 1-2 months (Universe and planet management)
+- **Phase 4-5**: 2-3 months (Social features and progression)
+- **Phase 6-7**: 1-2 months (Technical polish and UI/UX)
+- **Phase 8-9**: 1 month (Analytics and production readiness)
 
 **Total Estimated Time**: 7-10 months for full implementation
+**Current Priority**: Complete database logic migration (3 weeks)
 
 ## 🔍 **Risks & Considerations**
 
@@ -384,11 +425,16 @@ This document outlines the remaining features and systems that need to be implem
 
 - ✅ Database schema and migrations
 - ✅ User authentication and registration
-- ✅ Game tick system with stored procedures
+- ✅ Game tick system with stored procedures (Database logic migration started)
+- ✅ Resource production calculations moved to database
 - ✅ Basic fleet processing and combat
+- ✅ Combat reports and espionage reports system
+- ✅ Fleet movement calculations and management
 - ✅ Resource and point calculations
 - ✅ Basic UI framework and routing
 - ✅ API structure and error handling
 - ✅ Testing infrastructure
-- ✅ Docker containerization</content>
+- ✅ Docker containerization
+- ✅ Fleet capacity and cargo management
+- ✅ Combat simulation for planning</content>
 <parameter name="filePath">/Users/ionutale/developer-playground/galaxy-empire-new-start-from-screenshots/implementation-plan.md
