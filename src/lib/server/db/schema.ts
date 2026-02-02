@@ -131,6 +131,45 @@ export const userResearch = pgTable('user_research', {
 	armourTech: integer('armour_tech').default(0)
 });
 
+export const researchTypes = pgTable('research_types', {
+	id: serial('id').primaryKey(),
+	name: varchar('name', { length: 100 }).notNull(),
+	description: text('description'),
+	category: varchar('category', { length: 50 }).notNull(),
+	baseCost: jsonb('base_cost').notNull(),
+	baseResearchTime: integer('base_research_time').default(60), // seconds
+	maxLevel: integer('max_level').default(100),
+	prerequisites: jsonb('prerequisites').default({}),
+	icon: varchar('icon', { length: 10 }).default('🔬')
+});
+
+export const userResearchLevels = pgTable('user_research_levels', {
+	id: serial('id').primaryKey(),
+	userId: integer('user_id').references(() => users.id),
+	researchTypeId: integer('research_type_id').references(() => researchTypes.id),
+	level: integer('level').default(0),
+	isResearching: boolean('is_researching').default(false),
+	researchCompletionAt: timestamp('research_completion_at'),
+	createdAt: timestamp('created_at').defaultNow(),
+	updatedAt: timestamp('updated_at').defaultNow()
+}, (t) => ({
+	userResearchIdx: index('user_research_levels_user_research_idx').on(t.userId, t.researchTypeId),
+	userResearchingIdx: index('user_research_levels_researching_idx').on(t.userId, t.isResearching)
+}));
+
+export const researchQueue = pgTable('research_queue', {
+	id: serial('id').primaryKey(),
+	userId: integer('user_id').references(() => users.id),
+	researchTypeId: integer('research_type_id').references(() => researchTypes.id),
+	level: integer('level').notNull(),
+	startedAt: timestamp('started_at').defaultNow(),
+	completionAt: timestamp('completion_at').notNull(),
+	planetId: integer('planet_id').references(() => planets.id)
+}, (t) => ({
+	userQueueIdx: index('research_queue_user_idx').on(t.userId),
+	completionIdx: index('research_queue_completion_idx').on(t.completionAt)
+}));
+
 // 5. Fleets & Ships
 export const fleets = pgTable(
 	'fleets',
