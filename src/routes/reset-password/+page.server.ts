@@ -5,82 +5,75 @@ import { eq, and, gt } from 'drizzle-orm';
 import { hashPassword } from '$lib/server/auth';
 
 export const load = async ({ url }) => {
-    const token = url.searchParams.get('token');
+	const token = url.searchParams.get('token');
 
-    if (!token) {
-        throw redirect(302, '/login');
-    }
+	if (!token) {
+		throw redirect(302, '/login');
+	}
 
-    // Verify token exists and is valid
-    const result = await db.select()
-        .from(passwordResets)
-        .where(and(
-            eq(passwordResets.token, token),
-            gt(passwordResets.expiresAt, new Date())
-        ));
+	// Verify token exists and is valid
+	const result = await db
+		.select()
+		.from(passwordResets)
+		.where(and(eq(passwordResets.token, token), gt(passwordResets.expiresAt, new Date())));
 
-    if (result.length === 0) {
-        return {
-            token,
-            error: 'Invalid or expired password reset link.'
-        };
-    }
+	if (result.length === 0) {
+		return {
+			token,
+			error: 'Invalid or expired password reset link.'
+		};
+	}
 
-    return { token };
+	return { token };
 };
 
 export const actions = {
-    default: async ({ request }) => {
-        const data = await request.formData();
-        const token = data.get('token')?.toString();
-        const password = data.get('password')?.toString();
-        const confirmPassword = data.get('confirmPassword')?.toString();
+	default: async ({ request }) => {
+		const data = await request.formData();
+		const token = data.get('token')?.toString();
+		const password = data.get('password')?.toString();
+		const confirmPassword = data.get('confirmPassword')?.toString();
 
-        if (!token || !password || !confirmPassword) {
-            return fail(400, { error: 'All fields are required' });
-        }
+		if (!token || !password || !confirmPassword) {
+			return fail(400, { error: 'All fields are required' });
+		}
 
-        if (password !== confirmPassword) {
-            return fail(400, { error: 'Passwords do not match' });
-        }
+		if (password !== confirmPassword) {
+			return fail(400, { error: 'Passwords do not match' });
+		}
 
-        if (password.length < 6) {
-            return fail(400, { error: 'Password must be at least 6 characters' });
-        }
+		if (password.length < 6) {
+			return fail(400, { error: 'Password must be at least 6 characters' });
+		}
 
-        try {
-            // 1. Verify token again
-            const result = await db.select({ userId: passwordResets.userId })
-                .from(passwordResets)
-                .where(and(
-                    eq(passwordResets.token, token),
-                    gt(passwordResets.expiresAt, new Date())
-                ));
+		try {
+			// 1. Verify token again
+			const result = await db
+				.select({ userId: passwordResets.userId })
+				.from(passwordResets)
+				.where(and(eq(passwordResets.token, token), gt(passwordResets.expiresAt, new Date())));
 
-            if (result.length === 0) {
-                return fail(400, { error: 'Invalid or expired token' });
-            }
+			if (result.length === 0) {
+				return fail(400, { error: 'Invalid or expired token' });
+			}
 
-            const userId = result[0].userId;
+			const userId = result[0].userId;
 
-            if (!userId) {
-                return fail(400, { error: 'Invalid user associated with token' });
-            }
+			if (!userId) {
+				return fail(400, { error: 'Invalid user associated with token' });
+			}
 
-            // 2. Update password
-            const hashedPassword = await hashPassword(password);
-            await db.update(users)
-                .set({ passwordHash: hashedPassword })
-                .where(eq(users.id, userId));
+			// 2. Update password
+			const hashedPassword = await hashPassword(password);
+			await db.update(users).set({ passwordHash: hashedPassword }).where(eq(users.id, userId));
 
-            // 3. Delete used token (and any other tokens for this user)
-            await db.delete(passwordResets).where(eq(passwordResets.userId, userId));
+			// 3. Delete used token (and any other tokens for this user)
+			await db.delete(passwordResets).where(eq(passwordResets.userId, userId));
+		} catch (err) {
+			console.error('Reset password error:', err);
+			return fail(500, { error: 'An error occurred. Please try again.' });
+		}
 
-        } catch (err) {
-            console.error('Reset password error:', err);
-            return fail(500, { error: 'An error occurred. Please try again.' });
-        }
-
-        throw redirect(302, '/login?reset=success');
-    }
+		throw redirect(302, '/login?reset=success');
+	}
 };

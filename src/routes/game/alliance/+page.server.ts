@@ -5,110 +5,108 @@ import type { PageServerLoad, Actions } from './$types';
 import { fail } from '@sveltejs/kit';
 
 export const load: PageServerLoad = async ({ locals }) => {
-    if (!locals.user) return {};
+	if (!locals.user) return {};
 
-    // Refresh user data to get alliance_id
-    const userRes = await db.select({ allianceId: users.allianceId })
-        .from(users)
-        .where(eq(users.id, locals.user.id));
-    
-    const allianceId = userRes[0]?.allianceId;
+	// Refresh user data to get alliance_id
+	const userRes = await db
+		.select({ allianceId: users.allianceId })
+		.from(users)
+		.where(eq(users.id, locals.user.id));
 
-    if (allianceId) {
-        // User is in an alliance
-        const allianceRes = await db.select().from(alliances).where(eq(alliances.id, allianceId));
-        const alliance = allianceRes[0];
+	const allianceId = userRes[0]?.allianceId;
 
-        const membersRes = await db.select({
-            id: users.id,
-            username: users.username,
-            points: users.points
-        })
-        .from(users)
-        .where(eq(users.allianceId, allianceId))
-        .orderBy(desc(users.points));
+	if (allianceId) {
+		// User is in an alliance
+		const allianceRes = await db.select().from(alliances).where(eq(alliances.id, allianceId));
+		const alliance = allianceRes[0];
 
-        return {
-            inAlliance: true,
-            alliance,
-            members: membersRes
-        };
-    } else {
-        // User is not in an alliance
-        const alliancesRes = await db.select({
-            id: alliances.id,
-            name: alliances.name,
-            tag: alliances.tag,
-            ownerId: alliances.ownerId,
-            createdAt: alliances.createdAt,
-            memberCount: sql<number>`count(${users.id})`
-        })
-        .from(alliances)
-        .leftJoin(users, eq(alliances.id, users.allianceId))
-        .groupBy(alliances.id)
-        .orderBy(desc(sql`count(${users.id})`));
-        
-        return {
-            inAlliance: false,
-            alliances: alliancesRes
-        };
-    }
+		const membersRes = await db
+			.select({
+				id: users.id,
+				username: users.username,
+				points: users.points
+			})
+			.from(users)
+			.where(eq(users.allianceId, allianceId))
+			.orderBy(desc(users.points));
+
+		return {
+			inAlliance: true,
+			alliance,
+			members: membersRes
+		};
+	} else {
+		// User is not in an alliance
+		const alliancesRes = await db
+			.select({
+				id: alliances.id,
+				name: alliances.name,
+				tag: alliances.tag,
+				ownerId: alliances.ownerId,
+				createdAt: alliances.createdAt,
+				memberCount: sql<number>`count(${users.id})`
+			})
+			.from(alliances)
+			.leftJoin(users, eq(alliances.id, users.allianceId))
+			.groupBy(alliances.id)
+			.orderBy(desc(sql`count(${users.id})`));
+
+		return {
+			inAlliance: false,
+			alliances: alliancesRes
+		};
+	}
 };
 
 export const actions: Actions = {
-    create: async ({ request, locals }) => {
-        const data = await request.formData();
-        const name = data.get('name') as string;
-        const tag = data.get('tag') as string;
+	create: async ({ request, locals }) => {
+		const data = await request.formData();
+		const name = data.get('name') as string;
+		const tag = data.get('tag') as string;
 
-        if (!locals.user) return fail(401, { error: 'Unauthorized' });
-        const userId = locals.user.id;
-        if (!name || !tag) return fail(400, { error: 'Name and Tag required' });
+		if (!locals.user) return fail(401, { error: 'Unauthorized' });
+		const userId = locals.user.id;
+		if (!name || !tag) return fail(400, { error: 'Name and Tag required' });
 
-        try {
-            await db.transaction(async (tx) => {
-                // Create alliance
-                const res = await tx.insert(alliances)
-                    .values({
-                        name,
-                        tag,
-                        ownerId: userId
-                    })
-                    .returning({ id: alliances.id });
-                
-                const allianceId = res[0].id;
+		try {
+			await db.transaction(async (tx) => {
+				// Create alliance
+				const res = await tx
+					.insert(alliances)
+					.values({
+						name,
+						tag,
+						ownerId: userId
+					})
+					.returning({ id: alliances.id });
 
-                // Update user
-                await tx.update(users)
-                    .set({ allianceId })
-                    .where(eq(users.id, userId));
-            });
+				const allianceId = res[0].id;
 
-            return { success: true };
-        } catch (e) {
-            console.error(e);
-            return fail(500, { error: 'Failed to create alliance' });
-        }
-    },
-    join: async ({ request, locals }) => {
-        const data = await request.formData();
-        const allianceId = Number(data.get('allianceId'));
+				// Update user
+				await tx.update(users).set({ allianceId }).where(eq(users.id, userId));
+			});
 
-        if (!locals.user) return fail(401, { error: 'Unauthorized' });
+			return { success: true };
+		} catch (e) {
+			console.error(e);
+			return fail(500, { error: 'Failed to create alliance' });
+		}
+	},
+	join: async ({ request, locals }) => {
+		const data = await request.formData();
+		const allianceId = Number(data.get('allianceId'));
 
-        await db.update(users)
-            .set({ allianceId })
-            .where(eq(users.id, locals.user.id));
+		if (!locals.user) return fail(401, { error: 'Unauthorized' });
 
-        return { success: true };
-    },
-    leave: async ({ locals }) => {
-        if (!locals.user) return fail(401, { error: 'Unauthorized' });
+		await db.update(users).set({ allianceId }).where(eq(users.id, locals.user.id));
 
-        await db.update(users)
-            .set({ allianceId: null })
-            .where(eq(users.id, locals.user.id));
+		return { success: true };
+	},
+	leave: async ({ locals }) => {
+		if (!locals.user) return fail(401, { error: 'Unauthorized' });
 
-        return { success: true };
-    }
+		await db.update(users).set({ allianceId: null }).where(eq(users.id, locals.user.id));
+
+		return { success: true };
+	}
 };

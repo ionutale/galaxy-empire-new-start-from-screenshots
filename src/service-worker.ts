@@ -6,7 +6,7 @@ const CACHE = `cache-${version}`;
 
 const ASSETS = [
 	...build, // the app itself
-	...files  // everything in `static`
+	...files // everything in `static`
 ];
 
 self.addEventListener('install', (event) => {
@@ -34,10 +34,10 @@ self.addEventListener('fetch', (event) => {
 	// ignore POST requests etc
 	if (event.request.method !== 'GET') return;
 
-    const url = new URL(event.request.url);
+	const url = new URL(event.request.url);
 
-    // Ignore chrome-extension requests and other non-http schemes
-    if (!url.protocol.startsWith('http')) return;
+	// Ignore chrome-extension requests and other non-http schemes
+	if (!url.protocol.startsWith('http')) return;
 
 	async function respond() {
 		const cache = await caches.open(CACHE);
@@ -78,17 +78,17 @@ self.addEventListener('fetch', (event) => {
 // });
 
 self.addEventListener('notificationclick', (event) => {
-    event.notification.close();
-    event.waitUntil(
-        clients.matchAll({ type: 'window' }).then((windowClients) => {
-            for (const client of windowClients) {
-                if (client.url === '/' && 'focus' in client) {
-                    return client.focus();
-                }
-            }
-            if (clients.openWindow) {
-                return clients.openWindow('/');
-            }
-        })
-    );
+	event.notification.close();
+	event.waitUntil(
+		clients.matchAll({ type: 'window' }).then((windowClients) => {
+			for (const client of windowClients) {
+				if (client.url === '/' && 'focus' in client) {
+					return client.focus();
+				}
+			}
+			if (clients.openWindow) {
+				return clients.openWindow('/');
+			}
+		})
+	);
 });

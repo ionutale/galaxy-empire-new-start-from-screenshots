@@ -1,6 +1,7 @@
 # Database Schema (PostgreSQL)
 
 ## 1. Users & Auth
+
 ```sql
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
@@ -21,6 +22,7 @@ CREATE TABLE sessions (
 ```
 
 ## 2. Universe & Map
+
 ```sql
 CREATE TABLE galaxies (
     id SERIAL PRIMARY KEY,
@@ -53,6 +55,7 @@ CREATE TABLE planets (
 ```
 
 ## 3. Resources & Buildings
+
 ```sql
 CREATE TABLE planet_resources (
     planet_id INT PRIMARY KEY REFERENCES planets(id),
@@ -80,6 +83,7 @@ CREATE TABLE planet_buildings (
 ```
 
 ## 4. Research & Tech
+
 ```sql
 CREATE TABLE user_research (
     user_id INT PRIMARY KEY REFERENCES users(id),
@@ -101,6 +105,7 @@ CREATE TABLE user_research (
 ```
 
 ## 5. Fleets & Units
+
 ```sql
 CREATE TABLE planet_units (
     planet_id INT PRIMARY KEY REFERENCES planets(id),
@@ -135,6 +140,7 @@ CREATE TABLE fleets (
 ```
 
 ## 6. Construction Queues
+
 ```sql
 CREATE TABLE construction_queue (
     id SERIAL PRIMARY KEY,

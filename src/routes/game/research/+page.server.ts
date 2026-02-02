@@ -6,97 +6,105 @@ import { fail } from '@sveltejs/kit';
 import { eq, sql } from 'drizzle-orm';
 
 function toCamel(s: string) {
-    return s.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+	return s.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
 }
 
 export const load: PageServerLoad = async ({ locals, parent }) => {
-    if (!locals.user) return {};
-    
-    const { currentPlanet } = await parent();
+	if (!locals.user) return {};
 
-    // Get user research levels
-    const res = await db.select().from(userResearch).where(eq(userResearch.userId, locals.user.id));
-    const userResearchData = res[0] || {};
+	const { currentPlanet } = await parent();
 
-    // Get Research Lab level on current planet
-    const buildRes = await db.select({ researchLab: planetBuildings.researchLab })
-        .from(planetBuildings)
-        .where(eq(planetBuildings.planetId, currentPlanet.id));
-    const researchLabLevel = buildRes[0]?.researchLab || 0;
+	// Get user research levels
+	const res = await db.select().from(userResearch).where(eq(userResearch.userId, locals.user.id));
+	const userResearchData = res[0] || {};
 
-    return {
-        userResearch: userResearchData,
-        researchLabLevel,
-        techs: RESEARCH
-    };
+	// Get Research Lab level on current planet
+	const buildRes = await db
+		.select({ researchLab: planetBuildings.researchLab })
+		.from(planetBuildings)
+		.where(eq(planetBuildings.planetId, currentPlanet.id));
+	const researchLabLevel = buildRes[0]?.researchLab || 0;
+
+	return {
+		userResearch: userResearchData,
+		researchLabLevel,
+		techs: RESEARCH
+	};
 };
 
 export const actions: Actions = {
-    research: async ({ request, locals }) => {
-        const data = await request.formData();
-        const techId = data.get('techId') as string;
-        const planetId = Number(data.get('planetId'));
+	research: async ({ request, locals }) => {
+		const data = await request.formData();
+		const techId = data.get('techId') as string;
+		const planetId = Number(data.get('planetId'));
 
-        if (!locals.user) return fail(401, { error: 'Unauthorized' });
-        const userId = locals.user.id;
-        if (!RESEARCH[techId as keyof typeof RESEARCH]) return fail(400, { error: 'Invalid tech' });
+		if (!locals.user) return fail(401, { error: 'Unauthorized' });
+		const userId = locals.user.id;
+		if (!RESEARCH[techId as keyof typeof RESEARCH]) return fail(400, { error: 'Invalid tech' });
 
-        try {
-            await db.transaction(async (tx) => {
-                // Get current levels
-                const res = await tx.select().from(userResearch).where(eq(userResearch.userId, userId));
-                const currentLevel = (res[0] as any)[toCamel(techId)] || 0;
-                const nextLevel = currentLevel + 1;
+		try {
+			await db.transaction(async (tx) => {
+				// Get current levels
+				const res = await tx.select().from(userResearch).where(eq(userResearch.userId, userId));
+				const currentLevel = (res[0] as any)[toCamel(techId)] || 0;
+				const nextLevel = currentLevel + 1;
 
-                // Calculate cost
-                const cost = getResearchCost(techId, currentLevel);
-                if (!cost) throw new Error('Cost calculation failed');
+				// Calculate cost
+				const cost = getResearchCost(techId, currentLevel);
+				if (!cost) throw new Error('Cost calculation failed');
 
-                // Check resources
-                const planetRes = await tx.select()
-                    .from(planetResources)
-                    .where(eq(planetResources.planetId, planetId))
-                    .for('update');
-                
-                const resources = planetRes[0];
-                if (!resources) throw new Error('Planet not found');
+				// Check resources
+				const planetRes = await tx
+					.select()
+					.from(planetResources)
+					.where(eq(planetResources.planetId, planetId))
+					.for('update');
 
-                if ((resources.metal || 0) < cost.metal || (resources.crystal || 0) < cost.crystal || (resources.gas || 0) < (cost.gas || 0)) {
-                    throw new Error('Not enough resources');
-                }
+				const resources = planetRes[0];
+				if (!resources) throw new Error('Planet not found');
 
-                // Check Research Lab
-                const buildRes = await tx.select({ researchLab: planetBuildings.researchLab })
-                    .from(planetBuildings)
-                    .where(eq(planetBuildings.planetId, planetId));
-                
-                if ((buildRes[0]?.researchLab || 0) < 1) {
-                     throw new Error('Research Lab required');
-                }
+				if (
+					(resources.metal || 0) < cost.metal ||
+					(resources.crystal || 0) < cost.crystal ||
+					(resources.gas || 0) < (cost.gas || 0)
+				) {
+					throw new Error('Not enough resources');
+				}
 
-                // Deduct resources
-                await tx.update(planetResources)
-                    .set({
-                        metal: sql`${planetResources.metal} - ${cost.metal}`,
-                        crystal: sql`${planetResources.crystal} - ${cost.crystal}`,
-                        gas: sql`${planetResources.gas} - ${cost.gas || 0}`
-                    })
-                    .where(eq(planetResources.planetId, planetId));
+				// Check Research Lab
+				const buildRes = await tx
+					.select({ researchLab: planetBuildings.researchLab })
+					.from(planetBuildings)
+					.where(eq(planetBuildings.planetId, planetId));
 
-                // Upgrade tech
-                await tx.update(userResearch)
-                    .set({ [toCamel(techId)]: nextLevel })
-                    .where(eq(userResearch.userId, userId));
-            });
-            
-            // Update points
-            await updateUserPoints(userId);
+				if ((buildRes[0]?.researchLab || 0) < 1) {
+					throw new Error('Research Lab required');
+				}
 
-            return { success: true, message: `Research successful` };
+				// Deduct resources
+				await tx
+					.update(planetResources)
+					.set({
+						metal: sql`${planetResources.metal} - ${cost.metal}`,
+						crystal: sql`${planetResources.crystal} - ${cost.crystal}`,
+						gas: sql`${planetResources.gas} - ${cost.gas || 0}`
+					})
+					.where(eq(planetResources.planetId, planetId));
 
-        } catch (e: any) {
-            console.error(e);
-            return fail(500, { error: e.message || 'Internal server error' });
-        }
-    }
+				// Upgrade tech
+				await tx
+					.update(userResearch)
+					.set({ [toCamel(techId)]: nextLevel })
+					.where(eq(userResearch.userId, userId));
+			});
+
+			// Update points
+			await updateUserPoints(userId);
+
+			return { success: true, message: `Research successful` };
+		} catch (e: any) {
+			console.error(e);
+			return fail(500, { error: e.message || 'Internal server error' });
+		}
+	}
 };

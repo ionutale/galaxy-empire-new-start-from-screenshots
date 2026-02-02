@@ -1,136 +1,173 @@
 <script lang="ts">
-    import { enhance } from '$app/forms';
-    import type { PageData } from './$types';
-    import Spinner from '$lib/components/Spinner.svelte';
+	import { enhance } from '$app/forms';
+	import type { PageData } from './$types';
+	import Spinner from '$lib/components/Spinner.svelte';
 
-    let { data }: { data: PageData } = $props();
+	let { data }: { data: PageData } = $props();
 
-    let commanders = $derived(data.commanders);
-    let durationCosts = $derived(data.durationCosts) as any;
-    let activeCommanders = $derived(data.activeCommanders);
-    let darkMatter = $derived(data.darkMatter);
+	let commanders = $derived(data.commanders);
+	let durationCosts = $derived(data.durationCosts) as any;
+	let activeCommanders = $derived(data.activeCommanders);
+	let darkMatter = $derived(data.darkMatter);
 
-    let selectedDuration = $state(7);
-    let loading = $state<Record<string, boolean>>({});
-    let savingSettings = $state(false);
+	let selectedDuration = $state(7);
+	let loading = $state<Record<string, boolean>>({});
+	let savingSettings = $state(false);
 
-    function formatDate(dateStr: string | Date) {
-        return new Date(dateStr).toLocaleDateString() + ' ' + new Date(dateStr).toLocaleTimeString();
-    }
+	function formatDate(dateStr: string | Date) {
+		return new Date(dateStr).toLocaleDateString() + ' ' + new Date(dateStr).toLocaleTimeString();
+	}
 </script>
 
-<div class="w-full max-w-6xl mx-auto p-4">
-    <div class="flex justify-between items-center mb-8">
-        <h1 class="text-3xl font-bold text-purple-400">Commanders</h1>
-        <div class="bg-gray-800 px-4 py-2 rounded-lg border border-purple-500/30">
-            <span class="text-gray-400">Dark Matter:</span>
-            <span class="text-purple-400 font-bold ml-2">{darkMatter}</span>
-        </div>
-    </div>
+<div class="mx-auto w-full max-w-6xl p-4">
+	<div class="mb-8 flex items-center justify-between">
+		<h1 class="text-3xl font-bold text-purple-400">Commanders</h1>
+		<div class="rounded-lg border border-purple-500/30 bg-gray-800 px-4 py-2">
+			<span class="text-gray-400">Dark Matter:</span>
+			<span class="ml-2 font-bold text-purple-400">{darkMatter}</span>
+		</div>
+	</div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {#each Object.values(commanders) as commander}
-            <div class="bg-gray-900/80 border border-gray-700 rounded-lg overflow-hidden hover:border-purple-500/50 transition-colors">
-                <div class="p-4 bg-gray-800/50 border-b border-gray-700 flex justify-between items-center">
-                    <h3 class="text-xl font-bold text-white">{commander.name}</h3>
-                    {#if activeCommanders[commander.id]}
-                        <span class="px-2 py-1 bg-green-900/50 text-green-400 text-xs rounded border border-green-500/30">Active</span>
-                    {/if}
-                </div>
-                
-                <div class="p-6 space-y-4">
-                    <div class="h-32 bg-black/40 rounded flex items-center justify-center mb-4">
-                        <!-- Placeholder for image -->
-                        <span class="text-4xl">👨‍✈️</span>
-                    </div>
-                    
-                    <p class="text-gray-300 text-sm h-12">{commander.description}</p>
-                    
-                    <div class="text-purple-300 text-sm font-mono">
-                        Bonus: +{commander.bonusValue}% {commander.bonusType.replace('_', ' ')}
-                    </div>
+	<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+		{#each Object.values(commanders) as commander}
+			<div
+				class="overflow-hidden rounded-lg border border-gray-700 bg-gray-900/80 transition-colors hover:border-purple-500/50"
+			>
+				<div class="flex items-center justify-between border-b border-gray-700 bg-gray-800/50 p-4">
+					<h3 class="text-xl font-bold text-white">{commander.name}</h3>
+					{#if activeCommanders[commander.id]}
+						<span
+							class="rounded border border-green-500/30 bg-green-900/50 px-2 py-1 text-xs text-green-400"
+							>Active</span
+						>
+					{/if}
+				</div>
 
-                    {#if activeCommanders[commander.id]}
-                        <div class="text-xs text-gray-400 mt-2">
-                            Expires: {formatDate(activeCommanders[commander.id])}
-                        </div>
-                    {/if}
+				<div class="space-y-4 p-6">
+					<div class="mb-4 flex h-32 items-center justify-center rounded bg-black/40">
+						<!-- Placeholder for image -->
+						<span class="text-4xl">👨‍✈️</span>
+					</div>
 
-                    {#if commander.id === 'nebula_explorer' && activeCommanders[commander.id]}
-                        <div class="mt-4 pt-4 border-t border-gray-700">
-                            <h4 class="text-sm font-bold text-purple-400 mb-2">Auto-Explore Settings</h4>
-                            <form method="POST" action="?/saveSettings" use:enhance={() => {
-                                savingSettings = true;
-                                return async ({ update }) => {
-                                    savingSettings = false;
-                                    await update();
-                                };
-                            }}>
-                                <div class="space-y-2">
-                                    <label class="flex items-center space-x-2 text-sm text-gray-300">
-                                        <input type="checkbox" name="enabled" checked={data.autoExploreSettings?.enabled} class="rounded bg-gray-800 border-gray-600 text-purple-500 focus:ring-purple-500" />
-                                        <span>Enable Auto-Explore</span>
-                                    </label>
+					<p class="h-12 text-sm text-gray-300">{commander.description}</p>
 
-                                    <select name="templateId" class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-white">
-                                        <option value="">Select Template</option>
-                                        {#each data.templates as template}
-                                            <option value={template.id} selected={data.autoExploreSettings?.templateId === template.id}>{template.name}</option>
-                                        {/each}
-                                    </select>
+					<div class="font-mono text-sm text-purple-300">
+						Bonus: +{commander.bonusValue}% {commander.bonusType.replace('_', ' ')}
+					</div>
 
-                                    <select name="originPlanetId" class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-white">
-                                        <option value="">Select Origin Planet</option>
-                                        {#each data.userPlanets as planet}
-                                            <option value={planet.id} selected={data.autoExploreSettings?.originPlanetId === planet.id}>{planet.name} [{planet.galaxyId}:{planet.systemId}:{planet.planetNumber}]</option>
-                                        {/each}
-                                    </select>
+					{#if activeCommanders[commander.id]}
+						<div class="mt-2 text-xs text-gray-400">
+							Expires: {formatDate(activeCommanders[commander.id])}
+						</div>
+					{/if}
 
-                                    <button type="submit" disabled={savingSettings} class="w-full py-1 px-2 bg-blue-600 hover:bg-blue-500 text-white text-xs rounded transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
-                                        {#if savingSettings}
-                                            <Spinner size="sm" class="mr-2" />
-                                        {/if}
-                                        Save Settings
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    {/if}
+					{#if commander.id === 'nebula_explorer' && activeCommanders[commander.id]}
+						<div class="mt-4 border-t border-gray-700 pt-4">
+							<h4 class="mb-2 text-sm font-bold text-purple-400">Auto-Explore Settings</h4>
+							<form
+								method="POST"
+								action="?/saveSettings"
+								use:enhance={() => {
+									savingSettings = true;
+									return async ({ update }) => {
+										savingSettings = false;
+										await update();
+									};
+								}}
+							>
+								<div class="space-y-2">
+									<label class="flex items-center space-x-2 text-sm text-gray-300">
+										<input
+											type="checkbox"
+											name="enabled"
+											checked={data.autoExploreSettings?.enabled}
+											class="rounded border-gray-600 bg-gray-800 text-purple-500 focus:ring-purple-500"
+										/>
+										<span>Enable Auto-Explore</span>
+									</label>
 
-                    <form method="POST" action="?/purchase" use:enhance={() => {
-                        loading[commander.id] = true;
-                        return async ({ update }) => {
-                            loading[commander.id] = false;
-                            await update();
-                        };
-                    }}>
-                        <input type="hidden" name="commanderId" value={commander.id} />
-                        
-                        <div class="space-y-3 mt-4">
-                            <select 
-                                name="duration" 
-                                class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-sm text-white focus:border-purple-500 outline-none"
-                                bind:value={selectedDuration}
-                            >
-                                {#each Object.entries(durationCosts) as [days, cost]}
-                                    <option value={days}>{days} Days - {cost} DM</option>
-                                {/each}
-                            </select>
+									<select
+										name="templateId"
+										class="w-full rounded border border-gray-600 bg-gray-800 px-2 py-1 text-xs text-white"
+									>
+										<option value="">Select Template</option>
+										{#each data.templates as template}
+											<option
+												value={template.id}
+												selected={data.autoExploreSettings?.templateId === template.id}
+												>{template.name}</option
+											>
+										{/each}
+									</select>
 
-                            <button 
-                                type="submit" 
-                                class="w-full py-2 px-4 bg-purple-600 hover:bg-purple-500 text-white rounded font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transform flex items-center justify-center"
-                                disabled={darkMatter < durationCosts[selectedDuration as any] || loading[commander.id]}
-                            >
-                                {#if loading[commander.id]}
-                                    <Spinner size="sm" class="mr-2" />
-                                {/if}
-                                {activeCommanders[commander.id] ? 'Extend' : 'Recruit'}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        {/each}
-    </div>
+									<select
+										name="originPlanetId"
+										class="w-full rounded border border-gray-600 bg-gray-800 px-2 py-1 text-xs text-white"
+									>
+										<option value="">Select Origin Planet</option>
+										{#each data.userPlanets as planet}
+											<option
+												value={planet.id}
+												selected={data.autoExploreSettings?.originPlanetId === planet.id}
+												>{planet.name} [{planet.galaxyId}:{planet.systemId}:{planet.planetNumber}]</option
+											>
+										{/each}
+									</select>
+
+									<button
+										type="submit"
+										disabled={savingSettings}
+										class="flex w-full items-center justify-center rounded bg-blue-600 px-2 py-1 text-xs text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+									>
+										{#if savingSettings}
+											<Spinner size="sm" class="mr-2" />
+										{/if}
+										Save Settings
+									</button>
+								</div>
+							</form>
+						</div>
+					{/if}
+
+					<form
+						method="POST"
+						action="?/purchase"
+						use:enhance={() => {
+							loading[commander.id] = true;
+							return async ({ update }) => {
+								loading[commander.id] = false;
+								await update();
+							};
+						}}
+					>
+						<input type="hidden" name="commanderId" value={commander.id} />
+
+						<div class="mt-4 space-y-3">
+							<select
+								name="duration"
+								class="w-full rounded border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-white outline-none focus:border-purple-500"
+								bind:value={selectedDuration}
+							>
+								{#each Object.entries(durationCosts) as [days, cost]}
+									<option value={days}>{days} Days - {cost} DM</option>
+								{/each}
+							</select>
+
+							<button
+								type="submit"
+								class="flex w-full transform items-center justify-center rounded bg-purple-600 px-4 py-2 font-bold text-white transition-colors hover:bg-purple-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+								disabled={darkMatter < durationCosts[selectedDuration as any] ||
+									loading[commander.id]}
+							>
+								{#if loading[commander.id]}
+									<Spinner size="sm" class="mr-2" />
+								{/if}
+								{activeCommanders[commander.id] ? 'Extend' : 'Recruit'}
+							</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		{/each}
+	</div>
 </div>

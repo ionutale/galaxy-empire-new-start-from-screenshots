@@ -3,5 +3,5 @@
 @plugin '@tailwindcss/typography';
 
 @utility pb-safe {
-  padding-bottom: env(safe-area-inset-bottom);
+	padding-bottom: env(safe-area-inset-bottom);
 }
