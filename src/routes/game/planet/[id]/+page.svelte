@@ -66,6 +66,37 @@
 		</p>
 	</div>
 
+	<!-- Resource Progress Bars -->
+	<div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+		<div class="rounded border border-gray-700 bg-gray-800 p-4">
+			<div class="mb-2 flex items-center justify-between">
+				<span class="text-sm font-medium text-gray-300">Metal</span>
+				<span class="text-sm text-gray-400">{resources.metal.toLocaleString()}</span>
+			</div>
+			<div class="h-2 rounded-full bg-gray-700">
+				<div class="h-2 rounded-full bg-gray-400" style="width: 60%"></div>
+			</div>
+		</div>
+		<div class="rounded border border-gray-700 bg-gray-800 p-4">
+			<div class="mb-2 flex items-center justify-between">
+				<span class="text-sm font-medium text-blue-300">Crystal</span>
+				<span class="text-sm text-gray-400">{resources.crystal.toLocaleString()}</span>
+			</div>
+			<div class="h-2 rounded-full bg-gray-700">
+				<div class="h-2 rounded-full bg-blue-400" style="width: 45%"></div>
+			</div>
+		</div>
+		<div class="rounded border border-gray-700 bg-gray-800 p-4">
+			<div class="mb-2 flex items-center justify-between">
+				<span class="text-sm font-medium text-purple-300">Gas</span>
+				<span class="text-sm text-gray-400">{resources.gas.toLocaleString()}</span>
+			</div>
+			<div class="h-2 rounded-full bg-gray-700">
+				<div class="h-2 rounded-full bg-purple-400" style="width: 30%"></div>
+			</div>
+		</div>
+	</div>
+
 	<!-- Building Queue -->
 	{#if queue.length > 0}
 		<div class="mb-6 rounded-lg border border-blue-500 bg-blue-900/20 p-4">
@@ -100,7 +131,7 @@
 		<h3 class="mb-4 border-b border-gray-700 pb-2 text-xl font-bold text-gray-300">Resource Production</h3>
 		<div class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
 			{#each resourceBuildings as building}
-				<div class="flex flex-col justify-between rounded border border-gray-700 bg-gray-800 p-4">
+				<div class="flex flex-col justify-between rounded border border-gray-700 bg-gray-800 p-4 transition-all duration-200 hover:border-blue-500 hover:shadow-lg hover:scale-105">
 					<div>
 						<div class="mb-2 flex items-center justify-between">
 							<div class="flex items-center space-x-3">

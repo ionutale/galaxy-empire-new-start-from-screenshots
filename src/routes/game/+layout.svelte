@@ -5,6 +5,9 @@
 
 	let { children, data } = $props();
 
+	// Dark mode
+	let isDarkMode = $state(false);
+
 	// Chat Logic
 	let isChatOpen = $state(false);
 	let chatMessages = $state<any[]>([]);
@@ -74,10 +77,10 @@
 	});
 </script>
 
-<div class="flex h-[100dvh] h-screen flex-col overflow-hidden bg-gray-900 font-sans text-white">
+<div class="flex h-[100dvh] h-screen flex-col overflow-hidden font-sans {isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'} {isDarkMode ? 'dark' : ''}">
 	<!-- Top Bar (HUD) -->
 	<header
-		class="z-20 flex h-12 shrink-0 items-center justify-between border-b border-gray-700 bg-gray-800 px-4"
+		class="z-20 flex h-12 shrink-0 items-center justify-between border-b px-4 {isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-300 bg-white'}"
 	>
 		<div class="flex items-center space-x-4">
 			<div class="hidden items-center space-x-2 sm:flex">
@@ -114,6 +117,13 @@
 				<div class="h-6 w-6 rounded-full border border-gray-600 bg-gray-700"></div>
 				<div class="h-6 w-6 rounded-full border border-gray-600 bg-gray-700"></div>
 			</div>
+			<button
+				onclick={() => (isDarkMode = !isDarkMode)}
+				class="text-2xl transition-transform active:scale-95"
+				title="Toggle dark mode"
+			>
+				{isDarkMode ? '☀️' : '🌙'}
+			</button>
 			<a href="/game/messages" class="relative transition-transform active:scale-95">
 				<span class="text-2xl">✉️</span>
 				{#if data.unreadMessages > 0}
@@ -225,15 +235,19 @@
 			</div>
 
 			<div class="flex border-t border-gray-700 bg-gray-800 p-2">
+				<label for="chat-input" class="sr-only">Chat message</label>
 				<input
+					id="chat-input"
 					type="text"
 					bind:value={newMessage}
 					onkeydown={(e) => e.key === 'Enter' && sendChat()}
 					placeholder="Type a message..."
+					aria-label="Type a chat message"
 					class="flex-1 rounded-l border border-gray-600 bg-gray-700 px-2 py-1 text-white focus:border-blue-500 focus:outline-none"
 				/>
 				<button
 					onclick={sendChat}
+					aria-label="Send chat message"
 					class="rounded-r bg-blue-600 px-4 py-1 font-bold text-white transition-transform hover:bg-blue-500 active:scale-95"
 					>Send</button
 				>
