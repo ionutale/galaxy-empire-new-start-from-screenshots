@@ -27,10 +27,8 @@
 	let ships = $derived(data.ships || {}) as any;
 
 	// Get query params for pre-filling
-	const currentGalaxy = data.currentPlanet?.galaxyId || '';
-	const currentSystem = data.currentPlanet?.systemId || '';
-	let targetGalaxy = $state($page.url.searchParams.get('galaxy') || currentGalaxy);
-	let targetSystem = $state($page.url.searchParams.get('system') || currentSystem);
+	let targetGalaxy = $state($page.url.searchParams.get('galaxy') || data.currentPlanet.galaxyId);
+	let targetSystem = $state($page.url.searchParams.get('system') || data.currentPlanet.systemId);
 	let targetPlanet = $state($page.url.searchParams.get('planet') || '');
 	let targetMission = $state($page.url.searchParams.get('mission') || 'attack');
 	let newTemplateName = $state('');

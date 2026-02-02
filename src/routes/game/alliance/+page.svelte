@@ -79,7 +79,9 @@
 					class="space-y-4"
 				>
 					<div>
-						<label for="alliance-tag" class="mb-1 block text-gray-400">Alliance Tag (3-8 chars)</label>
+						<label for="alliance-tag" class="mb-1 block text-gray-400"
+							>Alliance Tag (3-8 chars)</label
+						>
 						<input
 							id="alliance-tag"
 							type="text"

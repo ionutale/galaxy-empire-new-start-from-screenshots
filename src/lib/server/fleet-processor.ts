@@ -5,6 +5,7 @@ import {
 	planetResources,
 	planetShips,
 	planetDefenses,
+	planetBuildings,
 	messages,
 	users
 } from './db/schema';
@@ -203,9 +204,7 @@ async function processArrivingFleet(tx: any, fleet: any) {
 			// Init resources/buildings
 			await tx.insert(planetResources).values({ planetId: newPlanetId });
 			await tx.insert(planetShips).values({ planetId: newPlanetId });
-			// planet_buildings might be missing from imports if not used elsewhere, but let's assume it's handled or I need to import it.
-			// The original code did: INSERT INTO planet_buildings
-			// I should import planetBuildings.
+			await tx.insert(planetBuildings).values({ planetId: newPlanetId });
 
 			// Send success message
 			await tx.insert(messages).values({
