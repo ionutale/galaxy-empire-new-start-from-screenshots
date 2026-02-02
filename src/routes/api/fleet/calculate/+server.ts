@@ -1,6 +1,8 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { getFleetMovementInfo, calculateFuelConsumption, formatDuration } from '$lib/server/fleet-movement';
+import { db } from '$lib/server/db';
+import { sql } from 'drizzle-orm';
+import { formatDuration } from '$lib/server/fleet-movement';
 
 export const GET: RequestHandler = async ({ locals, url }) => {
 	if (!locals.user) {
@@ -31,22 +33,25 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	}
 
 	try {
-		const movementInfo = getFleetMovementInfo(
-			fromGalaxy, fromSystem, fromPlanet,
-			toGalaxy, toSystem, toPlanet,
-			ships, mission
-		);
+		const result = await db.execute(sql`
+			SELECT get_fleet_movement_info(
+				${fromGalaxy}, ${fromSystem}, ${fromPlanet},
+				${toGalaxy}, ${toSystem}, ${toPlanet},
+				${JSON.stringify(ships)}::jsonb,
+				${mission}
+			) as movement_info
+		`);
 
-		const fuelConsumption = calculateFuelConsumption(movementInfo.distance, ships, mission);
+		const movementInfo = result.rows[0].movement_info as any;
 
 		return json({
 			distance: Math.round(movementInfo.distance),
 			duration: movementInfo.duration,
 			durationFormatted: formatDuration(movementInfo.duration),
-			fleetSpeed: movementInfo.fleetSpeed,
-			slowestShip: movementInfo.slowestShip,
-			fuelConsumption,
-			canReach: movementInfo.canReach,
+			fleetSpeed: movementInfo.fleet_speed,
+			slowestShip: movementInfo.slowest_ship,
+			fuelConsumption: movementInfo.fuel_consumption,
+			canReach: movementInfo.can_reach,
 			reason: movementInfo.reason
 		});
 	} catch (error) {

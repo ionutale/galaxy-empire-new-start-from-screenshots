@@ -236,13 +236,15 @@ This document outlines the remaining features and systems that need to be implem
 **Recent Progress:**
 - [x] Game tick system migrated to stored procedures
 - [x] Resource production calculations moved to database
+- [x] Building queue processing stored procedures implemented
+- [x] Building cost and time calculations moved to stored procedures
 
 **Remaining Components:**
-- [ ] Fleet movement logic migration to stored procedures
-- [ ] Combat calculations stored procedures
-- [ ] Building queue processing stored procedures
-- [ ] Research queue processing stored procedures
-- [ ] Espionage mission processing stored procedures
+- [x] Fleet movement logic migration to stored procedures
+- [x] Combat calculations stored procedures
+- [x] Building queue processing stored procedures
+- [x] Research queue processing stored procedures
+- [x] Espionage mission processing stored procedures
 - [ ] Database-side validation procedures
 - [ ] Automated cleanup procedures (old fleets, expired messages)
 
@@ -385,10 +387,9 @@ This document outlines the remaining features and systems that need to be implem
 
 ## 📋 **Implementation Order Recommendation**
 
-**Current Focus (Database Logic Migration):**
-- Database stored procedures for fleet movement
-- Combat calculations moved to database
-- Building and research queue processing procedures
+**Current Focus (Database Logic Migration - Phase 2):**
+- Database-side validation procedures
+- Automated cleanup procedures (old fleets, expired messages)
 
 1. **Phase 1 (Core Gameplay)**: Building system, research, ship construction
 2. **Phase 2 (Database Migration)**: Move remaining logic to stored procedures
@@ -410,8 +411,8 @@ This document outlines the remaining features and systems that need to be implem
 - **Phase 6-7**: 1-2 months (Technical polish and UI/UX)
 - **Phase 8-9**: 1 month (Analytics and production readiness)
 
-**Total Estimated Time**: 7-10 months for full implementation
-**Current Priority**: Complete database logic migration (3 weeks)
+**Total Estimated Time**: 6-9 months for full implementation
+**Current Progress**: Database migration ~70% complete (3-4 weeks elapsed)
 
 ## 🔍 **Risks & Considerations**
 

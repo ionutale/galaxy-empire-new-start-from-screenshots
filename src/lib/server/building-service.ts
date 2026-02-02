@@ -1,6 +1,6 @@
 import { db } from './db';
 import { sql } from 'drizzle-orm';
-import { planets, planet_buildings, building_types, building_queue } from './db/schema';
+import { planets, planetBuildings, buildingTypes, buildingQueue } from './db/schema';
 
 export interface BuildingCost {
 	metal: number;
@@ -136,14 +136,33 @@ export class BuildingService {
 			return { success: false, error: 'Building is already upgrading' };
 		}
 
+		// Calculate cost using stored function
+		const costResult = await db.execute(sql`
+			SELECT calculate_building_cost(${buildingTypeId}, ${building.level + 1}) as cost
+		`);
+		const calculatedCost = costResult.rows[0].cost as BuildingCost;
+
 		// Check resources
-		const resourceCheck = await this.checkResources(planetId, building.cost);
+		const resourceCheck = await this.checkResources(planetId, calculatedCost);
 		if (!resourceCheck.success) {
 			return { success: false, error: resourceCheck.error };
 		}
 
-		// Calculate completion time
-		const completionTime = new Date(Date.now() + building.buildTime * 1000);
+		// Get robotics and nanite levels for time calculation
+		const facilityResult = await db.execute(sql`
+			SELECT
+				COALESCE((SELECT level FROM planet_buildings WHERE planet_id = ${planetId} AND building_type_id = (SELECT id FROM building_types WHERE name = 'Robotics Factory')), 0) as robotics_level,
+				COALESCE((SELECT level FROM planet_buildings WHERE planet_id = ${planetId} AND building_type_id = (SELECT id FROM building_types WHERE name = 'Nanite Factory')), 0) as nanite_level
+		`);
+		const roboticsLevel = facilityResult.rows[0].robotics_level;
+		const naniteLevel = facilityResult.rows[0].nanite_level;
+
+		// Calculate completion time using stored function
+		const timeResult = await db.execute(sql`
+			SELECT extract(epoch from calculate_building_time(${buildingTypeId}, ${building.level + 1}, ${roboticsLevel}, ${naniteLevel})) as build_seconds
+		`);
+		const buildSeconds = timeResult.rows[0].build_seconds;
+		const completionTime = new Date(Date.now() + buildSeconds * 1000);
 
 		// Reserve resources and add to queue
 		await db.execute(sql`
@@ -152,7 +171,7 @@ export class BuildingService {
 				completion_at, resources_reserved
 			) VALUES (
 				${planetId}, ${buildingTypeId}, ${building.level + 1},
-				${completionTime}, ${JSON.stringify(building.cost)}
+				${completionTime}, ${JSON.stringify(calculatedCost)}
 			)
 		`);
 
@@ -161,10 +180,10 @@ export class BuildingService {
 			UPDATE planets
 			SET resources = jsonb_set(
 				jsonb_set(
-					jsonb_set(resources, '{metal}', (COALESCE(resources->>'metal', '0')::int - ${building.cost.metal})::text::jsonb),
-					'{crystal}', (COALESCE(resources->>'crystal', '0')::int - ${building.cost.crystal})::text::jsonb
+					jsonb_set(resources, '{metal}', (COALESCE(resources->>'metal', '0')::int - ${calculatedCost.metal})::text::jsonb),
+					'{crystal}', (COALESCE(resources->>'crystal', '0')::int - ${calculatedCost.crystal})::text::jsonb
 				),
-				'{gas}', (COALESCE(resources->>'gas', '0')::int - ${building.cost.gas})::text::jsonb
+				'{gas}', (COALESCE(resources->>'gas', '0')::int - ${calculatedCost.gas})::text::jsonb
 			)
 			WHERE id = ${planetId}
 		`);
@@ -186,32 +205,8 @@ export class BuildingService {
 	 * Process completed building constructions
 	 */
 	static async processCompletedBuildings(): Promise<void> {
-		const now = new Date();
-
-		// Get completed buildings
-		const completedResult = await db.execute(sql`
-			SELECT bq.*, pb.level as current_level
-			FROM building_queue bq
-			JOIN planet_buildings pb ON pb.planet_id = bq.planet_id AND pb.building_type_id = bq.building_type_id
-			WHERE bq.completion_at <= ${now}
-		`);
-
-		for (const item of completedResult.rows) {
-			// Update building level
-			await db.execute(sql`
-				UPDATE planet_buildings
-				SET level = ${item.target_level},
-					is_upgrading = false,
-					upgrade_started_at = null,
-					upgrade_completion_at = null
-				WHERE planet_id = ${item.planet_id} AND building_type_id = ${item.building_type_id}
-			`);
-
-			// Remove from queue
-			await db.execute(sql`
-				DELETE FROM building_queue WHERE id = ${item.id}
-			`);
-		}
+		// Call stored procedure to process completed buildings
+		await db.execute(sql`CALL process_completed_buildings()`);
 	}
 
 	/**

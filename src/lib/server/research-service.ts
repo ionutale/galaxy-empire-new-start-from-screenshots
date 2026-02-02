@@ -145,36 +145,8 @@ export class ResearchService {
 	 * Process completed research
 	 */
 	static async processCompletedResearch(userId: number): Promise<void> {
-		const now = new Date();
-
-		// Get completed research
-		const completedResult = await db.execute(sql`
-			SELECT rq.*, rt.name
-			FROM research_queue rq
-			JOIN research_types rt ON rt.id = rq.research_type_id
-			WHERE rq.user_id = ${userId} AND rq.completion_at <= ${now}
-			ORDER BY rq.completion_at ASC
-		`);
-
-		for (const queueItem of completedResult.rows) {
-			await db.transaction(async (tx) => {
-				// Update research level
-				await tx.execute(sql`
-					UPDATE user_research_levels
-					SET level = ${queueItem.level},
-						is_researching = false,
-						research_completion_at = NULL,
-						updated_at = NOW()
-					WHERE user_id = ${userId} AND research_type_id = ${queueItem.research_type_id}
-				`);
-
-				// Remove from queue
-				await tx.execute(sql`
-					DELETE FROM research_queue
-					WHERE id = ${queueItem.id}
-				`);
-			});
-		}
+		// Call stored procedure to process completed research
+		await db.execute(sql`CALL process_completed_research(${userId})`);
 	}
 
 	/**

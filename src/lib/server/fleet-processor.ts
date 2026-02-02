@@ -412,79 +412,8 @@ async function processArrivingFleet(tx: any, fleet: any) {
 			await returnFleet(tx, fleet);
 		}
 	} else if (fleet.mission === 'espionage') {
-		if (targetPlanet) {
-			// Espionage mission - gather intelligence on target planet
-			const [resourcesRes] = await tx
-				.select({
-					metal: planetResources.metal,
-					crystal: planetResources.crystal,
-					gas: planetResources.gas
-				})
-				.from(planetResources)
-				.where(eq(planetResources.planetId, targetPlanet.id));
-
-			const [buildingsRes] = await tx
-				.select()
-				.from(planetBuildings)
-				.where(eq(planetBuildings.planetId, targetPlanet.id));
-
-			const [shipsRes] = await tx
-				.select()
-				.from(planetShips)
-				.where(eq(planetShips.planetId, targetPlanet.id));
-
-			const [defensesRes] = await tx
-				.select()
-				.from(planetDefenses)
-				.where(eq(planetDefenses.planetId, targetPlanet.id));
-
-			const [researchRes] = await tx
-				.select()
-				.from(userResearch)
-				.where(eq(userResearch.userId, targetPlanet.userId));
-
-			// Create espionage report
-			const reportId = await tx.insert(espionageReports).values({
-				attackerId: fleet.userId,
-				targetId: targetPlanet.userId,
-				galaxy: fleet.targetGalaxy,
-				system: fleet.targetSystem,
-				planet: fleet.targetPlanet,
-				resources: resourcesRes || null,
-				buildings: buildingsRes || null,
-				fleet: shipsRes || null,
-				defenses: defensesRes || null,
-				research: researchRes || null
-			}).returning({ id: espionageReports.id });
-
-			// Send message to attacker
-			await tx.insert(messages).values({
-				userId: fleet.userId,
-				type: 'espionage',
-				title: 'Espionage Report',
-				content: `Espionage mission successful at [${fleet.targetGalaxy}:${fleet.targetSystem}:${fleet.targetPlanet}]\n\n[View Detailed Report](/game/espionage-report/${reportId[0].id})`
-			});
-
-			// Chance of detection (notify defender)
-			if (Math.random() < 0.3) { // 30% chance of detection
-				await tx.insert(messages).values({
-					userId: targetPlanet.userId,
-					type: 'espionage',
-					title: 'Espionage Detected!',
-					content: `An espionage probe was detected at [${fleet.targetGalaxy}:${fleet.targetSystem}:${fleet.targetPlanet}]`
-				});
-			}
-
-			await returnFleet(tx, fleet);
-		} else {
-			await tx.insert(messages).values({
-				userId: fleet.userId,
-				type: 'espionage',
-				title: 'Espionage Failed',
-				content: 'No target found at coordinates.'
-			});
-			await returnFleet(tx, fleet);
-		}
+		// Call stored procedure to process espionage mission
+		await tx.execute(sql`CALL process_espionage_mission(${fleet.id})`);
 	} else if (fleet.mission === 'expedition') {
 		const outcome = Math.random();
 		let message = '';

@@ -153,24 +153,23 @@ export async function dispatchFleet(
 
 		const origin = originRes[0];
 
-		// Calculate movement info
-		const movementInfo = getFleetMovementInfo(
-			origin.galaxyId,
-			origin.systemId,
-			origin.planetNumber,
-			galaxy,
-			system,
-			planet,
-			ships,
-			mission
-		);
+		// Calculate movement info using stored procedure
+		const movementResult = await tx.execute(sql`
+			SELECT get_fleet_movement_info(
+				${origin.galaxyId}, ${origin.systemId}, ${origin.planetNumber},
+				${galaxy}, ${system}, ${planet},
+				${JSON.stringify(ships)}::jsonb,
+				${mission}
+			) as movement_info
+		`);
+		const movementInfo = movementResult.rows[0].movement_info as any;
 
-		if (!movementInfo.canReach) {
+		if (!movementInfo.can_reach) {
 			throw new Error(movementInfo.reason || 'Cannot reach destination');
 		}
 
-		// Calculate fuel consumption
-		const fuelNeeded = calculateFuelConsumption(movementInfo.distance, ships, mission);
+		// Use fuel consumption from stored procedure
+		const fuelNeeded = movementInfo.fuel_consumption;
 
 		// Check fuel availability (gas is used as fuel)
 		if ((availableResources.gas || 0) < fuelNeeded) {

@@ -110,6 +110,36 @@ export const planetBuildings = pgTable('planet_buildings', {
 	gasStorage: integer('gas_storage').default(0)
 });
 
+// Building system tables
+export const buildingTypes = pgTable('building_types', {
+	id: serial('id').primaryKey(),
+	name: varchar('name', { length: 100 }).notNull(),
+	description: text('description'),
+	category: varchar('category', { length: 50 }).notNull(),
+	baseCost: jsonb('base_cost').notNull(),
+	baseProduction: jsonb('base_production'),
+	baseEnergy: jsonb('base_energy'),
+	maxLevel: integer('max_level').default(100),
+	prerequisites: jsonb('prerequisites'),
+	buildTimeFormula: varchar('build_time_formula', { length: 200 }),
+	createdAt: timestamp('created_at').defaultNow()
+});
+
+export const buildingQueue = pgTable('building_queue', {
+	id: serial('id').primaryKey(),
+	planetId: integer('planet_id')
+		.notNull()
+		.references(() => planets.id, { onDelete: 'cascade' }),
+	buildingTypeId: integer('building_type_id')
+		.notNull()
+		.references(() => buildingTypes.id),
+	targetLevel: integer('target_level').notNull(),
+	startedAt: timestamp('started_at').defaultNow(),
+	completionAt: timestamp('completion_at').notNull(),
+	resourcesReserved: jsonb('resources_reserved').notNull(),
+	createdAt: timestamp('created_at').defaultNow()
+});
+
 // 4. Research & Tech
 export const userResearch = pgTable('user_research', {
 	userId: integer('user_id')
