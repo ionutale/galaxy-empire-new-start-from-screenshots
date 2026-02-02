@@ -1,11 +1,12 @@
 import { json } from '@sveltejs/kit';
-import { processFleets } from '$lib/server/fleet-processor';
-import { processAutoExplore } from '$lib/server/auto-explorer';
+import { db } from '$lib/server/db';
+import { sql } from 'drizzle-orm';
 
 export async function GET() {
 	try {
-		await processFleets();
-		await processAutoExplore();
+		// Call stored procedures for fleet processing and auto-exploration
+		await db.execute(sql`CALL process_fleets()`);
+		await db.execute(sql`CALL process_auto_explore()`);
 		return json({ success: true });
 	} catch (e) {
 		console.error('Game tick error:', e);
