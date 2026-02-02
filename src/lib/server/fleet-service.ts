@@ -14,106 +14,23 @@ export async function dispatchFleet(
 	ships: Record<string, number>,
 	resources: { metal: number; crystal: number; gas: number }
 ) {
-	// Validation
-	let totalShips = 0;
-	let totalCapacity = 0;
+	// Validate fleet dispatch using stored procedure
+	const validationResult = await db.execute(sql`
+		SELECT validate_fleet_dispatch(
+			${userId}, ${planetId}, ${JSON.stringify(ships)}::jsonb, ${mission},
+			${galaxy}, ${system}, ${planet}, ${JSON.stringify(resources)}::jsonb
+		) as validation
+	`);
 
-	for (const [type, count] of Object.entries(ships)) {
-		if (count > 0) {
-			totalShips += count;
-			totalCapacity += (SHIPS[type]?.capacity || 0) * count;
-		}
+	const validation = validationResult.rows[0].validation as any;
+	if (!validation.valid) {
+		throw new Error(validation.error);
 	}
 
-	if (totalShips === 0) {
-		throw new Error('No ships selected');
-	}
-
-	const totalResources = resources.metal + resources.crystal + resources.gas;
-	if (totalResources > totalCapacity) {
-		throw new Error(
-			`Not enough cargo capacity. Capacity: ${totalCapacity}, Resources: ${totalResources}`
-		);
-	}
+	const movementInfo = validation.movement_info;
+	const fuelNeeded = movementInfo.fuel_consumption;
 
 	return await db.transaction(async (tx) => {
-		// Check max fleets limit (Computer Technology)
-		const researchRes = await tx
-			.select({ computerTech: userResearch.computerTech })
-			.from(userResearch)
-			.where(eq(userResearch.userId, userId));
-
-		const computerTechLevel = researchRes[0]?.computerTech || 0;
-		const maxFleets = 1 + computerTechLevel;
-
-		const activeFleetsRes = await tx
-			.select({ count: sql<number>`count(*)` })
-			.from(fleets)
-			.where(and(eq(fleets.userId, userId), inArray(fleets.status, ['active', 'returning'])));
-
-		const activeFleets = Number(activeFleetsRes[0].count);
-
-		if (activeFleets >= maxFleets) {
-			throw new Error(
-				`Max fleet limit reached (${maxFleets}). Upgrade Computer Technology to increase limit.`
-			);
-		}
-
-		if (mission === 'expedition') {
-			const activeExpeditions = await tx
-				.select({ count: sql<number>`count(*)` })
-				.from(fleets)
-				.where(
-					and(
-						eq(fleets.originPlanetId, planetId),
-						eq(fleets.mission, 'expedition'),
-						inArray(fleets.status, ['active', 'returning'])
-					)
-				);
-
-			if (Number(activeExpeditions[0].count) >= 18) {
-				throw new Error('Max expedition limit reached (18)');
-			}
-		}
-
-		// Check if user has enough ships
-		const shipCheck = await tx
-			.select()
-			.from(planetShips)
-			.where(eq(planetShips.planetId, planetId))
-			.for('update');
-
-		if (shipCheck.length === 0) throw new Error('Planet ships not found');
-		const availableShips = shipCheck[0];
-
-		for (const [type, count] of Object.entries(ships)) {
-			const shipKey = type.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
-			const available = (availableShips as any)[shipKey];
-
-			if (typeof available !== 'number' || available < count) {
-				throw new Error(`Not enough ${type}`);
-			}
-		}
-
-		// Check if user has enough resources
-		const resourceCheck = await tx
-			.select({
-				metal: planetResources.metal,
-				crystal: planetResources.crystal,
-				gas: planetResources.gas
-			})
-			.from(planetResources)
-			.where(eq(planetResources.planetId, planetId))
-			.for('update');
-
-		if (resourceCheck.length === 0) throw new Error('Planet resources not found');
-		const availableResources = resourceCheck[0];
-
-		if ((availableResources.metal || 0) < resources.metal) throw new Error('Not enough Metal');
-		if ((availableResources.crystal || 0) < resources.crystal)
-			throw new Error('Not enough Crystal');
-		if ((availableResources.gas || 0) < resources.gas) throw new Error('Not enough Gas');
-
 		// Deduct ships
 		for (const [type, count] of Object.entries(ships)) {
 			const shipKey = type.replace(/_([a-z])/g, (g) =>
@@ -127,60 +44,13 @@ export async function dispatchFleet(
 				.where(eq(planetShips.planetId, planetId));
 		}
 
-		// Deduct resources
+		// Deduct resources and fuel
 		await tx
 			.update(planetResources)
 			.set({
 				metal: sql`${planetResources.metal} - ${resources.metal}`,
 				crystal: sql`${planetResources.crystal} - ${resources.crystal}`,
-				gas: sql`${planetResources.gas} - ${resources.gas}`
-			})
-			.where(eq(planetResources.planetId, planetId));
-
-		// Get origin planet coordinates
-		const originRes = await tx
-			.select({
-				galaxyId: planets.galaxyId,
-				systemId: planets.systemId,
-				planetNumber: planets.planetNumber
-			})
-			.from(planets)
-			.where(eq(planets.id, planetId));
-
-		if (originRes.length === 0) {
-			throw new Error('Origin planet not found');
-		}
-
-		const origin = originRes[0];
-
-		// Calculate movement info using stored procedure
-		const movementResult = await tx.execute(sql`
-			SELECT get_fleet_movement_info(
-				${origin.galaxyId}, ${origin.systemId}, ${origin.planetNumber},
-				${galaxy}, ${system}, ${planet},
-				${JSON.stringify(ships)}::jsonb,
-				${mission}
-			) as movement_info
-		`);
-		const movementInfo = movementResult.rows[0].movement_info as any;
-
-		if (!movementInfo.can_reach) {
-			throw new Error(movementInfo.reason || 'Cannot reach destination');
-		}
-
-		// Use fuel consumption from stored procedure
-		const fuelNeeded = movementInfo.fuel_consumption;
-
-		// Check fuel availability (gas is used as fuel)
-		if ((availableResources.gas || 0) < fuelNeeded) {
-			throw new Error(`Not enough fuel. Required: ${fuelNeeded}, Available: ${availableResources.gas || 0}`);
-		}
-
-		// Deduct fuel
-		await tx
-			.update(planetResources)
-			.set({
-				gas: sql`${planetResources.gas} - ${fuelNeeded}`
+				gas: sql`${planetResources.gas} - ${resources.gas + fuelNeeded}`
 			})
 			.where(eq(planetResources.planetId, planetId));
 

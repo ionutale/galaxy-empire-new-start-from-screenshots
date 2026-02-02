@@ -95,57 +95,22 @@ export class BuildingService {
 		buildingTypeId: number,
 		userId: number
 	): Promise<{ success: boolean; error?: string; completionTime?: Date }> {
-		// Check if planet belongs to user
-		const planetResult = await db.execute(sql`
-			SELECT p.*, u.id as user_id
-			FROM planets p
-			JOIN users u ON u.id = p.user_id
-			WHERE p.id = ${planetId} AND u.id = ${userId}
-		`);
-
-		if (planetResult.rows.length === 0) {
-			return { success: false, error: 'Planet not found or access denied' };
-		}
-
-		const planet = planetResult.rows[0];
-
-		// Check if building is already in queue
-		const queueResult = await db.execute(sql`
-			SELECT * FROM building_queue
-			WHERE planet_id = ${planetId} AND building_type_id = ${buildingTypeId}
-		`);
-
-		if (queueResult.rows.length > 0) {
-			return { success: false, error: 'Building already in construction queue' };
-		}
-
-		// Get building info
+		// Get current building level for target level calculation
 		const building = await this.getPlanetBuilding(planetId, buildingTypeId);
 		if (!building) {
 			return { success: false, error: 'Building type not found' };
 		}
 
-		// Check prerequisites
-		const prerequisiteCheck = await this.checkPrerequisites(planetId, building.prerequisites);
-		if (!prerequisiteCheck.success) {
-			return { success: false, error: prerequisiteCheck.error };
-		}
+		const targetLevel = building.level + 1;
 
-		// Check if can upgrade (not already upgrading)
-		if (building.isUpgrading) {
-			return { success: false, error: 'Building is already upgrading' };
-		}
-
-		// Calculate cost using stored function
-		const costResult = await db.execute(sql`
-			SELECT calculate_building_cost(${buildingTypeId}, ${building.level + 1}) as cost
+		// Validate construction using stored procedure
+		const validationResult = await db.execute(sql`
+			SELECT validate_building_construction(${userId}, ${planetId}, ${buildingTypeId}, ${targetLevel}) as validation
 		`);
-		const calculatedCost = costResult.rows[0].cost as BuildingCost;
 
-		// Check resources
-		const resourceCheck = await this.checkResources(planetId, calculatedCost);
-		if (!resourceCheck.success) {
-			return { success: false, error: resourceCheck.error };
+		const validation = validationResult.rows[0].validation as any;
+		if (!validation.valid) {
+			return { success: false, error: validation.error };
 		}
 
 		// Get robotics and nanite levels for time calculation
@@ -159,7 +124,7 @@ export class BuildingService {
 
 		// Calculate completion time using stored function
 		const timeResult = await db.execute(sql`
-			SELECT extract(epoch from calculate_building_time(${buildingTypeId}, ${building.level + 1}, ${roboticsLevel}, ${naniteLevel})) as build_seconds
+			SELECT extract(epoch from calculate_building_time(${buildingTypeId}, ${targetLevel}, ${roboticsLevel}, ${naniteLevel})) as build_seconds
 		`);
 		const buildSeconds = timeResult.rows[0].build_seconds;
 		const completionTime = new Date(Date.now() + buildSeconds * 1000);
@@ -170,8 +135,8 @@ export class BuildingService {
 				planet_id, building_type_id, target_level,
 				completion_at, resources_reserved
 			) VALUES (
-				${planetId}, ${buildingTypeId}, ${building.level + 1},
-				${completionTime}, ${JSON.stringify(calculatedCost)}
+				${planetId}, ${buildingTypeId}, ${targetLevel},
+				${completionTime}, ${JSON.stringify(validation.cost)}
 			)
 		`);
 
@@ -180,10 +145,10 @@ export class BuildingService {
 			UPDATE planets
 			SET resources = jsonb_set(
 				jsonb_set(
-					jsonb_set(resources, '{metal}', (COALESCE(resources->>'metal', '0')::int - ${calculatedCost.metal})::text::jsonb),
-					'{crystal}', (COALESCE(resources->>'crystal', '0')::int - ${calculatedCost.crystal})::text::jsonb
+					jsonb_set(resources, '{metal}', (COALESCE(resources->>'metal', '0')::int - ${validation.cost.metal})::text::jsonb),
+					'{crystal}', (COALESCE(resources->>'crystal', '0')::int - ${validation.cost.crystal})::text::jsonb
 				),
-				'{gas}', (COALESCE(resources->>'gas', '0')::int - ${calculatedCost.gas})::text::jsonb
+				'{gas}', (COALESCE(resources->>'gas', '0')::int - ${validation.cost.gas})::text::jsonb
 			)
 			WHERE id = ${planetId}
 		`);

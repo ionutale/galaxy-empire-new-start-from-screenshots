@@ -83,48 +83,51 @@ export class ResearchService {
 		researchTypeId: number,
 		planetId: number
 	): Promise<{ success: boolean; error?: string; completionTime?: Date }> {
-		// Check if user exists
-		const userResult = await db.execute(sql`
-			SELECT id FROM users WHERE id = ${userId}
+		// Validate research start using stored procedure
+		const validationResult = await db.execute(sql`
+			SELECT validate_research_start(${userId}, ${researchTypeId}, ${planetId}) as validation
 		`);
-		if (userResult.rows.length === 0) {
-			return { success: false, error: 'User not found' };
+
+		const validation = validationResult.rows[0].validation as any;
+		if (!validation.valid) {
+			return { success: false, error: validation.error };
 		}
 
-		// Get research info
-		const research = await this.getUserResearchById(userId, researchTypeId);
-		if (!research) {
-			return { success: false, error: 'Research not found' };
-		}
+		// Get research lab level for time calculation
+		const labResult = await db.execute(sql`
+			SELECT COALESCE(MAX(level), 0) as lab_level
+			FROM planet_buildings pb
+			JOIN planets p ON p.id = pb.planet_id
+			WHERE p.user_id = ${userId} AND pb.building_type_id = (SELECT id FROM building_types WHERE name = 'Research Lab')
+		`);
+		const labLevel = labResult.rows[0].lab_level;
 
-		// Check if already researching
-		if (research.isResearching) {
-			return { success: false, error: 'Already researching this technology' };
-		}
-
-		// Check prerequisites
-		if (!this.checkPrerequisites(userId, research.prerequisites)) {
-			return { success: false, error: 'Prerequisites not met' };
-		}
-
-		// Check if can afford
-		const canAfford = await this.checkResearchCost(userId, research.cost);
-		if (!canAfford) {
-			return { success: false, error: 'Insufficient resources' };
-		}
-
-		// Deduct resources
-		await this.deductResearchCost(userId, research.cost);
-
-		// Calculate completion time
-		const completionTime = new Date(Date.now() + research.researchTime * 1000);
+		// Calculate completion time using stored function
+		const timeResult = await db.execute(sql`
+			SELECT extract(epoch from calculate_research_time(${researchTypeId}, ${validation.target_level}, ${labLevel})) as research_seconds
+		`);
+		const researchSeconds = timeResult.rows[0].research_seconds;
+		const completionTime = new Date(Date.now() + researchSeconds * 1000);
 
 		// Start transaction
 		await db.transaction(async (tx) => {
+			// Deduct resources from planet
+			await tx.execute(sql`
+				UPDATE planets
+				SET resources = jsonb_set(
+					jsonb_set(
+						jsonb_set(resources, '{metal}', (COALESCE(resources->>'metal', '0')::int - ${validation.cost.metal})::text::jsonb),
+						'{crystal}', (COALESCE(resources->>'crystal', '0')::int - ${validation.cost.crystal})::text::jsonb
+					),
+					'{gas}', (COALESCE(resources->>'gas', '0')::int - ${validation.cost.gas})::text::jsonb
+				)
+				WHERE id = ${planetId}
+			`);
+
 			// Update or insert user research level
 			await tx.execute(sql`
 				INSERT INTO user_research_levels (user_id, research_type_id, level, is_researching, research_completion_at)
-				VALUES (${userId}, ${researchTypeId}, ${research.level}, true, ${completionTime})
+				VALUES (${userId}, ${researchTypeId}, ${validation.target_level - 1}, true, ${completionTime})
 				ON CONFLICT (user_id, research_type_id)
 				DO UPDATE SET
 					is_researching = true,
@@ -133,8 +136,8 @@ export class ResearchService {
 
 			// Add to research queue
 			await tx.execute(sql`
-				INSERT INTO research_queue (user_id, research_type_id, level, completion_at, planet_id)
-				VALUES (${userId}, ${researchTypeId}, ${research.level + 1}, ${completionTime}, ${planetId})
+				INSERT INTO research_queue (user_id, research_type_id, level, completion_at, planet_id, resources_reserved)
+				VALUES (${userId}, ${researchTypeId}, ${validation.target_level}, ${completionTime}, ${planetId}, ${JSON.stringify(validation.cost)})
 			`);
 		});
 
