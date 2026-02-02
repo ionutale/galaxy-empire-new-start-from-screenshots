@@ -1,7 +1,8 @@
 import { db } from './db';
-import { planetShips, fleets, planetResources, userResearch } from './db/schema';
+import { planetShips, fleets, planetResources, userResearch, planets } from './db/schema';
 import { eq, sql, and, inArray } from 'drizzle-orm';
 import { SHIPS } from '$lib/game-config';
+import { getFleetMovementInfo, calculateFuelConsumption } from './fleet-movement';
 
 export async function dispatchFleet(
 	userId: number,
@@ -136,14 +137,56 @@ export async function dispatchFleet(
 			})
 			.where(eq(planetResources.planetId, planetId));
 
-		// Calculate arrival time
-		let durationSeconds = 30; // Default 30 seconds for demo
+		// Get origin planet coordinates
+		const originRes = await tx
+			.select({
+				galaxyId: planets.galaxyId,
+				systemId: planets.systemId,
+				planetNumber: planets.planetNumber
+			})
+			.from(planets)
+			.where(eq(planets.id, planetId));
 
-		if (mission === 'expedition') {
-			durationSeconds = 1800; // 30 minutes for expeditions
+		if (originRes.length === 0) {
+			throw new Error('Origin planet not found');
 		}
 
-		const arrivalTime = new Date(Date.now() + durationSeconds * 1000);
+		const origin = originRes[0];
+
+		// Calculate movement info
+		const movementInfo = getFleetMovementInfo(
+			origin.galaxyId,
+			origin.systemId,
+			origin.planetNumber,
+			galaxy,
+			system,
+			planet,
+			ships,
+			mission
+		);
+
+		if (!movementInfo.canReach) {
+			throw new Error(movementInfo.reason || 'Cannot reach destination');
+		}
+
+		// Calculate fuel consumption
+		const fuelNeeded = calculateFuelConsumption(movementInfo.distance, ships, mission);
+
+		// Check fuel availability (gas is used as fuel)
+		if ((availableResources.gas || 0) < fuelNeeded) {
+			throw new Error(`Not enough fuel. Required: ${fuelNeeded}, Available: ${availableResources.gas || 0}`);
+		}
+
+		// Deduct fuel
+		await tx
+			.update(planetResources)
+			.set({
+				gas: sql`${planetResources.gas} - ${fuelNeeded}`
+			})
+			.where(eq(planetResources.planetId, planetId));
+
+		// Calculate arrival time
+		const arrivalTime = new Date(Date.now() + movementInfo.duration * 1000);
 
 		// Create fleet
 		await tx.insert(fleets).values({

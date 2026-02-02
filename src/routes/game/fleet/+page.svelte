@@ -36,6 +36,68 @@
 	let deletingTemplate = $state<Record<string, boolean>>({});
 	let savingTemplate = $state(false);
 
+	// Movement calculation
+	let movementInfo = $state<{
+		distance: number;
+		duration: number;
+		durationFormatted: string;
+		fleetSpeed: number;
+		slowestShip: string;
+		fuelConsumption: number;
+		canReach: boolean;
+		reason?: string;
+	} | null>(null);
+	let calculatingMovement = $state(false);
+
+	// Calculate movement when inputs change
+	$effect(() => {
+		const hasShips = Object.values(shipCounts).some(count => count > 0);
+		const hasTarget = targetGalaxy && targetSystem && targetPlanet;
+
+		if (hasShips && hasTarget) {
+			calculateMovement();
+		} else {
+			movementInfo = null;
+		}
+	});
+
+	async function calculateMovement() {
+		if (calculatingMovement) return;
+
+		calculatingMovement = true;
+
+		try {
+			const params = new URLSearchParams({
+				fromGalaxy: data.currentPlanet.galaxyId.toString(),
+				fromSystem: data.currentPlanet.systemId.toString(),
+				fromPlanet: data.currentPlanet.planetNumber.toString(),
+				toGalaxy: targetGalaxy.toString(),
+				toSystem: targetSystem.toString(),
+				toPlanet: targetPlanet.toString(),
+				mission: targetMission
+			});
+
+			// Add ship counts
+			for (const [shipType, count] of Object.entries(shipCounts)) {
+				if (count > 0) {
+					params.append(shipType, count.toString());
+				}
+			}
+
+			const response = await fetch(`/api/fleet/calculate?${params}`);
+			if (response.ok) {
+				movementInfo = await response.json();
+			} else {
+				movementInfo = null;
+			}
+		} catch (error) {
+			console.error('Error calculating movement:', error);
+			movementInfo = null;
+		} finally {
+			calculatingMovement = false;
+		}
+	}
+
 	function toCamel(s: string) {
 		return s.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
 	}
@@ -284,7 +346,7 @@
 				<select
 					id="mission"
 					name="mission"
-					value={targetMission}
+					bind:value={targetMission}
 					class="w-full rounded border border-gray-600 bg-gray-700 px-2 py-2 text-white"
 				>
 					<option value="attack">Attack</option>
@@ -296,9 +358,44 @@
 				</select>
 			</div>
 
+			<!-- Movement Info -->
+			{#if movementInfo}
+				<div class="mb-6 rounded-lg border border-blue-500 bg-blue-900/20 p-4">
+					<h4 class="mb-3 text-sm font-bold text-blue-300">Flight Information</h4>
+					<div class="grid grid-cols-2 gap-4 text-sm">
+						<div>
+							<span class="text-gray-400">Distance:</span>
+							<span class="ml-2 text-white">{movementInfo.distance.toLocaleString()} units</span>
+						</div>
+						<div>
+							<span class="text-gray-400">Duration:</span>
+							<span class="ml-2 text-white">{movementInfo.durationFormatted}</span>
+						</div>
+						<div>
+							<span class="text-gray-400">Fleet Speed:</span>
+							<span class="ml-2 text-white">{movementInfo.fleetSpeed.toLocaleString()}</span>
+						</div>
+						<div>
+							<span class="text-gray-400">Fuel Cost:</span>
+							<span class="ml-2 text-white">{movementInfo.fuelConsumption.toLocaleString()} gas</span>
+						</div>
+					</div>
+					{#if movementInfo.slowestShip}
+						<div class="mt-2 text-xs text-gray-400">
+							Slowest ship: {movementInfo.slowestShip.replace(/_/g, ' ')}
+						</div>
+					{/if}
+					{#if !movementInfo.canReach}
+						<div class="mt-2 text-xs text-red-400">
+							⚠️ {movementInfo.reason}
+						</div>
+					{/if}
+				</div>
+			{/if}
+
 			<button
 				type="submit"
-				disabled={loading}
+				disabled={loading || (movementInfo && !movementInfo.canReach)}
 				class="flex w-full items-center justify-center rounded bg-blue-600 py-3 font-bold text-white transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
 			>
 				{#if loading}
