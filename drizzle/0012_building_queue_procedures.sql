@@ -5,11 +5,15 @@
 CREATE OR REPLACE PROCEDURE process_completed_buildings() AS $$
 DECLARE
     completed_building RECORD;
+    building_name text;
+    planet_user_id int;
 BEGIN
     -- Get all completed buildings
     FOR completed_building IN
-        SELECT bq.id, bq.planet_id, bq.building_type_id, bq.target_level
+        SELECT bq.id, bq.planet_id, bq.building_type_id, bq.target_level, bt.name, p.user_id
         FROM building_queue bq
+        JOIN building_types bt ON bt.id = bq.building_type_id
+        JOIN planets p ON p.id = bq.planet_id
         WHERE bq.completion_at <= now()
     LOOP
         -- Update building level
@@ -28,6 +32,15 @@ BEGIN
             SELECT 1 FROM planet_buildings
             WHERE planet_id = completed_building.planet_id
               AND building_type_id = completed_building.building_type_id
+        );
+
+        -- Create notification message
+        INSERT INTO messages (user_id, type, title, content)
+        VALUES (
+            completed_building.user_id,
+            'building',
+            'Building Completed',
+            'Your building "' || completed_building.name || '" has been upgraded to level ' || completed_building.target_level || '.'
         );
 
         -- Remove from queue

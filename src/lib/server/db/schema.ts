@@ -308,6 +308,26 @@ export const messages = pgTable(
 	})
 );
 
+// Private messaging between players
+export const privateMessages = pgTable(
+	'private_messages',
+	{
+		id: serial('id').primaryKey(),
+		fromUserId: integer('from_user_id').references(() => users.id),
+		toUserId: integer('to_user_id').references(() => users.id),
+		subject: varchar('subject', { length: 100 }),
+		content: text('content'),
+		isRead: boolean('is_read').default(false),
+		createdAt: timestamp('created_at').defaultNow()
+	},
+	(t) => ({
+		fromUserIdx: index('private_messages_from_user_idx').on(t.fromUserId),
+		toUserIdx: index('private_messages_to_user_idx').on(t.toUserId),
+		fromToIdx: index('private_messages_from_to_idx').on(t.fromUserId, t.toUserId),
+		createdIdx: index('private_messages_created_idx').on(t.createdAt)
+	})
+);
+
 // 6. Combat & Espionage
 export const combatReports = pgTable('combat_reports', {
 	id: serial('id').primaryKey(),

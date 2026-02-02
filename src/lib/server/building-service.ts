@@ -1,6 +1,7 @@
 import { db } from './db';
 import { sql } from 'drizzle-orm';
 import { planets, planetBuildings, buildingTypes, buildingQueue } from './db/schema';
+import { ErrorHandler, withPerformanceLogging } from './error-handler';
 
 export interface BuildingCost {
 	metal: number;
@@ -95,75 +96,86 @@ export class BuildingService {
 		buildingTypeId: number,
 		userId: number
 	): Promise<{ success: boolean; error?: string; completionTime?: Date }> {
-		// Get current building level for target level calculation
-		const building = await this.getPlanetBuilding(planetId, buildingTypeId);
-		if (!building) {
-			return { success: false, error: 'Building type not found' };
+		try {
+			// Get current building level for target level calculation
+			const building = await this.getPlanetBuilding(planetId, buildingTypeId);
+			if (!building) {
+				return { success: false, error: 'Building type not found' };
+			}
+
+			const targetLevel = building.level + 1;
+
+			// Validate construction using stored procedure
+			const validationResult = await db.execute(sql`
+				SELECT validate_building_construction(${userId}, ${planetId}, ${buildingTypeId}, ${targetLevel}) as validation
+			`);
+
+			const validation = validationResult.rows[0].validation as any;
+			if (!validation.valid) {
+				return { success: false, error: validation.error };
+			}
+
+			// Get robotics and nanite levels for time calculation
+			const facilityResult = await db.execute(sql`
+				SELECT
+					COALESCE((SELECT level FROM planet_buildings WHERE planet_id = ${planetId} AND building_type_id = (SELECT id FROM building_types WHERE name = 'Robotics Factory')), 0) as robotics_level,
+					COALESCE((SELECT level FROM planet_buildings WHERE planet_id = ${planetId} AND building_type_id = (SELECT id FROM building_types WHERE name = 'Nanite Factory')), 0) as nanite_level
+			`);
+			const roboticsLevel = facilityResult.rows[0].robotics_level;
+			const naniteLevel = facilityResult.rows[0].nanite_level;
+
+			// Calculate completion time using stored function
+			const timeResult = await db.execute(sql`
+				SELECT extract(epoch from calculate_building_time(${buildingTypeId}, ${targetLevel}, ${roboticsLevel}, ${naniteLevel})) as build_seconds
+			`);
+			const buildSeconds = timeResult.rows[0].build_seconds;
+			const completionTime = new Date(Date.now() + buildSeconds * 1000);
+
+			// Reserve resources and add to queue
+			await db.execute(sql`
+				INSERT INTO building_queue (
+					planet_id, building_type_id, target_level,
+					completion_at, resources_reserved
+				) VALUES (
+					${planetId}, ${buildingTypeId}, ${targetLevel},
+					${completionTime}, ${JSON.stringify(validation.cost)}
+				)
+			`);
+
+			// Deduct resources from planet
+			await db.execute(sql`
+				UPDATE planets
+				SET resources = jsonb_set(
+					jsonb_set(
+						jsonb_set(resources, '{metal}', (COALESCE(resources->>'metal', '0')::int - ${validation.cost.metal})::text::jsonb),
+						'{crystal}', (COALESCE(resources->>'crystal', '0')::int - ${validation.cost.crystal})::text::jsonb
+					),
+					'{gas}', (COALESCE(resources->>'gas', '0')::int - ${validation.cost.gas})::text::jsonb
+				)
+				WHERE id = ${planetId}
+			`);
+
+			// Mark building as upgrading
+			await db.execute(sql`
+				INSERT INTO planet_buildings (planet_id, building_type_id, level, is_upgrading, upgrade_started_at, upgrade_completion_at)
+				VALUES (${planetId}, ${buildingTypeId}, ${building.level}, true, now(), ${completionTime})
+				ON CONFLICT (planet_id, building_type_id) DO UPDATE SET
+					is_upgrading = true,
+					upgrade_started_at = now(),
+					upgrade_completion_at = ${completionTime}
+			`);
+
+			ErrorHandler.logUserAction(userId, 'building_construction_started', {
+				planetId,
+				buildingTypeId,
+				targetLevel,
+				completionTime
+			});
+
+			return { success: true, completionTime };
+		} catch (error) {
+			return ErrorHandler.handleApiError(error, 'building_construction');
 		}
-
-		const targetLevel = building.level + 1;
-
-		// Validate construction using stored procedure
-		const validationResult = await db.execute(sql`
-			SELECT validate_building_construction(${userId}, ${planetId}, ${buildingTypeId}, ${targetLevel}) as validation
-		`);
-
-		const validation = validationResult.rows[0].validation as any;
-		if (!validation.valid) {
-			return { success: false, error: validation.error };
-		}
-
-		// Get robotics and nanite levels for time calculation
-		const facilityResult = await db.execute(sql`
-			SELECT
-				COALESCE((SELECT level FROM planet_buildings WHERE planet_id = ${planetId} AND building_type_id = (SELECT id FROM building_types WHERE name = 'Robotics Factory')), 0) as robotics_level,
-				COALESCE((SELECT level FROM planet_buildings WHERE planet_id = ${planetId} AND building_type_id = (SELECT id FROM building_types WHERE name = 'Nanite Factory')), 0) as nanite_level
-		`);
-		const roboticsLevel = facilityResult.rows[0].robotics_level;
-		const naniteLevel = facilityResult.rows[0].nanite_level;
-
-		// Calculate completion time using stored function
-		const timeResult = await db.execute(sql`
-			SELECT extract(epoch from calculate_building_time(${buildingTypeId}, ${targetLevel}, ${roboticsLevel}, ${naniteLevel})) as build_seconds
-		`);
-		const buildSeconds = timeResult.rows[0].build_seconds;
-		const completionTime = new Date(Date.now() + buildSeconds * 1000);
-
-		// Reserve resources and add to queue
-		await db.execute(sql`
-			INSERT INTO building_queue (
-				planet_id, building_type_id, target_level,
-				completion_at, resources_reserved
-			) VALUES (
-				${planetId}, ${buildingTypeId}, ${targetLevel},
-				${completionTime}, ${JSON.stringify(validation.cost)}
-			)
-		`);
-
-		// Deduct resources from planet
-		await db.execute(sql`
-			UPDATE planets
-			SET resources = jsonb_set(
-				jsonb_set(
-					jsonb_set(resources, '{metal}', (COALESCE(resources->>'metal', '0')::int - ${validation.cost.metal})::text::jsonb),
-					'{crystal}', (COALESCE(resources->>'crystal', '0')::int - ${validation.cost.crystal})::text::jsonb
-				),
-				'{gas}', (COALESCE(resources->>'gas', '0')::int - ${validation.cost.gas})::text::jsonb
-			)
-			WHERE id = ${planetId}
-		`);
-
-		// Mark building as upgrading
-		await db.execute(sql`
-			INSERT INTO planet_buildings (planet_id, building_type_id, level, is_upgrading, upgrade_started_at, upgrade_completion_at)
-			VALUES (${planetId}, ${buildingTypeId}, ${building.level}, true, now(), ${completionTime})
-			ON CONFLICT (planet_id, building_type_id) DO UPDATE SET
-				is_upgrading = true,
-				upgrade_started_at = now(),
-				upgrade_completion_at = ${completionTime}
-		`);
-
-		return { success: true, completionTime };
 	}
 
 	/**

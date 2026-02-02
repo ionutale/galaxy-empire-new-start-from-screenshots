@@ -9,12 +9,13 @@
 	let isChatOpen = $state(false);
 	let chatMessages = $state<any[]>([]);
 	let newMessage = $state('');
+	let chatChannel = $state('global');
 	let chatInterval: any;
 	let gameTickInterval: any;
 
 	async function fetchChat() {
 		try {
-			const res = await fetch('/api/chat');
+			const res = await fetch(`/api/chat?channel=${chatChannel}`);
 			if (res.ok) {
 				chatMessages = await res.json();
 			}
@@ -42,7 +43,7 @@
 			const res = await fetch('/api/chat', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ content: newMessage })
+				body: JSON.stringify({ content: newMessage, channel: chatChannel })
 			});
 
 			if (res.ok) {
@@ -52,6 +53,11 @@
 		} catch (e) {
 			console.error('Failed to send message', e);
 		}
+	}
+
+	function switchChannel(channel: string) {
+		chatChannel = channel;
+		fetchChat();
 	}
 
 	onMount(() => {
@@ -181,7 +187,22 @@
 			class="absolute right-0 bottom-16 left-0 z-30 flex h-64 flex-col border-t border-gray-700 bg-black/90 backdrop-blur-md"
 		>
 			<div class="flex items-center justify-between border-b border-gray-700 bg-gray-800 p-2">
-				<span class="font-bold text-blue-300">Global Chat</span>
+				<div class="flex space-x-2">
+					<button
+						onclick={() => switchChannel('global')}
+						class="rounded px-2 py-1 text-sm transition {chatChannel === 'global' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}"
+					>
+						Global
+					</button>
+					{#if data.user.allianceId}
+						<button
+							onclick={() => switchChannel('alliance')}
+							class="rounded px-2 py-1 text-sm transition {chatChannel === 'alliance' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}"
+						>
+							Alliance
+						</button>
+					{/if}
+				</div>
 				<button
 					onclick={() => (isChatOpen = false)}
 					class="text-gray-400 transition-transform hover:text-white active:scale-95">▼</button
@@ -225,7 +246,7 @@
 		>
 			{#if chatMessages.length > 0}
 				{@const lastMsg = chatMessages[0]}
-				<span class="font-bold text-blue-400">[Global]</span>
+				<span class="font-bold text-blue-400">[{chatChannel === 'alliance' ? 'Alliance' : 'Global'}]</span>
 				<span class="text-yellow-500">{lastMsg.username}:</span>
 				{lastMsg.content}
 			{:else}

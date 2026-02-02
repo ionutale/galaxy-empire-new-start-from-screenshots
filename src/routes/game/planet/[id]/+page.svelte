@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import type { BuildingInfo } from '$lib/server/building-service';
+	import { onMount } from 'svelte';
 
 	let { data } = $props();
 	let loading = $state<Record<string, boolean>>({});
@@ -10,14 +11,24 @@
 	let queue = $derived(data.queue || []);
 	let resources = $derived(data.resources || { metal: 0, crystal: 0, gas: 0, energy: 0 });
 
+	// Real-time timer for queue updates
+	let currentTime = $state(new Date());
+
+	onMount(() => {
+		const interval = setInterval(() => {
+			currentTime = new Date();
+		}, 1000);
+
+		return () => clearInterval(interval);
+	});
+
 	// Group buildings by category
 	let resourceBuildings = $derived(buildings.filter(b => b.category === 'resource'));
 	let facilityBuildings = $derived(buildings.filter(b => b.category === 'facility'));
 	let storageBuildings = $derived(buildings.filter(b => b.category === 'storage'));
 
 	function formatTimeRemaining(completionAt: Date) {
-		const now = new Date();
-		const diff = completionAt.getTime() - now.getTime();
+		const diff = completionAt.getTime() - currentTime.getTime();
 		if (diff <= 0) return 'Complete';
 
 		const seconds = Math.floor(diff / 1000);

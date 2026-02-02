@@ -3,6 +3,9 @@ import { getSession } from '$lib/server/auth';
 import { processFleets } from '$lib/server/fleet-processor';
 import { processAutoExplore } from '$lib/server/auto-explorer';
 import { ShipyardService } from '$lib/server/shipyard-service';
+import { ResearchService } from '$lib/server/research-service';
+import { db } from '$lib/server/db';
+import { sql } from 'drizzle-orm';
 import { building } from '$app/environment';
 
 // Global interval handling for dev HMR
@@ -21,6 +24,8 @@ function startTickLoop() {
 			await processFleets();
 			await processAutoExplore();
 			await ShipyardService.processCompletedShipConstruction();
+			await ResearchService.processCompletedResearch();
+			await db.execute(sql`CALL process_completed_buildings()`);
 		} catch (e) {
 			console.error('Tick error:', e);
 		}

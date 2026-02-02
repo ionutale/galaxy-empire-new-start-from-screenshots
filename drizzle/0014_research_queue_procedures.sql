@@ -5,11 +5,13 @@
 CREATE OR REPLACE PROCEDURE process_completed_research(user_id int) AS $$
 DECLARE
     completed_research RECORD;
+    research_name text;
 BEGIN
     -- Get all completed research for the user
     FOR completed_research IN
-        SELECT rq.id, rq.research_type_id, rq.level
+        SELECT rq.id, rq.research_type_id, rq.level, rt.name
         FROM research_queue rq
+        JOIN research_types rt ON rt.id = rq.research_type_id
         WHERE rq.user_id = user_id AND rq.completion_at <= now()
         ORDER BY rq.completion_at ASC
     LOOP
@@ -27,6 +29,15 @@ BEGIN
         WHERE NOT EXISTS (
             SELECT 1 FROM user_research_levels
             WHERE user_id = user_id AND research_type_id = completed_research.research_type_id
+        );
+
+        -- Create notification message
+        INSERT INTO messages (user_id, type, title, content)
+        VALUES (
+            user_id,
+            'research',
+            'Research Completed',
+            'Your research "' || completed_research.name || '" has been completed to level ' || completed_research.level || '.'
         );
 
         -- Remove from queue

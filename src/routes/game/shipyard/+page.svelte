@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import Spinner from '$lib/components/Spinner.svelte';
+	import { onMount } from 'svelte';
 
 	let { data } = $props();
 
@@ -11,6 +12,17 @@
 	let shipyardInfo = $derived(shipyardData?.shipyardInfo || []);
 	let resources = $derived(shipyardData?.resources || {});
 	let shipyardLevel = $derived(shipyardData?.shipyardLevel || 0);
+
+	// Real-time timer for queue updates
+	let currentTime = $state(new Date());
+
+	onMount(() => {
+		const interval = setInterval(() => {
+			currentTime = new Date();
+		}, 1000);
+
+		return () => clearInterval(interval);
+	});
 
 	// Track input amounts
 	let amounts = $state(Object.fromEntries(shipyardInfo.map((ship) => [ship.shipType, 1])));
@@ -39,8 +51,7 @@
 	}
 
 	function formatTimeRemaining(completionAt: Date) {
-		const now = new Date();
-		const diff = completionAt.getTime() - now.getTime();
+		const diff = completionAt.getTime() - currentTime.getTime();
 		if (diff <= 0) return 'Complete';
 
 		const seconds = Math.floor(diff / 1000);

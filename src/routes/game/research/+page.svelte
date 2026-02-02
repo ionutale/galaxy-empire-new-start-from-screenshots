@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import type { ResearchInfo } from '$lib/server/research-service';
+	import { onMount } from 'svelte';
 
 	let { data } = $props();
 	let loading = $state<Record<string, boolean>>({});
@@ -15,6 +16,18 @@
 
 	let research = $derived(data.research || []) as ResearchInfo[];
 	let queue = $derived(data.queue || []);
+	let hasResearchLab = $derived(data.hasResearchLab || false);
+
+	// Real-time timer for queue updates
+	let currentTime = $state(new Date());
+
+	onMount(() => {
+		const interval = setInterval(() => {
+			currentTime = new Date();
+		}, 1000);
+
+		return () => clearInterval(interval);
+	});
 
 	// Group research by category
 	let energyResearch = $derived(research.filter(r => r.category === 'energy'));
@@ -24,8 +37,7 @@
 	let expansionResearch = $derived(research.filter(r => r.category === 'expansion'));
 
 	function formatTimeRemaining(completionAt: Date) {
-		const now = new Date();
-		const diff = completionAt.getTime() - now.getTime();
+		const diff = completionAt.getTime() - currentTime.getTime();
 		if (diff <= 0) return 'Complete';
 
 		const seconds = Math.floor(diff / 1000);
