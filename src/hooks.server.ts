@@ -2,6 +2,7 @@ import { redirect, type Handle } from '@sveltejs/kit';
 import { getSession } from '$lib/server/auth';
 import { processFleets } from '$lib/server/fleet-processor';
 import { processAutoExplore } from '$lib/server/auto-explorer';
+import { ShipyardService } from '$lib/server/shipyard-service';
 import { building } from '$app/environment';
 
 // Global interval handling for dev HMR
@@ -19,6 +20,7 @@ function startTickLoop() {
 		try {
 			await processFleets();
 			await processAutoExplore();
+			await ShipyardService.processCompletedShipConstruction();
 		} catch (e) {
 			console.error('Tick error:', e);
 		}

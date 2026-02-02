@@ -141,81 +141,9 @@ export class ShipyardService {
 		shipType: string,
 		amount: number
 	): Promise<{ success: boolean; error?: string }> {
-		const shipConfig = SHIPS[shipType];
-		if (!shipConfig) {
-			return { success: false, error: 'Invalid ship type' };
-		}
-
-		if (amount < 1) {
-			return { success: false, error: 'Invalid amount' };
-		}
-
 		try {
-			await db.transaction(async (tx) => {
-				// Check shipyard level
-				const buildRes = await tx
-					.select({ shipyard: planetBuildings.shipyard })
-					.from(planetBuildings)
-					.where(eq(planetBuildings.planetId, planetId));
-
-				if ((buildRes[0]?.shipyard || 0) < 1) {
-					throw new Error('Shipyard required');
-				}
-
-				// Check resources
-				const resRes = await tx
-					.select({
-						metal: planetResources.metal,
-						crystal: planetResources.crystal,
-						gas: planetResources.gas
-					})
-					.from(planetResources)
-					.where(eq(planetResources.planetId, planetId))
-					.for('update');
-
-				if (resRes.length === 0) {
-					throw new Error('Planet not found');
-				}
-
-				const resources = resRes[0];
-				const totalCost = {
-					metal: shipConfig.cost.metal * amount,
-					crystal: shipConfig.cost.crystal * amount,
-					gas: (shipConfig.cost.gas || 0) * amount
-				};
-
-				if (
-					(resources.metal || 0) < totalCost.metal ||
-					(resources.crystal || 0) < totalCost.crystal ||
-					(resources.gas || 0) < totalCost.gas
-				) {
-					throw new Error('Not enough resources');
-				}
-
-				// Calculate construction time (simplified - 1 second per ship for now)
-				const constructionTimeSeconds = amount; // TODO: Make this configurable
-				const completionAt = new Date(Date.now() + constructionTimeSeconds * 1000);
-
-				// Deduct resources
-				await tx
-					.update(planetResources)
-					.set({
-						metal: sql`${planetResources.metal} - ${totalCost.metal}`,
-						crystal: sql`${planetResources.crystal} - ${totalCost.crystal}`,
-						gas: sql`${planetResources.gas} - ${totalCost.gas}`
-					})
-					.where(eq(planetResources.planetId, planetId));
-
-				// Add to shipyard queue
-				await tx.insert(shipyardQueue).values({
-					userId,
-					planetId,
-					shipType,
-					amount,
-					completionAt
-				});
-			});
-
+			// Use stored procedure for validation and construction start
+			await db.execute(sql`CALL start_ship_construction(${userId}, ${planetId}, ${shipType}, ${amount})`);
 			return { success: true };
 		} catch (error: any) {
 			return { success: false, error: error.message };
@@ -226,41 +154,9 @@ export class ShipyardService {
 	 * Process completed ship construction
 	 */
 	static async processCompletedShipConstruction(): Promise<void> {
-		const now = new Date();
-
 		try {
-			await db.transaction(async (tx) => {
-				// Get completed ship constructions
-				const completed = await tx
-					.select()
-					.from(shipyardQueue)
-					.where(sql`${shipyardQueue.completionAt} <= ${now}`)
-					.orderBy(shipyardQueue.completionAt);
-
-				for (const item of completed) {
-					// Ensure planet_ships row exists
-					await tx
-						.insert(planetShips)
-						.values({ planetId: item.planetId })
-						.onConflictDoNothing({ target: planetShips.planetId });
-
-					// Add ships to planet
-					const shipKey = item.shipType.replace(/_([a-z])/g, (g) =>
-						g[1].toUpperCase()
-					) as keyof typeof planetShips;
-
-					const shipColumn = planetShips[shipKey];
-					if (shipColumn) {
-						await tx
-							.update(planetShips)
-							.set({ [shipKey]: sql`${shipColumn} + ${item.amount}` })
-							.where(eq(planetShips.planetId, item.planetId));
-					}
-
-					// Remove from queue
-					await tx.delete(shipyardQueue).where(eq(shipyardQueue.id, item.id));
-				}
-			});
+			// Use stored procedure to process completed constructions
+			await db.execute(sql`CALL process_completed_ship_construction()`);
 		} catch (error) {
 			console.error('Error processing completed ship construction:', error);
 		}
@@ -274,46 +170,15 @@ export class ShipyardService {
 		queueId: number
 	): Promise<{ success: boolean; error?: string }> {
 		try {
-			await db.transaction(async (tx) => {
-				// Get the queue item
-				const queueRes = await tx
-					.select()
-					.from(shipyardQueue)
-					.where(and(eq(shipyardQueue.id, queueId), eq(shipyardQueue.userId, userId)))
-					.for('update');
+			// Use stored function for cancellation
+			const result = await db.execute(sql`SELECT cancel_ship_construction(${userId}, ${queueId}) as result`);
+			const cancelResult = result.rows[0]?.result as any;
 
-				if (queueRes.length === 0) {
-					throw new Error('Construction not found');
-				}
-
-				const item = queueRes[0];
-				const shipConfig = SHIPS[item.shipType];
-				if (!shipConfig) {
-					throw new Error('Invalid ship type');
-				}
-
-				// Calculate refund (50% of resources)
-				const refund = {
-					metal: Math.floor((shipConfig.cost.metal * item.amount) * 0.5),
-					crystal: Math.floor((shipConfig.cost.crystal * item.amount) * 0.5),
-					gas: Math.floor(((shipConfig.cost.gas || 0) * item.amount) * 0.5)
-				};
-
-				// Refund resources
-				await tx
-					.update(planetResources)
-					.set({
-						metal: sql`${planetResources.metal} + ${refund.metal}`,
-						crystal: sql`${planetResources.crystal} + ${refund.crystal}`,
-						gas: sql`${planetResources.gas} + ${refund.gas}`
-					})
-					.where(eq(planetResources.planetId, item.planetId));
-
-				// Remove from queue
-				await tx.delete(shipyardQueue).where(eq(shipyardQueue.id, queueId));
-			});
-
-			return { success: true };
+			if (cancelResult?.success) {
+				return { success: true };
+			} else {
+				return { success: false, error: cancelResult?.error || 'Unknown error' };
+			}
 		} catch (error: any) {
 			return { success: false, error: error.message };
 		}

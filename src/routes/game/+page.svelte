@@ -95,6 +95,12 @@
 			<p class="text-sm text-gray-400">
 				[{data.currentPlanet.galaxyId}:{data.currentPlanet.systemId}:{data.currentPlanet
 					.planetNumber}]
+				<a
+					href="/game/planet/{data.currentPlanet.id}"
+					class="ml-4 text-blue-400 hover:text-blue-300 underline"
+				>
+					View Details
+				</a>
 			</p>
 		</div>
 

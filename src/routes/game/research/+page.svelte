@@ -14,6 +14,7 @@
 	});
 
 	let research = $derived(data.research || []) as ResearchInfo[];
+	let queue = $derived(data.queue || []);
 
 	// Group research by category
 	let energyResearch = $derived(research.filter(r => r.category === 'energy'));
@@ -22,10 +23,36 @@
 	let intelligenceResearch = $derived(research.filter(r => r.category === 'intelligence'));
 	let expansionResearch = $derived(research.filter(r => r.category === 'expansion'));
 
-	// Check if user has research lab
-	let hasResearchLab = $derived(data.currentPlanet?.buildings?.find((b: any) => b.name === 'Research Lab')?.level > 0);
-</script>
+	function formatTimeRemaining(completionAt: Date) {
+		const now = new Date();
+		const diff = completionAt.getTime() - now.getTime();
+		if (diff <= 0) return 'Complete';
 
+		const seconds = Math.floor(diff / 1000);
+		const minutes = Math.floor(seconds / 60);
+		const hours = Math.floor(minutes / 60);
+
+		if (hours > 0) {
+			return `${hours}h ${minutes % 60}m`;
+		} else if (minutes > 0) {
+			return `${minutes}m ${seconds % 60}s`;
+		} else {
+			return `${seconds}s`;
+		}
+	}
+
+	function getResearchIcon(researchTypeId: number) {
+		// Simple mapping - you might want to enhance this based on research types
+		switch (researchTypeId) {
+			case 1: return '⚡'; // Energy
+			case 2: return '🛡️'; // Combat
+			case 3: return '🚀'; // Propulsion
+			case 4: return '🕵️'; // Intelligence
+			case 5: return '🏗️'; // Expansion
+			default: return '🔬';
+		}
+	}
+</script>
 <div class="p-4 pb-20">
 	<h2 class="mb-6 text-2xl font-bold text-blue-300">Research Lab</h2>
 
@@ -35,6 +62,35 @@
 				href="/game"
 				class="font-bold underline hover:text-white">Build one in the Facilities menu.</a
 			>
+		</div>
+	{/if}
+
+	<!-- Research Queue -->
+	{#if queue.length > 0}
+		<div class="mb-6 rounded-lg border border-blue-500 bg-blue-900/20 p-4">
+			<h3 class="mb-3 text-lg font-bold text-blue-300">Research Queue</h3>
+			<div class="space-y-2">
+				{#each queue as item}
+					<div class="flex items-center justify-between rounded bg-gray-800 p-3">
+						<div class="flex items-center space-x-3">
+							<span class="text-2xl">{getResearchIcon(item.researchTypeId)}</span>
+							<div>
+								<span class="font-medium text-gray-200">Research Level {item.level}</span>
+								<div class="text-sm text-yellow-400">{formatTimeRemaining(new Date(item.completionAt))}</div>
+							</div>
+						</div>
+						<form method="POST" action="?/cancel" use:enhance>
+							<input type="hidden" name="queue_id" value={item.id} />
+							<button
+								type="submit"
+								class="rounded bg-red-600 px-3 py-1 text-sm font-bold text-white hover:bg-red-500"
+							>
+								Cancel
+							</button>
+						</form>
+					</div>
+				{/each}
+			</div>
 		</div>
 	{/if}
 
