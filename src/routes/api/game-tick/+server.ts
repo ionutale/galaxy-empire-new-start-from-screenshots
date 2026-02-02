@@ -3,6 +3,7 @@ import { db } from '$lib/server/db';
 import { sql } from 'drizzle-orm';
 import { BuildingService } from '$lib/server/building-service';
 import { ResearchService } from '$lib/server/research-service';
+import { ShipyardService } from '$lib/server/shipyard-service';
 
 export async function GET() {
 	try {
@@ -14,6 +15,9 @@ export async function GET() {
 		for (const user of usersResult.rows) {
 			await ResearchService.processCompletedResearch(user.id);
 		}
+
+		// Process completed ship construction
+		await ShipyardService.processCompletedShipConstruction();
 
 		// Call stored procedures for fleet processing and auto-exploration
 		await db.execute(sql`CALL process_fleets()`);

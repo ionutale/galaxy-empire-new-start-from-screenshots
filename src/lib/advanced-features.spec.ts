@@ -10,6 +10,18 @@ describe('Advanced Game Features', () => {
 
   describe('Game Configuration', () => {
     it('should have combat rules configuration', async () => {
+      // Reset to default config first
+      const defaultConfig = {
+        rounds_per_battle: 1,
+        attacker_loss_multiplier: 0.5,
+        defender_loss_multiplier: 1.0,
+        draw_loss_multiplier: 0.5,
+        loot_percentage: 0.5,
+        rapidfire_enabled: false
+      };
+
+      await db.execute(sql`CALL update_game_config('combat_rules', ${JSON.stringify(defaultConfig)}::jsonb, 'Reset to default combat rules')`);
+
       const result = await db.execute(sql`SELECT get_game_config('combat_rules') as config`);
       const config = result.rows[0].config;
 

@@ -36,6 +36,13 @@
       "when": 1770063758105,
       "tag": "0004_sloppy_anthem",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1770064831651,
+      "tag": "0005_short_blue_blade",
+      "breakpoints": true
     }
   ]
 }

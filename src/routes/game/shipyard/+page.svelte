@@ -1,39 +1,59 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { SHIPS } from '$lib/game-config';
 	import Spinner from '$lib/components/Spinner.svelte';
 
 	let { data } = $props();
 
-	const shipTypes = Object.keys(SHIPS);
+	// Get data from the new structure
+	let shipyardData = $derived(data.shipyardData);
+	let ships = $derived(shipyardData?.ships || {});
+	let queue = $derived(shipyardData?.queue || []);
+	let shipyardInfo = $derived(shipyardData?.shipyardInfo || []);
+	let resources = $derived(shipyardData?.resources || {});
+	let shipyardLevel = $derived(shipyardData?.shipyardLevel || 0);
 
 	// Track input amounts
-	let amounts = $state(Object.fromEntries(shipTypes.map((type) => [type, 1])));
+	let amounts = $state(Object.fromEntries(shipyardInfo.map((ship) => [ship.shipType, 1])));
+
+	// Update amounts when shipyardInfo changes
+	$effect(() => {
+		if (shipyardInfo.length > 0) {
+			amounts = Object.fromEntries(shipyardInfo.map((ship) => [ship.shipType, 1]));
+		}
+	});
+
 	let loading = $state<Record<string, boolean>>({});
 
-	let resources = $derived({
-		metal: data.resources?.metal || 0,
-		crystal: data.resources?.crystal || 0,
-		gas: data.resources?.gas || 0,
-		energy: data.resources?.energy || 0
-	});
-	let ships = $derived(data.ships || {}) as any;
-	let shipyardLevel = $derived(data.shipyardLevel || 0);
-
-	function canBuild(type: string) {
-		const ship = SHIPS[type as keyof typeof SHIPS];
-		const amount = amounts[type] || 1;
+	function canBuild(ship: any) {
+		const amount = amounts[ship.shipType] || 1;
 		const cost = {
 			metal: ship.cost.metal * amount,
 			crystal: ship.cost.crystal * amount,
-			gas: (ship.cost.gas || 0) * amount
+			gas: ship.cost.gas * amount
 		};
 
-		return (
+		return ship.canBuild &&
 			resources.metal >= cost.metal &&
 			resources.crystal >= cost.crystal &&
-			(cost.gas === 0 || resources.gas >= cost.gas)
-		);
+			(cost.gas === 0 || resources.gas >= cost.gas);
+	}
+
+	function formatTimeRemaining(completionAt: Date) {
+		const now = new Date();
+		const diff = completionAt.getTime() - now.getTime();
+		if (diff <= 0) return 'Complete';
+
+		const seconds = Math.floor(diff / 1000);
+		const minutes = Math.floor(seconds / 60);
+		const hours = Math.floor(minutes / 60);
+
+		if (hours > 0) {
+			return `${hours}h ${minutes % 60}m`;
+		} else if (minutes > 0) {
+			return `${minutes}m ${seconds % 60}s`;
+		} else {
+			return `${seconds}s`;
+		}
 	}
 </script>
 
@@ -49,19 +69,45 @@
 		</div>
 	{/if}
 
+	<!-- Construction Queue -->
+	{#if queue.length > 0}
+		<div class="mb-6 rounded-lg border border-blue-500 bg-blue-900/20 p-4">
+			<h3 class="mb-3 text-lg font-bold text-blue-300">Construction Queue</h3>
+			<div class="space-y-2">
+				{#each queue as item}
+					<div class="flex items-center justify-between rounded bg-gray-800 p-3">
+						<div class="flex items-center space-x-3">
+							<span class="font-medium text-gray-200">{item.shipType.replace(/_/g, ' ')}</span>
+							<span class="text-sm text-gray-400">x{item.amount}</span>
+							<span class="text-sm text-yellow-400">{formatTimeRemaining(new Date(item.completionAt))}</span>
+						</div>
+						<form method="POST" action="?/cancel" use:enhance>
+							<input type="hidden" name="queue_id" value={item.id} />
+							<button
+								type="submit"
+								class="rounded bg-red-600 px-3 py-1 text-sm font-bold text-white hover:bg-red-500"
+							>
+								Cancel
+							</button>
+						</form>
+					</div>
+				{/each}
+			</div>
+		</div>
+	{/if}
+
 	<div
 		class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 {shipyardLevel === 0
 			? 'pointer-events-none opacity-50 grayscale'
 			: ''}"
 	>
-		{#each shipTypes as type}
-			{@const ship = SHIPS[type as keyof typeof SHIPS]}
-			{@const count = ships[type] || 0}
-			{@const amount = amounts[type] || 1}
+		{#each shipyardInfo as ship}
+			{@const count = ships[ship.shipType.replace(/_([a-z])/g, (g) => g[1].toUpperCase())] || 0}
+			{@const amount = amounts[ship.shipType] || 1}
 			{@const totalCost = {
 				metal: ship.cost.metal * amount,
 				crystal: ship.cost.crystal * amount,
-				gas: (ship.cost.gas || 0) * amount
+				gas: ship.cost.gas * amount
 			}}
 
 			<div class="flex flex-col rounded-lg border border-gray-700 bg-gray-800 p-4 shadow-lg">
@@ -104,34 +150,38 @@
 						{/if}
 					</div>
 
+					{#if !ship.canBuild}
+						<div class="mb-2 text-xs text-red-400">{ship.reason}</div>
+					{/if}
+
 					<form
 						method="POST"
 						action="?/build"
 						use:enhance={() => {
-							loading[type] = true;
+							loading[ship.shipType] = true;
 							return async ({ update }) => {
-								loading[type] = false;
+								loading[ship.shipType] = false;
 								await update();
 							};
 						}}
 						class="flex space-x-2"
 					>
-						<input type="hidden" name="type" value={type} />
+						<input type="hidden" name="type" value={ship.shipType} />
 						<input type="hidden" name="planet_id" value={data.currentPlanet.id} />
 						<input
 							type="number"
 							name="amount"
 							min="1"
-							bind:value={amounts[type]}
+							bind:value={amounts[ship.shipType]}
 							class="w-16 rounded border border-gray-600 bg-gray-700 px-2 py-1 text-center text-white"
 							disabled={shipyardLevel === 0}
 						/>
 						<button
 							type="submit"
 							class="flex flex-1 transform items-center justify-center rounded bg-blue-600 text-sm font-bold transition hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-600 disabled:opacity-50"
-							disabled={shipyardLevel === 0 || !canBuild(type) || loading[type]}
+							disabled={shipyardLevel === 0 || !canBuild(ship) || loading[ship.shipType]}
 						>
-							{#if loading[type]}
+							{#if loading[ship.shipType]}
 								<Spinner size="sm" class="mr-2" />
 							{/if}
 							Build

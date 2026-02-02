@@ -1,134 +1,92 @@
-import { db } from '$lib/server/db';
-import { planetShips, planetBuildings, planetResources } from '$lib/server/db/schema';
-import { eq, sql } from 'drizzle-orm';
-import { fail } from '@sveltejs/kit';
-import { SHIPS } from '$lib/game-config';
-import { updatePlanetResources } from '$lib/server/game';
-import { updateUserPoints } from '$lib/server/points-calculator';
+import { ShipyardService } from '$lib/server/shipyard-service';
 import type { PageServerLoad, Actions } from './$types';
 
-export const load: PageServerLoad = async ({ parent }) => {
+export const load: PageServerLoad = async ({ parent, fetch }) => {
 	const { currentPlanet } = await parent();
 
 	if (!currentPlanet) {
-		return { ships: null };
+		return { shipyardData: null };
 	}
 
-	const shipsRes = await db
-		.select()
-		.from(planetShips)
-		.where(eq(planetShips.planetId, currentPlanet.id));
+	try {
+		const response = await fetch(`/api/shipyard?planetId=${currentPlanet.id}`);
+		const shipyardData = await response.json();
 
-	const buildRes = await db
-		.select({ shipyard: planetBuildings.shipyard })
-		.from(planetBuildings)
-		.where(eq(planetBuildings.planetId, currentPlanet.id));
-
-	const shipyardLevel = buildRes[0]?.shipyard || 0;
-
-	return {
-		ships: shipsRes[0],
-		shipyardLevel
-	};
+		return { shipyardData };
+	} catch (error) {
+		console.error('Error loading shipyard data:', error);
+		return { shipyardData: null };
+	}
 };
 
 export const actions = {
-	build: async ({ request, locals }) => {
-		if (!locals.user) return fail(401);
+	build: async ({ request, locals, fetch }) => {
+		if (!locals.user) return { success: false, error: 'Unauthorized' };
 
 		const data = await request.formData();
 		const shipType = data.get('type') as string;
 		const amount = Number(data.get('amount') || 1);
 		const planetId = Number(data.get('planet_id'));
 
-		if (!shipType || !planetId || amount < 1) return fail(400);
-
-		const shipConfig = SHIPS[shipType as keyof typeof SHIPS];
-		if (!shipConfig) return fail(400, { error: 'Invalid ship type' });
-
-		// Update resources first
-		await updatePlanetResources(planetId);
+		if (!shipType || !planetId || amount < 1) {
+			return { success: false, error: 'Invalid data' };
+		}
 
 		try {
-			await db.transaction(async (tx) => {
-				// Check Shipyard Level
-				const buildRes = await tx
-					.select({ shipyard: planetBuildings.shipyard })
-					.from(planetBuildings)
-					.where(eq(planetBuildings.planetId, planetId));
-
-				if ((buildRes[0]?.shipyard || 0) < 1) {
-					throw new Error('Shipyard required');
-				}
-
-				// Check resources with lock
-				const resCheck = await tx
-					.select({
-						metal: planetResources.metal,
-						crystal: planetResources.crystal,
-						gas: planetResources.gas
-					})
-					.from(planetResources)
-					.where(eq(planetResources.planetId, planetId))
-					.for('update');
-
-				if (resCheck.length === 0) throw new Error('Planet resources not found');
-				const resources = resCheck[0];
-
-				const totalCost = {
-					metal: shipConfig.cost.metal * amount,
-					crystal: shipConfig.cost.crystal * amount,
-					gas: (shipConfig.cost.gas || 0) * amount
-				};
-
-				if (
-					(resources.metal || 0) < totalCost.metal ||
-					(resources.crystal || 0) < totalCost.crystal ||
-					(resources.gas || 0) < totalCost.gas
-				) {
-					throw new Error('Not enough resources');
-				}
-
-				// Deduct resources
-				await tx
-					.update(planetResources)
-					.set({
-						metal: sql`${planetResources.metal} - ${totalCost.metal}`,
-						crystal: sql`${planetResources.crystal} - ${totalCost.crystal}`,
-						gas: sql`${planetResources.gas} - ${totalCost.gas}`
-					})
-					.where(eq(planetResources.planetId, planetId));
-
-				// Ensure planet_ships row exists
-				await tx
-					.insert(planetShips)
-					.values({ planetId })
-					.onConflictDoNothing({ target: planetShips.planetId });
-
-				// Add ships
-				// Convert snake_case shipType to camelCase for Drizzle column
-				const shipKey = shipType.replace(/_([a-z])/g, (g) =>
-					g[1].toUpperCase()
-				) as keyof typeof planetShips;
-				const shipColumn = planetShips[shipKey];
-
-				if (!shipColumn) throw new Error('Invalid ship column mapping');
-
-				await tx
-					.update(planetShips)
-					.set({ [shipKey]: sql`${shipColumn} + ${amount}` })
-					.where(eq(planetShips.planetId, planetId));
+			const response = await fetch('/api/shipyard', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					action: 'build',
+					planetId,
+					shipType,
+					amount
+				})
 			});
 
-			// Update points
-			await updateUserPoints(locals.user.id);
-			return { success: true };
-		} catch (e: any) {
-			if (e.message === 'Shipyard required' || e.message === 'Not enough resources') {
-				return fail(400, { error: e.message });
+			const result = await response.json();
+
+			if (!result.success) {
+				return { success: false, error: result.error || 'Failed to start construction' };
 			}
-			console.error(e);
-			return fail(500, { error: 'Internal server error' });
+
+			return { success: true };
+		} catch (error) {
+			console.error('Error building ships:', error);
+			return { success: false, error: 'Internal server error' };
+		}
+	},
+
+	cancel: async ({ request, locals, fetch }) => {
+		if (!locals.user) return { success: false, error: 'Unauthorized' };
+
+		const data = await request.formData();
+		const queueId = Number(data.get('queue_id'));
+
+		if (!queueId) {
+			return { success: false, error: 'Invalid queue ID' };
+		}
+
+		try {
+			const response = await fetch('/api/shipyard', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					action: 'cancel',
+					queueId
+				})
+			});
+
+			const result = await response.json();
+
+			if (!result.success) {
+				return { success: false, error: result.error || 'Failed to cancel construction' };
+			}
+
+			return { success: true };
+		} catch (error) {
+			console.error('Error canceling construction:', error);
+			return { success: false, error: 'Internal server error' };
 		}
 	}
 } satisfies Actions;

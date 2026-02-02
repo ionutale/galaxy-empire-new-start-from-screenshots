@@ -170,6 +170,20 @@ export const researchQueue = pgTable('research_queue', {
 	completionIdx: index('research_queue_completion_idx').on(t.completionAt)
 }));
 
+export const shipyardQueue = pgTable('shipyard_queue', {
+	id: serial('id').primaryKey(),
+	userId: integer('user_id').references(() => users.id),
+	planetId: integer('planet_id').references(() => planets.id),
+	shipType: varchar('ship_type', { length: 50 }).notNull(),
+	amount: integer('amount').notNull(),
+	startedAt: timestamp('started_at').defaultNow(),
+	completionAt: timestamp('completion_at').notNull()
+}, (t) => ({
+	userQueueIdx: index('shipyard_queue_user_idx').on(t.userId),
+	planetQueueIdx: index('shipyard_queue_planet_idx').on(t.planetId),
+	completionIdx: index('shipyard_queue_completion_idx').on(t.completionAt)
+}));
+
 // 5. Fleets & Ships
 export const fleets = pgTable(
 	'fleets',
