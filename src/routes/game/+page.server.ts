@@ -5,23 +5,31 @@ import { fail } from '@sveltejs/kit';
 import { getBuildingCost, DEFENSES } from '$lib/game-config';
 import { updatePlanetResources } from '$lib/server/game';
 import { updateUserPoints } from '$lib/server/points-calculator';
+import { BuildingService } from '$lib/server/building-service';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ parent }) => {
 	const { currentPlanet } = await parent();
 
 	if (!currentPlanet) {
-		return { buildings: null, defenses: null };
+		return { buildings: null, defenses: null, planetProduction: null, planetStorage: null };
 	}
 
-	const [buildingsRes, defensesRes] = await Promise.all([
-		db.select().from(planetBuildings).where(eq(planetBuildings.planetId, currentPlanet.id)),
-		db.select().from(planetDefenses).where(eq(planetDefenses.planetId, currentPlanet.id))
+	// Get buildings using new building service
+	const [buildings, planetProduction, planetStorage] = await Promise.all([
+		BuildingService.getPlanetBuildings(currentPlanet.id),
+		BuildingService.calculatePlanetProduction(currentPlanet.id),
+		BuildingService.calculatePlanetStorage(currentPlanet.id)
 	]);
 
+	// Get legacy defense data for now
+	const defensesRes = await db.select().from(planetDefenses).where(eq(planetDefenses.planetId, currentPlanet.id));
+
 	return {
-		buildings: buildingsRes[0],
-		defenses: defensesRes[0]
+		buildings,
+		defenses: defensesRes[0],
+		planetProduction,
+		planetStorage
 	};
 };
 
@@ -30,77 +38,22 @@ export const actions = {
 		if (!locals.user || !locals.user.id) return fail(401);
 
 		const data = await request.formData();
-		const buildingType = data.get('type') as string;
+		const buildingTypeId = Number(data.get('building_type_id'));
 		const planetId = Number(data.get('planet_id'));
 
-		if (!buildingType || !planetId) return fail(400);
-
-		// Update resources first to get accurate count
-		await updatePlanetResources(planetId);
+		if (!buildingTypeId || !planetId) return fail(400);
 
 		try {
-			await db.transaction(async (tx) => {
-				// Get current level and resources
-				// We need to map buildingType (snake_case) to column (camelCase)
-				const buildingKey = buildingType.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
-				const buildingColumn = (planetBuildings as any)[buildingKey];
+			const result = await BuildingService.startBuildingConstruction(planetId, buildingTypeId, locals.user.id);
 
-				if (!buildingColumn) throw new Error('Invalid building type column');
-
-				const planetRes = await tx
-					.select({
-						metal: planetResources.metal,
-						crystal: planetResources.crystal,
-						gas: planetResources.gas,
-						level: buildingColumn
-					})
-					.from(planetResources)
-					.innerJoin(planetBuildings, eq(planetResources.planetId, planetBuildings.planetId))
-					.where(eq(planetResources.planetId, planetId))
-					.for('update'); // Lock resources
-
-				if (planetRes.length === 0) return fail(404);
-
-				const { metal, crystal, gas, level } = planetRes[0];
-				const currentLevel = level || 0;
-				const cost = getBuildingCost(buildingType, currentLevel);
-
-				if (!cost) throw new Error('Invalid building');
-
-				if (
-					(metal || 0) < cost.metal ||
-					(crystal || 0) < cost.crystal ||
-					(cost.gas && (gas || 0) < cost.gas)
-				) {
-					throw new Error('Not enough resources');
-				}
-
-				// Deduct resources
-				await tx
-					.update(planetResources)
-					.set({
-						metal: sql`${planetResources.metal} - ${cost.metal}`,
-						crystal: sql`${planetResources.crystal} - ${cost.crystal}`,
-						gas: sql`${planetResources.gas} - ${cost.gas || 0}`
-					})
-					.where(eq(planetResources.planetId, planetId));
-
-				// Upgrade building
-				await tx
-					.update(planetBuildings)
-					.set({ [buildingKey]: sql`${buildingColumn} + 1` })
-					.where(eq(planetBuildings.planetId, planetId));
-			});
-
-			// Update points
-			await updateUserPoints(locals.user.id);
-			return { success: true };
-		} catch (e: any) {
-			if (e.message === 'Not enough resources' || e.message === 'Invalid building') {
-				return fail(400, { error: e.message });
+			if (!result.success) {
+				return fail(400, { error: result.error });
 			}
-			console.error(e);
-			return fail(500, { error: 'Internal server error' });
+
+			return { success: true, completionTime: result.completionTime };
+		} catch (error) {
+			console.error('Building upgrade error:', error);
+			return fail(500, { error: 'Failed to start building upgrade' });
 		}
 	},
 

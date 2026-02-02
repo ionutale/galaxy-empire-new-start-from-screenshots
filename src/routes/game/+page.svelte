@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { getBuildingCost, getProduction, DEFENSES } from '$lib/game-config';
 	import Spinner from '$lib/components/Spinner.svelte';
+	import type { BuildingInfo } from '$lib/server/building-service';
+	import { DEFENSES } from '$lib/game-config';
 
 	let { data } = $props();
 	let loading = $state<Record<string, boolean>>({});
@@ -13,27 +14,20 @@
 		energy: data.resources?.energy || 0
 	});
 
-	let buildings = $derived(data.buildings || {}) as any;
+	let buildings = $derived(data.buildings || []) as BuildingInfo[];
 	let defenses = $derived(data.defenses || {}) as any;
 
-	const resourceBuildings = [
-		{ id: 'metal_mine', name: 'Metal Mine', icon: '⛏️' },
-		{ id: 'crystal_mine', name: 'Crystal Mine', icon: '💎' },
-		{ id: 'gas_extractor', name: 'Gas Extractor', icon: '⛽' },
-		{ id: 'solar_plant', name: 'Solar Plant', icon: '☀️' }
-	];
+	// Group buildings by category
+	let resourceBuildings = $derived(buildings.filter(b => b.category === 'resource'));
+	let facilityBuildings = $derived(buildings.filter(b => b.category === 'facility'));
+	let storageBuildings = $derived(buildings.filter(b => b.category === 'storage'));
 
-	const facilityBuildings = [
-		{ id: 'robotics_factory', name: 'Robotics Factory', icon: '🤖' },
-		{ id: 'shipyard', name: 'Shipyard', icon: '🛠️' },
-		{ id: 'research_lab', name: 'Research Lab', icon: '🔬' },
-		{ id: 'nanite_factory', name: 'Nanite Factory', icon: '🧬' }
-	];
+	// Defense types from config
+	let defenseTypes = $derived(Object.keys(DEFENSES));
 
-	const defenseTypes = Object.keys(DEFENSES);
-
+	// Helper function for camelCase conversion
 	function toCamel(s: string) {
-		return s.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+		return s.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
 	}
 
 	let isRenaming = $state(false);
@@ -108,48 +102,57 @@
 		<h3 class="mb-4 border-b border-gray-700 pb-2 text-xl font-bold text-gray-300">Resources</h3>
 		<div class="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
 			{#each resourceBuildings as building}
-				{@const level = buildings?.[toCamel(building.id)] ?? 0}
-				{@const cost = getBuildingCost(building.id, level)}
-				{@const production = getProduction(building.id, level)}
-
 				<div
 					class="flex flex-col rounded-lg border border-gray-700 bg-gray-800/80 p-4 shadow-lg backdrop-blur-sm"
 				>
 					<div class="mb-2 flex items-center justify-between">
 						<div class="flex items-center space-x-3">
-							<span class="text-3xl">{building.icon}</span>
+							<span class="text-3xl">
+								{#if building.name.includes('Metal')}⛏️
+								{:else if building.name.includes('Crystal')}💎
+								{:else if building.name.includes('Gas')}⛽
+								{:else if building.name.includes('Solar')}☀️
+								{:else}🏭
+								{/if}
+							</span>
 							<div>
 								<h3 class="text-lg font-bold text-gray-200">{building.name}</h3>
-								<span class="font-mono text-xs text-blue-400">Level {level}</span>
+								<span class="font-mono text-xs text-blue-400">Level {building.level}</span>
+								{#if building.isUpgrading}
+									<span class="ml-2 text-xs text-yellow-400">Upgrading...</span>
+								{/if}
 							</div>
 						</div>
-						{#if production > 0}
+						{#if building.production}
 							<div class="text-right">
 								<div class="text-xs text-gray-400">Hourly Output</div>
-								<div class="font-mono text-sm text-green-400">+{production.toLocaleString()}</div>
+								{#if building.production.metal}
+									<div class="font-mono text-sm text-green-400">+{building.production.metal.toLocaleString()} Metal</div>
+								{:else if building.production.crystal}
+									<div class="font-mono text-sm text-green-400">+{building.production.crystal.toLocaleString()} Crystal</div>
+								{:else if building.production.gas}
+									<div class="font-mono text-sm text-green-400">+{building.production.gas.toLocaleString()} Gas</div>
+								{:else if building.production.energy}
+									<div class="font-mono text-sm text-green-400">+{building.production.energy.toLocaleString()} Energy</div>
+								{/if}
 							</div>
 						{/if}
 					</div>
 
 					<div class="mt-auto">
 						<div class="mb-2 flex flex-wrap gap-2 text-xs text-gray-400">
-							{#if cost}
-								{#if cost.metal > 0}
-									<span class={resources.metal < cost.metal ? 'text-red-400' : 'text-gray-300'}>
-										Metal: {cost.metal.toLocaleString()}
-									</span>
-								{/if}
-								{#if cost.crystal > 0}
-									<span class={resources.crystal < cost.crystal ? 'text-red-400' : 'text-gray-300'}>
-										Crystal: {cost.crystal.toLocaleString()}
-									</span>
-								{/if}
-								{#if (cost.gas || 0) > 0}
-									<span class={resources.gas < (cost.gas || 0) ? 'text-red-400' : 'text-gray-300'}>
-										Gas: {(cost.gas || 0).toLocaleString()}
-									</span>
-								{/if}
+							<span class={resources.metal < building.cost.metal ? 'text-red-400' : 'text-gray-300'}>
+								Metal: {building.cost.metal.toLocaleString()}
+							</span>
+							<span class={resources.crystal < building.cost.crystal ? 'text-red-400' : 'text-gray-300'}>
+								Crystal: {building.cost.crystal.toLocaleString()}
+							</span>
+							{#if building.cost.gas > 0}
+								<span class={resources.gas < building.cost.gas ? 'text-red-400' : 'text-gray-300'}>
+									Gas: {building.cost.gas.toLocaleString()}
+								</span>
 							{/if}
+							<span class="text-gray-500">Time: {Math.ceil(building.buildTime / 60)}m</span>
 						</div>
 
 						<form
@@ -163,21 +166,25 @@
 								};
 							}}
 						>
-							<input type="hidden" name="type" value={building.id} />
+							<input type="hidden" name="building_type_id" value={building.id} />
 							<input type="hidden" name="planet_id" value={data.currentPlanet.id} />
 							<button
 								type="submit"
-								disabled={!cost ||
-									resources.metal < cost.metal ||
-									resources.crystal < cost.crystal ||
-									((cost.gas || 0) > 0 && resources.gas < (cost.gas || 0)) ||
+								disabled={!building.canUpgrade ||
+									building.isUpgrading ||
+									resources.metal < building.cost.metal ||
+									resources.crystal < building.cost.crystal ||
+									resources.gas < building.cost.gas ||
 									loading[building.id]}
 								class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
 							>
 								{#if loading[building.id]}
 									<Spinner size="sm" class="mr-2" />
+								{:else if building.isUpgrading}
+									Upgrading...
+								{:else}
+									Upgrade to Level {building.level + 1}
 								{/if}
-								Upgrade to Level {level + 1}
 							</button>
 						</form>
 					</div>
@@ -189,9 +196,6 @@
 		<h3 class="mb-4 border-b border-gray-700 pb-2 text-xl font-bold text-gray-300">Facilities</h3>
 		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 			{#each facilityBuildings as building}
-				{@const level = buildings[toCamel(building.id)]}
-				{@const cost = getBuildingCost(building.id, level)}
-
 				<div
 					class="flex flex-col rounded-lg border border-gray-700 bg-gray-800/80 p-4 shadow-lg backdrop-blur-sm"
 				>
@@ -200,27 +204,27 @@
 							<span class="text-3xl">{building.icon}</span>
 							<div>
 								<h3 class="text-lg font-bold text-gray-200">{building.name}</h3>
-								<span class="font-mono text-xs text-blue-400">Level {level}</span>
+								<span class="font-mono text-xs text-blue-400">Level {building.level}</span>
 							</div>
 						</div>
 					</div>
 
 					<div class="mt-auto">
 						<div class="mb-2 flex flex-wrap gap-2 text-xs text-gray-400">
-							{#if cost}
-								{#if cost.metal > 0}
-									<span class={resources.metal < cost.metal ? 'text-red-400' : 'text-gray-300'}>
-										Metal: {cost.metal.toLocaleString()}
+							{#if building.upgradeCost}
+								{#if building.upgradeCost.metal > 0}
+									<span class={resources.metal < building.upgradeCost.metal ? 'text-red-400' : 'text-gray-300'}>
+										Metal: {building.upgradeCost.metal.toLocaleString()}
 									</span>
 								{/if}
-								{#if cost.crystal > 0}
-									<span class={resources.crystal < cost.crystal ? 'text-red-400' : 'text-gray-300'}>
-										Crystal: {cost.crystal.toLocaleString()}
+								{#if building.upgradeCost.crystal > 0}
+									<span class={resources.crystal < building.upgradeCost.crystal ? 'text-red-400' : 'text-gray-300'}>
+										Crystal: {building.upgradeCost.crystal.toLocaleString()}
 									</span>
 								{/if}
-								{#if (cost.gas || 0) > 0}
-									<span class={resources.gas < (cost.gas || 0) ? 'text-red-400' : 'text-gray-300'}>
-										Gas: {(cost.gas || 0).toLocaleString()}
+								{#if (building.upgradeCost.gas || 0) > 0}
+									<span class={resources.gas < (building.upgradeCost.gas || 0) ? 'text-red-400' : 'text-gray-300'}>
+										Gas: {(building.upgradeCost.gas || 0).toLocaleString()}
 									</span>
 								{/if}
 							{/if}
@@ -230,28 +234,32 @@
 							method="POST"
 							action="?/upgrade"
 							use:enhance={() => {
-								loading[building.id] = true;
+								loading[building.building_type_id] = true;
 								return async ({ update }) => {
-									loading[building.id] = false;
+									loading[building.building_type_id] = false;
 									await update();
 								};
 							}}
 						>
-							<input type="hidden" name="type" value={building.id} />
+							<input type="hidden" name="type" value={building.building_type_id} />
 							<input type="hidden" name="planet_id" value={data.currentPlanet.id} />
 							<button
 								type="submit"
-								disabled={!cost ||
-									resources.metal < cost.metal ||
-									resources.crystal < cost.crystal ||
-									((cost.gas || 0) > 0 && resources.gas < (cost.gas || 0)) ||
-									loading[building.id]}
+								disabled={!building.upgradeCost ||
+									resources.metal < building.upgradeCost.metal ||
+									resources.crystal < building.upgradeCost.crystal ||
+									((building.upgradeCost.gas || 0) > 0 && resources.gas < (building.upgradeCost.gas || 0)) ||
+									building.isUpgrading ||
+									loading[building.building_type_id]}
 								class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
 							>
-								{#if loading[building.id]}
+								{#if loading[building.building_type_id]}
 									<Spinner size="sm" class="mr-2" />
+								{:else if building.isUpgrading}
+									Upgrading...
+								{:else}
+									Upgrade to Level {building.level + 1}
 								{/if}
-								Upgrade to Level {level + 1}
 							</button>
 						</form>
 					</div>
@@ -264,14 +272,14 @@
 			Defenses
 		</h3>
 
-		{#if buildings.shipyard === 0}
+		{#if (buildings.find(b => b.name === 'Shipyard')?.level || 0) === 0}
 			<div class="mb-6 rounded border border-red-500 bg-red-900/50 p-4 text-center text-red-200">
 				You need a Shipyard to build defenses. Build one in the Facilities section above.
 			</div>
 		{/if}
 
 		<div
-			class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 {buildings.shipyard === 0
+			class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 {(buildings.find(b => b.name === 'Shipyard')?.level || 0) === 0
 				? 'pointer-events-none opacity-50 grayscale'
 				: ''}"
 		>
@@ -335,12 +343,12 @@
 									min="1"
 									value="1"
 									class="w-16 rounded border border-gray-600 bg-gray-700 px-2 py-1 text-center text-white"
-									disabled={buildings.shipyard === 0}
+									disabled={(buildings.find(b => b.name === 'Shipyard')?.level || 0) === 0}
 								/>
 								<button
 									type="submit"
 									class="flex flex-1 transform items-center justify-center rounded bg-blue-600 text-sm font-bold transition hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-600 disabled:opacity-50"
-									disabled={buildings.shipyard === 0 || loading[type]}
+									disabled={(buildings.find(b => b.name === 'Shipyard')?.level || 0) === 0 || loading[type]}
 								>
 									{#if loading[type]}
 										<Spinner size="sm" class="mr-2" />
@@ -348,6 +356,81 @@
 									Build
 								</button>
 							{/if}
+						</form>
+					</div>
+				</div>
+			{/each}
+		</div>
+
+		<!-- Storage Section -->
+		<h3 class="mt-8 mb-4 border-b border-gray-700 pb-2 text-xl font-bold text-gray-300">Storage</h3>
+		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+			{#each storageBuildings as building}
+				<div
+					class="flex flex-col rounded-lg border border-gray-700 bg-gray-800/80 p-4 shadow-lg backdrop-blur-sm"
+				>
+					<div class="mb-2 flex items-center justify-between">
+						<div class="flex items-center space-x-3">
+							<span class="text-3xl">{building.icon}</span>
+							<div>
+								<h3 class="text-lg font-bold text-gray-200">{building.name}</h3>
+								<span class="font-mono text-xs text-blue-400">Level {building.level}</span>
+							</div>
+						</div>
+					</div>
+
+					<div class="mt-auto">
+						<div class="mb-2 flex flex-wrap gap-2 text-xs text-gray-400">
+							{#if building.upgradeCost}
+								{#if building.upgradeCost.metal > 0}
+									<span class={resources.metal < building.upgradeCost.metal ? 'text-red-400' : 'text-gray-300'}>
+										Metal: {building.upgradeCost.metal.toLocaleString()}
+									</span>
+								{/if}
+								{#if building.upgradeCost.crystal > 0}
+									<span class={resources.crystal < building.upgradeCost.crystal ? 'text-red-400' : 'text-gray-300'}>
+										Crystal: {building.upgradeCost.crystal.toLocaleString()}
+									</span>
+								{/if}
+								{#if (building.upgradeCost.gas || 0) > 0}
+									<span class={resources.gas < (building.upgradeCost.gas || 0) ? 'text-red-400' : 'text-gray-300'}>
+										Gas: {(building.upgradeCost.gas || 0).toLocaleString()}
+									</span>
+								{/if}
+							{/if}
+						</div>
+
+						<form
+							method="POST"
+							action="?/upgrade"
+							use:enhance={() => {
+								loading[building.building_type_id] = true;
+								return async ({ update }) => {
+									loading[building.building_type_id] = false;
+									await update();
+								};
+							}}
+						>
+							<input type="hidden" name="type" value={building.building_type_id} />
+							<input type="hidden" name="planet_id" value={data.currentPlanet.id} />
+							<button
+								type="submit"
+								disabled={!building.upgradeCost ||
+									resources.metal < building.upgradeCost.metal ||
+									resources.crystal < building.upgradeCost.crystal ||
+									((building.upgradeCost.gas || 0) > 0 && resources.gas < (building.upgradeCost.gas || 0)) ||
+									building.isUpgrading ||
+									loading[building.building_type_id]}
+								class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
+							>
+								{#if loading[building.building_type_id]}
+									<Spinner size="sm" class="mr-2" />
+								{:else if building.isUpgrading}
+									Upgrading...
+								{:else}
+									Upgrade to Level {building.level + 1}
+								{/if}
+							</button>
 						</form>
 					</div>
 				</div>
