@@ -7,7 +7,9 @@ import {
 	planetDefenses,
 	planetBuildings,
 	messages,
-	users
+	users,
+	combatReports,
+	espionageReports
 } from './db/schema';
 import { SHIPS } from '$lib/game-config';
 import { simulateCombat } from './combat-engine';
@@ -355,13 +357,37 @@ async function processArrivingFleet(tx: any, fleet: any) {
 			}
 
 			// Send Reports
-			const attackerReport = `Combat Result: ${result.winner.toUpperCase()}\n\nAttacker Losses: ${JSON.stringify(result.attackerLosses)}\nDefender Losses: ${JSON.stringify(result.defenderLosses)}\n\n${lootMsg}`;
+			const loot = result.winner === 'attacker' && !fleetDestroyed ? {
+				metal: stolenMetal,
+				crystal: stolenCrystal,
+				gas: stolenGas
+			} : null;
 
+			// Create detailed combat report
+			const reportId = await tx.insert(combatReports).values({
+				attackerId: fleet.userId,
+				defenderId: targetPlanet.userId,
+				galaxy: fleet.targetGalaxy,
+				system: fleet.targetSystem,
+				planet: fleet.targetPlanet,
+				mission: fleet.mission,
+				attackerFleet: fleet.ships,
+				defenderFleet: defenderShips,
+				defenderDefenses: defenderDefenses,
+				attackerLosses: result.attackerLosses,
+				defenderLosses: result.defenderLosses,
+				winner: result.winner,
+				rounds: result.rounds,
+				loot: loot,
+				debris: null // TODO: Implement debris field generation
+			}).returning({ id: combatReports.id });
+
+			// Send message notifications with link to detailed report
 			await tx.insert(messages).values({
 				userId: fleet.userId,
 				type: 'combat',
-				title: 'Combat Report: ' + result.winner,
-				content: attackerReport
+				title: `Combat Report: ${result.winner === 'attacker' ? 'Victory' : result.winner === 'defender' ? 'Defeat' : 'Draw'}`,
+				content: `Combat at [${fleet.targetGalaxy}:${fleet.targetSystem}:${fleet.targetPlanet}]\nResult: ${result.winner.toUpperCase()}\n\nAttacker Losses: ${Object.entries(result.attackerLosses).map(([type, count]) => `${type}: ${count}`).join(', ') || 'None'}\nDefender Losses: ${Object.entries(result.defenderLosses).map(([type, count]) => `${type}: ${count}`).join(', ') || 'None'}\n\n${loot ? `Loot: Metal ${loot.metal}, Crystal ${loot.crystal}, Gas ${loot.gas}` : ''}\n\n[View Detailed Report](/game/combat-report/${reportId[0].id})`
 			});
 
 			if (targetPlanet.userId !== fleet.userId) {
@@ -369,7 +395,7 @@ async function processArrivingFleet(tx: any, fleet: any) {
 					userId: targetPlanet.userId,
 					type: 'combat',
 					title: 'You were attacked!',
-					content: attackerReport
+					content: `Combat at [${fleet.targetGalaxy}:${fleet.targetSystem}:${fleet.targetPlanet}]\nResult: ${result.winner === 'attacker' ? 'Defeated' : result.winner === 'defender' ? 'Victory' : 'Draw'}\n\nAttacker Losses: ${Object.entries(result.attackerLosses).map(([type, count]) => `${type}: ${count}`).join(', ') || 'None'}\nDefender Losses: ${Object.entries(result.defenderLosses).map(([type, count]) => `${type}: ${count}`).join(', ') || 'None'}\n\n${loot ? `Looted: Metal ${loot.metal}, Crystal ${loot.crystal}, Gas ${loot.gas}` : ''}\n\n[View Detailed Report](/game/combat-report/${reportId[0].id})`
 				});
 			}
 
@@ -381,6 +407,80 @@ async function processArrivingFleet(tx: any, fleet: any) {
 				userId: fleet.userId,
 				type: 'combat',
 				title: 'Attack Failed',
+				content: 'No target found at coordinates.'
+			});
+			await returnFleet(tx, fleet);
+		}
+	} else if (fleet.mission === 'espionage') {
+		if (targetPlanet) {
+			// Espionage mission - gather intelligence on target planet
+			const [resourcesRes] = await tx
+				.select({
+					metal: planetResources.metal,
+					crystal: planetResources.crystal,
+					gas: planetResources.gas
+				})
+				.from(planetResources)
+				.where(eq(planetResources.planetId, targetPlanet.id));
+
+			const [buildingsRes] = await tx
+				.select()
+				.from(planetBuildings)
+				.where(eq(planetBuildings.planetId, targetPlanet.id));
+
+			const [shipsRes] = await tx
+				.select()
+				.from(planetShips)
+				.where(eq(planetShips.planetId, targetPlanet.id));
+
+			const [defensesRes] = await tx
+				.select()
+				.from(planetDefenses)
+				.where(eq(planetDefenses.planetId, targetPlanet.id));
+
+			const [researchRes] = await tx
+				.select()
+				.from(userResearch)
+				.where(eq(userResearch.userId, targetPlanet.userId));
+
+			// Create espionage report
+			const reportId = await tx.insert(espionageReports).values({
+				attackerId: fleet.userId,
+				targetId: targetPlanet.userId,
+				galaxy: fleet.targetGalaxy,
+				system: fleet.targetSystem,
+				planet: fleet.targetPlanet,
+				resources: resourcesRes || null,
+				buildings: buildingsRes || null,
+				fleet: shipsRes || null,
+				defenses: defensesRes || null,
+				research: researchRes || null
+			}).returning({ id: espionageReports.id });
+
+			// Send message to attacker
+			await tx.insert(messages).values({
+				userId: fleet.userId,
+				type: 'espionage',
+				title: 'Espionage Report',
+				content: `Espionage mission successful at [${fleet.targetGalaxy}:${fleet.targetSystem}:${fleet.targetPlanet}]\n\n[View Detailed Report](/game/espionage-report/${reportId[0].id})`
+			});
+
+			// Chance of detection (notify defender)
+			if (Math.random() < 0.3) { // 30% chance of detection
+				await tx.insert(messages).values({
+					userId: targetPlanet.userId,
+					type: 'espionage',
+					title: 'Espionage Detected!',
+					content: `An espionage probe was detected at [${fleet.targetGalaxy}:${fleet.targetSystem}:${fleet.targetPlanet}]`
+				});
+			}
+
+			await returnFleet(tx, fleet);
+		} else {
+			await tx.insert(messages).values({
+				userId: fleet.userId,
+				type: 'espionage',
+				title: 'Espionage Failed',
 				content: 'No target found at coordinates.'
 			});
 			await returnFleet(tx, fleet);

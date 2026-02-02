@@ -55,34 +55,36 @@ This document outlines the remaining features and systems that need to be implem
 ## 🎮 **Priority 2: Fleet & Combat System**
 
 ### 2.1 Fleet Movement
-**Status:** Basic structure exists, needs completion
+**Status:** ✅ COMPLETED
 
-**Missing Components:**
-- [ ] Fleet movement calculations (distance, speed, fuel)
-- [ ] Fleet arrival/departure handling
-- [ ] Mission type implementations (Transport, Espionage, Colonize)
-- [ ] Fleet capacity and cargo management
-- [ ] Fleet speed calculations with technologies
+**Implemented Components:**
+- [x] Fleet movement calculations (distance, speed, fuel)
+- [x] Fleet arrival/departure handling
+- [x] Mission type implementations (Transport, Espionage, Colonize)
+- [x] Fleet capacity and cargo management
+- [x] Fleet speed calculations with technologies
 
-**Files to Create/Modify:**
-- `src/lib/server/fleet-movement.ts` - Movement calculations
-- `src/routes/api/fleet/send/+server.ts` - Fleet dispatch API
-- `src/routes/game/fleet/movements/+page.svelte` - Fleet movements UI
+**Files Created/Modified:**
+- `src/lib/server/fleet-movement.ts` - Movement calculations ✅
+- `src/routes/api/fleet/send/+server.ts` - Fleet dispatch API ✅
+- `src/routes/game/fleet/movements/+page.svelte` - Fleet movements UI ✅
 
 ### 2.2 Combat Reports & Espionage
-**Status:** Basic combat exists, reports missing
+**Status:** ✅ COMPLETED
 
-**Missing Components:**
-- [ ] Detailed combat reports with ship losses
-- [ ] Espionage mission results
-- [ ] Battle simulation for planning
-- [ ] Combat statistics and history
-- [ ] Debris field generation and recycling
+**Implemented Components:**
+- [x] Detailed combat reports with ship losses
+- [x] Espionage mission results
+- [x] Battle simulation for planning
+- [x] Combat statistics and history
+- [x] Debris field generation and recycling
 
-**Files to Create/Modify:**
-- `src/routes/api/combat/simulate/+server.ts` - Combat simulator
-- `src/routes/game/combat-report/[id]/+page.svelte` - Combat report viewer
-- Database tables: `combat_reports`, `espionage_reports`
+**Files Created/Modified:**
+- `src/lib/server/db/schema.ts` - Added combat_reports, espionage_reports tables ✅
+- `src/lib/server/fleet-processor.ts` - Combat report creation, espionage handling ✅
+- `src/routes/game/combat-report/[id]/+page.svelte` - Combat report viewer ✅
+- `src/routes/game/espionage-report/[id]/+page.svelte` - Espionage report viewer ✅
+- `src/routes/api/combat/simulate/+server.ts` - Combat simulator API ✅
 
 ### 2.3 Colonization System
 **Status:** Not implemented

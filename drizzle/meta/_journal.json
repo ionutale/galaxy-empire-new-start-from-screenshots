@@ -43,6 +43,13 @@
       "when": 1770064831651,
       "tag": "0005_short_blue_blade",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1770066139612,
+      "tag": "0006_mixed_changeling",
+      "breakpoints": true
     }
   ]
 }

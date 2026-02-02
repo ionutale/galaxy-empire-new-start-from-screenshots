@@ -278,6 +278,42 @@ export const messages = pgTable(
 	})
 );
 
+// 6. Combat & Espionage
+export const combatReports = pgTable('combat_reports', {
+	id: serial('id').primaryKey(),
+	attackerId: integer('attacker_id').references(() => users.id),
+	defenderId: integer('defender_id').references(() => users.id),
+	galaxy: integer('galaxy').notNull(),
+	system: integer('system').notNull(),
+	planet: integer('planet').notNull(),
+	mission: varchar('mission', { length: 20 }).notNull(),
+	attackerFleet: jsonb('attacker_fleet').notNull(),
+	defenderFleet: jsonb('defender_fleet').notNull(),
+	defenderDefenses: jsonb('defender_defenses').notNull(),
+	attackerLosses: jsonb('attacker_losses').notNull(),
+	defenderLosses: jsonb('defender_losses').notNull(),
+	winner: varchar('winner', { length: 10 }).notNull(),
+	rounds: integer('rounds').default(1),
+	loot: jsonb('loot'),
+	debris: jsonb('debris'),
+	createdAt: timestamp('created_at').defaultNow()
+});
+
+export const espionageReports = pgTable('espionage_reports', {
+	id: serial('id').primaryKey(),
+	attackerId: integer('attacker_id').references(() => users.id),
+	targetId: integer('target_id').references(() => users.id),
+	galaxy: integer('galaxy').notNull(),
+	system: integer('system').notNull(),
+	planet: integer('planet').notNull(),
+	resources: jsonb('resources'),
+	buildings: jsonb('buildings'),
+	fleet: jsonb('fleet'),
+	defenses: jsonb('defenses'),
+	research: jsonb('research'),
+	createdAt: timestamp('created_at').defaultNow()
+});
+
 export const chatMessages = pgTable('chat_messages', {
 	id: serial('id').primaryKey(),
 	userId: integer('user_id').references(() => users.id),
