@@ -19,7 +19,8 @@
 		"db:migrate": "drizzle-kit migrate",
 		"db:push": "drizzle-kit push",
 		"db:studio": "drizzle-kit studio",
-		"migrate": "tsx scripts/migrate.ts"
+		"migrate": "tsx scripts/migrate.ts",
+		"init-achievements": "tsx scripts/init-achievements.ts"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.4.0",

@@ -462,3 +462,30 @@ export const transactions = pgTable('transactions', {
 	metadata: jsonb('metadata'), // additional data
 	createdAt: timestamp('created_at').defaultNow()
 });
+
+// 11. Achievement System
+export const achievements = pgTable('achievements', {
+	id: serial('id').primaryKey(),
+	code: varchar('code', { length: 100 }).notNull().unique(),
+	name: varchar('name', { length: 255 }).notNull(),
+	description: text('description').notNull(),
+	category: varchar('category', { length: 50 }).notNull(), // 'building', 'combat', 'economy', 'exploration', 'research', 'social'
+	icon: varchar('icon', { length: 50 }).notNull(),
+	rewardType: varchar('reward_type', { length: 50 }), // 'dark_matter', 'commander_xp', 'resource_bonus'
+	rewardAmount: integer('reward_amount'),
+	requirementType: varchar('requirement_type', { length: 50 }).notNull(), // 'stat_value', 'count_value', 'boolean_flag'
+	requirementTarget: varchar('requirement_target', { length: 100 }).notNull(), // stat name or condition
+	requirementValue: integer('requirement_value'), // threshold value
+	isHidden: boolean('is_hidden').default(false),
+	sortOrder: integer('sort_order').default(0),
+	createdAt: timestamp('created_at').defaultNow()
+});
+
+export const userAchievements = pgTable('user_achievements', {
+	id: serial('id').primaryKey(),
+	userId: integer('user_id').references(() => users.id),
+	achievementId: integer('achievement_id').references(() => achievements.id),
+	unlockedAt: timestamp('unlocked_at').defaultNow(),
+	progress: integer('progress').default(0), // for progress-tracking achievements
+	isCompleted: boolean('is_completed').default(false)
+});

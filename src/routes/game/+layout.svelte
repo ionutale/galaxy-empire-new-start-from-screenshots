@@ -364,5 +364,12 @@
 			<span class="mb-1 text-xl">🏆</span>
 			<span class="text-[10px] tracking-wide uppercase">Rank</span>
 		</a>
+		<a
+			href="/game/achievements"
+			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
+		>
+			<span class="mb-1 text-xl">🎖️</span>
+			<span class="text-[10px] tracking-wide uppercase">Achievements</span>
+		</a>
 	</nav>
 </div>
