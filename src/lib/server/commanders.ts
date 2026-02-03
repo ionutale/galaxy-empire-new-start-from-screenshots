@@ -1,13 +1,15 @@
 import { db } from './db';
-import { users, userCommanders } from './db/schema';
-import { eq, and, gt } from 'drizzle-orm';
+import { users, userCommanders, transactions } from './db/schema';
+import { eq, and, gt, sql } from 'drizzle-orm';
 
 export interface Commander {
 	id: string;
 	name: string;
 	description: string;
 	bonusType: 'mine_production' | 'fleet_speed' | 'research_speed' | 'energy_production';
-	bonusValue: number; // Percentage (e.g., 10 for 10%)
+	baseBonusValue: number; // Base percentage (e.g., 10 for 10%)
+	levelBonusMultiplier: number; // Additional bonus per level (e.g., 2 for +2% per level)
+	maxLevel: number;
 	image: string;
 }
 
@@ -15,33 +17,41 @@ export const COMMANDERS: Record<string, Commander> = {
 	geologist: {
 		id: 'geologist',
 		name: 'Geologist',
-		description: 'Increases mine production by 10%.',
+		description: 'Increases mine production.',
 		bonusType: 'mine_production',
-		bonusValue: 10,
+		baseBonusValue: 10,
+		levelBonusMultiplier: 2,
+		maxLevel: 20,
 		image: 'geologist.png'
 	},
 	admiral: {
 		id: 'admiral',
 		name: 'Admiral',
-		description: 'Increases fleet speed by 10%.',
+		description: 'Increases fleet speed.',
 		bonusType: 'fleet_speed',
-		bonusValue: 10,
+		baseBonusValue: 10,
+		levelBonusMultiplier: 2,
+		maxLevel: 20,
 		image: 'admiral.png'
 	},
 	engineer: {
 		id: 'engineer',
 		name: 'Engineer',
-		description: 'Increases energy production by 10%.',
+		description: 'Increases energy production.',
 		bonusType: 'energy_production',
-		bonusValue: 10,
+		baseBonusValue: 10,
+		levelBonusMultiplier: 2,
+		maxLevel: 20,
 		image: 'engineer.png'
 	},
 	technocrat: {
 		id: 'technocrat',
 		name: 'Technocrat',
-		description: 'Decreases research time by 10%.',
+		description: 'Decreases research time.',
 		bonusType: 'research_speed',
-		bonusValue: 10,
+		baseBonusValue: 10,
+		levelBonusMultiplier: 2,
+		maxLevel: 20,
 		image: 'technocrat.png'
 	},
 	nebula_explorer: {
@@ -49,7 +59,9 @@ export const COMMANDERS: Record<string, Commander> = {
 		name: 'Nebula Explorer',
 		description: 'Automatically sends expeditions using a selected fleet template.',
 		bonusType: 'fleet_speed', // Reusing type or add new one? The type is just for bonus calculation usually.
-		bonusValue: 0,
+		baseBonusValue: 0,
+		levelBonusMultiplier: 0,
+		maxLevel: 1,
 		image: 'explorer.png'
 	}
 };
@@ -85,6 +97,16 @@ export async function purchaseCommander(userId: number, commanderId: string, dur
 			.update(users)
 			.set({ darkMatter: currentDM - cost })
 			.where(eq(users.id, userId));
+
+		// Record transaction
+		await tx.insert(transactions).values({
+			userId,
+			type: 'commander_purchase',
+			itemId: commanderId,
+			amount: cost,
+			duration: durationDays,
+			metadata: { commanderName: COMMANDERS[commanderId].name }
+		});
 
 		// Add/Extend Commander
 		// Check if already active
@@ -125,7 +147,10 @@ export async function getActiveCommanders(userId: number) {
 	const res = await db
 		.select({
 			commanderId: userCommanders.commanderId,
-			expiresAt: userCommanders.expiresAt
+			expiresAt: userCommanders.expiresAt,
+			level: userCommanders.level,
+			experience: userCommanders.experience,
+			totalExperience: userCommanders.totalExperience
 		})
 		.from(userCommanders)
 		.where(and(eq(userCommanders.userId, userId), gt(userCommanders.expiresAt, new Date())));
@@ -140,9 +165,82 @@ export async function getCommanderBonus(userId: number, bonusType: string): Prom
 	for (const row of active) {
 		const commander = COMMANDERS[row.commanderId];
 		if (commander && commander.bonusType === bonusType) {
-			totalBonus += commander.bonusValue;
+			// Calculate bonus based on level
+			const level = row.level || 1;
+			const bonus = commander.baseBonusValue + (level - 1) * commander.levelBonusMultiplier;
+			totalBonus += bonus;
 		}
 	}
 
 	return totalBonus;
+}
+
+// Experience and leveling functions
+export function getExperienceForLevel(level: number): number {
+	// Experience required = 100 * level^2
+	return 100 * level * level;
+}
+
+export function getLevelFromExperience(experience: number): number {
+	// Level = floor(sqrt(experience / 100))
+	return Math.floor(Math.sqrt(experience / 100)) + 1;
+}
+
+export async function addCommanderExperience(userId: number, commanderId: string, experienceGained: number) {
+	const commander = COMMANDERS[commanderId];
+	if (!commander) return;
+
+	return await db.transaction(async (tx) => {
+		// Get current commander data
+		const existingRes = await tx
+			.select({ level: userCommanders.level, experience: userCommanders.experience, totalExperience: userCommanders.totalExperience })
+			.from(userCommanders)
+			.where(and(eq(userCommanders.userId, userId), eq(userCommanders.commanderId, commanderId)))
+			.limit(1);
+
+		if (existingRes.length === 0) return; // Commander not owned
+
+		const current = existingRes[0];
+		const newTotalExp = (current.totalExperience || 0) + experienceGained;
+		const newLevel = Math.min(getLevelFromExperience(newTotalExp), commander.maxLevel);
+		const newExp = newTotalExp - getExperienceForLevel(newLevel - 1);
+
+		await tx
+			.update(userCommanders)
+			.set({
+				level: newLevel,
+				experience: newExp,
+				totalExperience: newTotalExp
+			})
+			.where(and(eq(userCommanders.userId, userId), eq(userCommanders.commanderId, commanderId)));
+
+		return { newLevel, leveledUp: newLevel > (current.level || 1) };
+	});
+}
+
+export async function getCommanderExperience(userId: number, commanderId: string) {
+	const res = await db
+		.select({
+			level: userCommanders.level,
+			experience: userCommanders.experience,
+			totalExperience: userCommanders.totalExperience
+		})
+		.from(userCommanders)
+		.where(and(eq(userCommanders.userId, userId), eq(userCommanders.commanderId, commanderId)))
+		.limit(1);
+
+	if (res.length === 0) return null;
+
+	const data = res[0];
+	const commander = COMMANDERS[commanderId];
+	const expForCurrentLevel = getExperienceForLevel(data.level || 1);
+	const expForNextLevel = getExperienceForLevel((data.level || 1) + 1);
+
+	return {
+		level: data.level || 1,
+		experience: data.experience || 0,
+		totalExperience: data.totalExperience || 0,
+		experienceToNext: expForNextLevel - expForCurrentLevel,
+		maxLevel: commander?.maxLevel || 20
+	};
 }

@@ -8,6 +8,7 @@
 	let commanders = $derived(data.commanders);
 	let durationCosts = $derived(data.durationCosts) as any;
 	let activeCommanders = $derived(data.activeCommanders);
+	let commanderExperience = $derived(data.commanderExperience);
 	let darkMatter = $derived(data.darkMatter);
 
 	let selectedDuration = $state(7);
@@ -51,13 +52,41 @@
 
 					<p class="h-12 text-sm text-gray-300">{commander.description}</p>
 
-					<div class="font-mono text-sm text-purple-300">
-						Bonus: +{commander.bonusValue}% {commander.bonusType.replace('_', ' ')}
-					</div>
-
 					{#if activeCommanders[commander.id]}
+						{@const exp = commanderExperience[commander.id]}
+						{@const currentBonus = commander.baseBonusValue + ((exp?.level || 1) - 1) * commander.levelBonusMultiplier}
+						<div class="font-mono text-sm text-purple-300">
+							Bonus: +{currentBonus}% {commander.bonusType.replace('_', ' ')}
+						</div>
+
+						{#if exp}
+							<div class="mt-2 space-y-1">
+								<div class="flex justify-between text-xs text-gray-400">
+									<span>Level {exp.level}</span>
+									<span>{exp.experience}/{exp.experienceToNext} XP</span>
+								</div>
+								<div class="h-1 rounded-full bg-gray-700">
+									<div
+										class="h-1 rounded-full bg-purple-500 transition-all"
+										style="width: {(exp.experience / exp.experienceToNext) * 100}%"
+									></div>
+								</div>
+								{#if exp.level < commander.maxLevel}
+									<div class="text-xs text-gray-500">
+										Next level: {exp.experienceToNext - exp.experience} XP needed
+									</div>
+								{:else}
+									<div class="text-xs text-yellow-400">Max level reached!</div>
+								{/if}
+							</div>
+						{/if}
+
 						<div class="mt-2 text-xs text-gray-400">
 							Expires: {formatDate(activeCommanders[commander.id])}
+						</div>
+					{:else}
+						<div class="font-mono text-sm text-purple-300">
+							Bonus: +{commander.baseBonusValue}% {commander.bonusType.replace('_', ' ')}
 						</div>
 					{/if}
 

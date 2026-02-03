@@ -195,7 +195,7 @@ The core game tick system with stored procedures has been successfully implement
 - [x] Real-time chat functionality (polling-based updates)
 - [x] Global chat channel (global chat with alliance tags)
 - [x] Alliance chat (implemented - alliance members can chat privately)
-- [x] Chat moderation (not implemented - basic chat)
+- [x] Chat moderation (implemented - word filtering, rate limiting, mute/ban system)
 - [x] Chat history (stored in database)
 
 **Files Created/Modified:**
@@ -214,7 +214,7 @@ The core game tick system with stored procedures has been successfully implement
 - [x] Officer effects on gameplay (boosters for production/research/construction)
 - [x] Officer upgrade system (duration-based purchases)
 - [x] Officer assignment to planets/fleets (global boosters)
-- [x] Officer experience and leveling (not implemented - simple duration system)
+- [x] Officer experience and leveling (implemented - level-based bonuses with experience gain from building completion)
 
 **Files Created/Modified:**
 - `src/lib/server/commander-service.ts` - Officer logic ✅
@@ -230,7 +230,7 @@ The core game tick system with stored procedures has been successfully implement
 - [x] Premium currency (Dark Matter) transactions
 - [x] Item shop with resources/speed-ups (booster items)
 - [x] Premium packages and offers (various booster durations)
-- [x] Transaction history (not implemented - purchases are immediate)
+- [x] Transaction history (implemented - all purchases recorded)
 - [x] Payment integration (not implemented - DM is given freely)
 
 **Files Created/Modified:**
@@ -238,6 +238,9 @@ The core game tick system with stored procedures has been successfully implement
 - `src/routes/api/shop/purchase/+server.ts` - Purchase API (not needed, using page actions)
 - `src/routes/game/shop/+page.server.ts` - Shop page ✅
 - `src/routes/game/shop/+page.svelte` - Shop UI ✅
+- `src/routes/api/transactions/+server.ts` - Transaction history API ✅
+- `src/routes/game/transactions/+page.server.ts` - Transaction history page ✅
+- `src/routes/game/transactions/+page.svelte` - Transaction history UI ✅
 - Database tables: `shop_items`, `transactions` (active_boosters table exists)
 
 ### 5.3 Highscore & Rankings

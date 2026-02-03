@@ -4,7 +4,8 @@ import {
 	COMMANDERS,
 	DURATION_COSTS,
 	purchaseCommander,
-	getActiveCommanders
+	getActiveCommanders,
+	getCommanderExperience
 } from '$lib/server/commanders';
 import { db } from '$lib/server/db';
 import { users, fleetTemplates, planets, autoExploreSettings } from '$lib/server/db/schema';
@@ -38,6 +39,15 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.where(eq(autoExploreSettings.userId, locals.user.id));
 	const settings = settingsRes[0] || null;
 
+	// Get commander experience data
+	const commanderExperience: Record<string, any> = {};
+	for (const commander of activeCommanders) {
+		const exp = await getCommanderExperience(locals.user.id, commander.commanderId);
+		if (exp) {
+			commanderExperience[commander.commanderId] = exp;
+		}
+	}
+
 	return {
 		commanders: COMMANDERS,
 		durationCosts: DURATION_COSTS,
@@ -48,6 +58,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			},
 			{} as Record<string, Date>
 		),
+		commanderExperience,
 		darkMatter,
 		templates,
 		userPlanets,

@@ -64,6 +64,13 @@
       "when": 1770103886562,
       "tag": "0008_odd_radioactive_man",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1770120933481,
+      "tag": "0009_overjoyed_rage",
+      "breakpoints": true
     }
   ]
 }

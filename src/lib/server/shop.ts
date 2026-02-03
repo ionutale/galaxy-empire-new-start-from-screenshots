@@ -1,5 +1,5 @@
 import { db } from './db';
-import { users, userBoosters } from './db/schema';
+import { users, userBoosters, transactions } from './db/schema';
 import { eq, and, gt } from 'drizzle-orm';
 
 export interface ShopItem {
@@ -92,6 +92,19 @@ export async function purchaseShopItem(userId: number, itemId: string) {
 			.update(users)
 			.set({ darkMatter: currentDM - item.cost })
 			.where(eq(users.id, userId));
+
+		// Record transaction
+		await tx.insert(transactions).values({
+			userId,
+			type: 'purchase',
+			amount: item.cost,
+			description: `Purchased ${item.name}`,
+			metadata: JSON.stringify({
+				itemId,
+				itemName: item.name,
+				durationSeconds: item.durationSeconds
+			})
+		});
 
 		// Add Booster
 		// Check for existing active booster of same type

@@ -1,5 +1,5 @@
 import { db } from './db';
-import { sql } from 'drizzle-orm';
+import { sql, eq } from 'drizzle-orm';
 import { planets, planetBuildings, buildingTypes, buildingQueue } from './db/schema';
 import { ErrorHandler, withPerformanceLogging } from './error-handler';
 
@@ -394,9 +394,66 @@ export class BuildingService {
 	}
 
 	/**
-	 * Get building icon based on name
+	 * Process completed building constructions
 	 */
-	private static getBuildingIcon(name: string): string {
+	static async processCompletedBuildings() {
+		const completed = await db
+			.select({
+				id: buildingQueue.id,
+				planetId: buildingQueue.planet_id,
+				buildingTypeId: buildingQueue.building_type_id,
+				targetLevel: buildingQueue.target_level
+			})
+			.from(buildingQueue)
+			.where(sql`${buildingQueue.completion_at} <= NOW()`);
+
+		for (const item of completed) {
+			await db.transaction(async (tx) => {
+				// Update building level
+				const existing = await tx
+					.select({ level: planetBuildings.level })
+					.from(planetBuildings)
+					.where(eq(planetBuildings.planet_id, item.planetId))
+					.limit(1);
+
+				if (existing.length > 0) {
+					await tx
+						.update(planetBuildings)
+						.set({ level: item.targetLevel })
+						.where(eq(planetBuildings.planet_id, item.planetId));
+				} else {
+					await tx.insert(planetBuildings).values({
+						planet_id: item.planetId,
+						level: item.targetLevel
+					});
+				}
+
+				// Remove from queue
+				await tx.delete(buildingQueue).where(eq(buildingQueue.id, item.id));
+
+				// Give commander experience for building completion
+				const planet = await tx
+					.select({ userId: planets.userId })
+					.from(planets)
+					.where(eq(planets.id, item.planetId))
+					.limit(1);
+
+				if (planet.length > 0) {
+					// Give experience to relevant commanders (engineer for facilities, etc.)
+					const experienceGained = 10; // Base experience for building completion
+					await this.giveCommanderExperience(planet[0].userId, 'engineer', experienceGained);
+				}
+			});
+		}
+	}
+
+	/**
+	 * Give experience to a user's commander
+	 */
+	static async giveCommanderExperience(userId: number, commanderId: string, experience: number) {
+		const { addCommanderExperience } = await import('$lib/server/commanders');
+		await addCommanderExperience(userId, commanderId, experience);
+	}
 		const iconMap: Record<string, string> = {
 			'Metal Mine': '⛏️',
 			'Crystal Mine': '💎',

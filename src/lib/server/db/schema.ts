@@ -22,6 +22,7 @@ export const users = pgTable('users', {
 	avatarId: integer('avatar_id').default(1),
 	darkMatter: integer('dark_matter').default(0),
 	points: integer('points').default(0),
+	role: varchar('role', { length: 20 }).default('player'), // 'player', 'moderator', 'admin'
 	createdAt: timestamp('created_at').defaultNow(),
 	lastLogin: timestamp('last_login'),
 	allianceId: integer('alliance_id') // Foreign key added later in SQL, defining here
@@ -396,7 +397,10 @@ export const userCommanders = pgTable(
 	{
 		userId: integer('user_id').references(() => users.id),
 		commanderId: varchar('commander_id', { length: 50 }).notNull(),
-		expiresAt: timestamp('expires_at').notNull()
+		expiresAt: timestamp('expires_at').notNull(),
+		level: integer('level').default(1),
+		experience: integer('experience').default(0),
+		totalExperience: integer('total_experience').default(0)
 	},
 	(t) => ({
 		pk: primaryKey({ columns: [t.userId, t.commanderId] })
@@ -418,4 +422,43 @@ export const autoExploreSettings = pgTable('auto_explore_settings', {
 	templateId: integer('template_id').references(() => fleetTemplates.id),
 	originPlanetId: integer('origin_planet_id').references(() => planets.id),
 	lastRun: timestamp('last_run').defaultNow()
+});
+
+// 9. Chat Moderation
+export const chatModeration = pgTable('chat_moderation', {
+	id: serial('id').primaryKey(),
+	messageId: integer('message_id').references(() => chatMessages.id, { onDelete: 'cascade' }),
+	moderatorId: integer('moderator_id').references(() => users.id),
+	action: varchar('action', { length: 20 }).notNull(), // 'delete', 'mute', 'ban'
+	reason: text('reason'),
+	createdAt: timestamp('created_at').defaultNow()
+});
+
+export const userMutes = pgTable('user_mutes', {
+	id: serial('id').primaryKey(),
+	userId: integer('user_id').references(() => users.id),
+	mutedBy: integer('muted_by').references(() => users.id),
+	reason: text('reason'),
+	expiresAt: timestamp('expires_at'),
+	createdAt: timestamp('created_at').defaultNow()
+});
+
+export const bannedWords = pgTable('banned_words', {
+	id: serial('id').primaryKey(),
+	word: varchar('word', { length: 100 }).notNull().unique(),
+	severity: varchar('severity', { length: 20 }).default('moderate'), // 'low', 'moderate', 'high'
+	createdAt: timestamp('created_at').defaultNow()
+});
+
+// 10. Transaction History
+export const transactions = pgTable('transactions', {
+	id: serial('id').primaryKey(),
+	userId: integer('user_id').references(() => users.id),
+	type: varchar('type', { length: 50 }).notNull(), // 'commander_purchase', 'booster_purchase', 'dark_matter_purchase'
+	itemId: varchar('item_id', { length: 100 }), // commander id, booster id, etc.
+	amount: integer('amount').notNull(), // cost in dark matter
+	duration: integer('duration'), // for time-based purchases (days)
+	description: varchar('description', { length: 255 }), // human readable description
+	metadata: jsonb('metadata'), // additional data
+	createdAt: timestamp('created_at').defaultNow()
 });
