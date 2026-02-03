@@ -57,6 +57,13 @@
       "when": 1770070495113,
       "tag": "0007_loud_nextwave",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1770103886562,
+      "tag": "0008_odd_radioactive_man",
+      "breakpoints": true
     }
   ]
 }

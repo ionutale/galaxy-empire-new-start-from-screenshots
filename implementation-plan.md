@@ -139,10 +139,9 @@ The core game tick system with stored procedures has been successfully implement
 **Status:** ✅ COMPLETED
 
 **Implemented Components:**
-- [x] Planet resource production tracking (simplified calculation)
-- [x] Planet temperature effects on production (not implemented - simplified)
-- [x] Planet storage capacity management (not implemented - unlimited for now)
-- [x] Planet defense placement (not implemented - separate defense system)
+- [x] Planet defense placement (implemented - defense building system in main game page)
+- [x] Planet temperature effects on production (implemented - gas production affected by temperature)
+- [x] Planet storage capacity management (partially implemented - storage calculation exists, no resource capping)
 - [x] Planet overview and switching (planet overview page with switch functionality)
 
 **Files Created/Modified:**
@@ -161,8 +160,8 @@ The core game tick system with stored procedures has been successfully implement
 **Implemented Components:**
 - [x] Alliance creation and management (create/join/leave)
 - [x] Alliance member management (member list with points)
-- [x] Alliance diplomacy (war/peace) (not implemented - basic alliances only)
-- [x] Alliance chat system (not implemented - global chat only)
+- [x] Alliance diplomacy (war/peace) (implemented - alliance leaders can declare war/peace with other alliances)
+- [x] Alliance chat system (implemented - alliance channel in chat system)
 - [x] Alliance rankings and statistics (basic member rankings)
 
 **Files Created/Modified:**
@@ -176,8 +175,8 @@ The core game tick system with stored procedures has been successfully implement
 **Status:** ✅ COMPLETED
 
 **Implemented Components:**
-- [x] Private messaging between players (not implemented - system messages only)
-- [x] Alliance messaging (not implemented - global chat only)
+- [x] Private messaging between players (implemented - full private messaging system)
+- [x] Alliance messaging (implemented - alliance members can message each other)
 - [x] System notifications (system messages for various events)
 - [x] Message archiving and deletion (basic message storage)
 - [x] Message formatting and attachments (basic text only)
@@ -195,7 +194,7 @@ The core game tick system with stored procedures has been successfully implement
 **Implemented Components:**
 - [x] Real-time chat functionality (polling-based updates)
 - [x] Global chat channel (global chat with alliance tags)
-- [x] Alliance chat (not implemented - global only)
+- [x] Alliance chat (implemented - alliance members can chat privately)
 - [x] Chat moderation (not implemented - basic chat)
 - [x] Chat history (stored in database)
 

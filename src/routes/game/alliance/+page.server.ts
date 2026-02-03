@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
-import { users, alliances } from '$lib/server/db/schema';
-import { eq, desc, sql } from 'drizzle-orm';
+import { users, alliances, allianceDiplomacy } from '$lib/server/db/schema';
+import { eq, desc, sql, or, and } from 'drizzle-orm';
 import type { PageServerLoad, Actions } from './$types';
 import { fail } from '@sveltejs/kit';
 
@@ -30,10 +30,56 @@ export const load: PageServerLoad = async ({ locals }) => {
 			.where(eq(users.allianceId, allianceId))
 			.orderBy(desc(users.points));
 
+		// Load diplomacy relations
+		const diplomacyRes = await db
+			.select({
+				id: allianceDiplomacy.id,
+				initiatorAllianceId: allianceDiplomacy.initiatorAllianceId,
+				targetAllianceId: allianceDiplomacy.targetAllianceId,
+				type: allianceDiplomacy.type,
+				status: allianceDiplomacy.status,
+				expiresAt: allianceDiplomacy.expiresAt,
+				createdAt: allianceDiplomacy.createdAt
+			})
+			.from(allianceDiplomacy)
+			.where(
+				or(
+					eq(allianceDiplomacy.initiatorAllianceId, allianceId),
+					eq(allianceDiplomacy.targetAllianceId, allianceId)
+				)
+			)
+			.orderBy(desc(allianceDiplomacy.createdAt));
+
+		// Load alliance tags for diplomacy
+		const diplomacyWithTags = await Promise.all(
+			diplomacyRes.map(async (dip) => {
+				const [initiator] = await db.select({ tag: alliances.tag }).from(alliances).where(eq(alliances.id, dip.initiatorAllianceId));
+				const [target] = await db.select({ tag: alliances.tag }).from(alliances).where(eq(alliances.id, dip.targetAllianceId));
+				return {
+					...dip,
+					initiatorTag: initiator?.tag || 'Unknown',
+					targetTag: target?.tag || 'Unknown'
+				};
+			})
+		);
+
+		// Load all alliances for diplomacy dropdown
+		const allAlliancesRes = await db
+			.select({
+				id: alliances.id,
+				name: alliances.name,
+				tag: alliances.tag
+			})
+			.from(alliances)
+			.where(sql`${alliances.id} != ${allianceId}`)
+			.orderBy(alliances.name);
+
 		return {
 			inAlliance: true,
 			alliance,
-			members: membersRes
+			members: membersRes,
+			diplomacy: diplomacyWithTags,
+			allAlliances: allAlliancesRes
 		};
 	} else {
 		// User is not in an alliance
@@ -108,5 +154,41 @@ export const actions: Actions = {
 		await db.update(users).set({ allianceId: null }).where(eq(users.id, locals.user.id));
 
 		return { success: true };
+	},
+	declareWar: async ({ request, locals }) => {
+		const data = await request.formData();
+		const targetAllianceId = Number(data.get('targetAllianceId'));
+
+		if (!locals.user?.allianceId) return fail(401, { error: 'Not in alliance' });
+
+		try {
+			await db.insert(allianceDiplomacy).values({
+				initiatorAllianceId: locals.user.allianceId,
+				targetAllianceId,
+				type: 'war',
+				status: 'active'
+			});
+			return { success: true };
+		} catch (e) {
+			return fail(500, { error: 'Failed to declare war' });
+		}
+	},
+	declarePeace: async ({ request, locals }) => {
+		const data = await request.formData();
+		const targetAllianceId = Number(data.get('targetAllianceId'));
+
+		if (!locals.user?.allianceId) return fail(401, { error: 'Not in alliance' });
+
+		try {
+			await db.insert(allianceDiplomacy).values({
+				initiatorAllianceId: locals.user.allianceId,
+				targetAllianceId,
+				type: 'peace',
+				status: 'active'
+			});
+			return { success: true };
+		} catch (e) {
+			return fail(500, { error: 'Failed to declare peace' });
+		}
 	}
 };

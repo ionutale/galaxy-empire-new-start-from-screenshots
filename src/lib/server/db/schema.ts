@@ -290,6 +290,23 @@ export const alliances = pgTable('alliances', {
 	createdAt: timestamp('created_at').defaultNow()
 });
 
+export const allianceDiplomacy = pgTable(
+	'alliance_diplomacy',
+	{
+		id: serial('id').primaryKey(),
+		initiatorAllianceId: integer('initiator_alliance_id').references(() => alliances.id),
+		targetAllianceId: integer('target_alliance_id').references(() => alliances.id),
+		type: varchar('type', { length: 20 }).notNull(), // 'war', 'peace', 'nap', 'alliance'
+		status: varchar('status', { length: 20 }).default('pending'), // 'pending', 'active', 'expired'
+		expiresAt: timestamp('expires_at'),
+		createdAt: timestamp('created_at').defaultNow(),
+		updatedAt: timestamp('updated_at').defaultNow()
+	},
+	(t) => ({
+		uniqueDiplomacy: unique().on(t.initiatorAllianceId, t.targetAllianceId, t.type, t.status)
+	})
+);
+
 export const messages = pgTable(
 	'messages',
 	{

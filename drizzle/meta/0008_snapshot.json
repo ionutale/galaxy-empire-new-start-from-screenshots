@@ -1,0 +1,2772 @@
+{
+  "id": "5640c0a1-f4e0-43ff-90a2-4e9db2f2aa72",
+  "prevId": "552d5c54-1455-4b05-8078-8df23c1625a6",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.alliance_diplomacy": {
+      "name": "alliance_diplomacy",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "initiator_alliance_id": {
+          "name": "initiator_alliance_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "target_alliance_id": {
+          "name": "target_alliance_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type": {
+          "name": "type",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'pending'"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "alliance_diplomacy_initiator_alliance_id_alliances_id_fk": {
+          "name": "alliance_diplomacy_initiator_alliance_id_alliances_id_fk",
+          "tableFrom": "alliance_diplomacy",
+          "tableTo": "alliances",
+          "columnsFrom": [
+            "initiator_alliance_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "alliance_diplomacy_target_alliance_id_alliances_id_fk": {
+          "name": "alliance_diplomacy_target_alliance_id_alliances_id_fk",
+          "tableFrom": "alliance_diplomacy",
+          "tableTo": "alliances",
+          "columnsFrom": [
+            "target_alliance_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "alliance_diplomacy_initiator_alliance_id_target_alliance_id_type_status_unique": {
+          "name": "alliance_diplomacy_initiator_alliance_id_target_alliance_id_type_status_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "initiator_alliance_id",
+            "target_alliance_id",
+            "type",
+            "status"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.alliances": {
+      "name": "alliances",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tag": {
+          "name": "tag",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "alliances_owner_id_users_id_fk": {
+          "name": "alliances_owner_id_users_id_fk",
+          "tableFrom": "alliances",
+          "tableTo": "users",
+          "columnsFrom": [
+            "owner_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "alliances_name_unique": {
+          "name": "alliances_name_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "name"
+          ]
+        },
+        "alliances_tag_unique": {
+          "name": "alliances_tag_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "tag"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.auto_explore_settings": {
+      "name": "auto_explore_settings",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "enabled": {
+          "name": "enabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "template_id": {
+          "name": "template_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "origin_planet_id": {
+          "name": "origin_planet_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_run": {
+          "name": "last_run",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "auto_explore_settings_user_id_users_id_fk": {
+          "name": "auto_explore_settings_user_id_users_id_fk",
+          "tableFrom": "auto_explore_settings",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "auto_explore_settings_template_id_fleet_templates_id_fk": {
+          "name": "auto_explore_settings_template_id_fleet_templates_id_fk",
+          "tableFrom": "auto_explore_settings",
+          "tableTo": "fleet_templates",
+          "columnsFrom": [
+            "template_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "auto_explore_settings_origin_planet_id_planets_id_fk": {
+          "name": "auto_explore_settings_origin_planet_id_planets_id_fk",
+          "tableFrom": "auto_explore_settings",
+          "tableTo": "planets",
+          "columnsFrom": [
+            "origin_planet_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.building_queue": {
+      "name": "building_queue",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "planet_id": {
+          "name": "planet_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "building_type_id": {
+          "name": "building_type_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "target_level": {
+          "name": "target_level",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "completion_at": {
+          "name": "completion_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "resources_reserved": {
+          "name": "resources_reserved",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "building_queue_planet_id_planets_id_fk": {
+          "name": "building_queue_planet_id_planets_id_fk",
+          "tableFrom": "building_queue",
+          "tableTo": "planets",
+          "columnsFrom": [
+            "planet_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "building_queue_building_type_id_building_types_id_fk": {
+          "name": "building_queue_building_type_id_building_types_id_fk",
+          "tableFrom": "building_queue",
+          "tableTo": "building_types",
+          "columnsFrom": [
+            "building_type_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.building_types": {
+      "name": "building_types",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "category": {
+          "name": "category",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "base_cost": {
+          "name": "base_cost",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "base_production": {
+          "name": "base_production",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "base_energy": {
+          "name": "base_energy",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "max_level": {
+          "name": "max_level",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 100
+        },
+        "prerequisites": {
+          "name": "prerequisites",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "build_time_formula": {
+          "name": "build_time_formula",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.chat_messages": {
+      "name": "chat_messages",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "channel": {
+          "name": "channel",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'global'"
+        },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "chat_messages_user_id_users_id_fk": {
+          "name": "chat_messages_user_id_users_id_fk",
+          "tableFrom": "chat_messages",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.combat_reports": {
+      "name": "combat_reports",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "attacker_id": {
+          "name": "attacker_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "defender_id": {
+          "name": "defender_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "galaxy": {
+          "name": "galaxy",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "system": {
+          "name": "system",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "planet": {
+          "name": "planet",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mission": {
+          "name": "mission",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "attacker_fleet": {
+          "name": "attacker_fleet",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "defender_fleet": {
+          "name": "defender_fleet",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "defender_defenses": {
+          "name": "defender_defenses",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "attacker_losses": {
+          "name": "attacker_losses",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "defender_losses": {
+          "name": "defender_losses",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "winner": {
+          "name": "winner",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rounds": {
+          "name": "rounds",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 1
+        },
+        "loot": {
+          "name": "loot",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "debris": {
+          "name": "debris",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "combat_reports_attacker_id_users_id_fk": {
+          "name": "combat_reports_attacker_id_users_id_fk",
+          "tableFrom": "combat_reports",
+          "tableTo": "users",
+          "columnsFrom": [
+            "attacker_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "combat_reports_defender_id_users_id_fk": {
+          "name": "combat_reports_defender_id_users_id_fk",
+          "tableFrom": "combat_reports",
+          "tableTo": "users",
+          "columnsFrom": [
+            "defender_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.espionage_reports": {
+      "name": "espionage_reports",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "attacker_id": {
+          "name": "attacker_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "target_id": {
+          "name": "target_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "galaxy": {
+          "name": "galaxy",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "system": {
+          "name": "system",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "planet": {
+          "name": "planet",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "resources": {
+          "name": "resources",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "buildings": {
+          "name": "buildings",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fleet": {
+          "name": "fleet",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "defenses": {
+          "name": "defenses",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "research": {
+          "name": "research",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "espionage_reports_attacker_id_users_id_fk": {
+          "name": "espionage_reports_attacker_id_users_id_fk",
+          "tableFrom": "espionage_reports",
+          "tableTo": "users",
+          "columnsFrom": [
+            "attacker_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "espionage_reports_target_id_users_id_fk": {
+          "name": "espionage_reports_target_id_users_id_fk",
+          "tableFrom": "espionage_reports",
+          "tableTo": "users",
+          "columnsFrom": [
+            "target_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.fleet_templates": {
+      "name": "fleet_templates",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ships": {
+          "name": "ships",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "fleet_templates_user_id_users_id_fk": {
+          "name": "fleet_templates_user_id_users_id_fk",
+          "tableFrom": "fleet_templates",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.fleets": {
+      "name": "fleets",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "origin_planet_id": {
+          "name": "origin_planet_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "target_galaxy": {
+          "name": "target_galaxy",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "target_system": {
+          "name": "target_system",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "target_planet": {
+          "name": "target_planet",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mission": {
+          "name": "mission",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ships": {
+          "name": "ships",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "resources": {
+          "name": "resources",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "departure_time": {
+          "name": "departure_time",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "arrival_time": {
+          "name": "arrival_time",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "return_time": {
+          "name": "return_time",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'active'"
+        }
+      },
+      "indexes": {
+        "fleets_user_id_idx": {
+          "name": "fleets_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "fleets_status_arrival_time_idx": {
+          "name": "fleets_status_arrival_time_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "arrival_time",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "fleets_origin_planet_id_idx": {
+          "name": "fleets_origin_planet_id_idx",
+          "columns": [
+            {
+              "expression": "origin_planet_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "fleets_user_id_users_id_fk": {
+          "name": "fleets_user_id_users_id_fk",
+          "tableFrom": "fleets",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "fleets_origin_planet_id_planets_id_fk": {
+          "name": "fleets_origin_planet_id_planets_id_fk",
+          "tableFrom": "fleets",
+          "tableTo": "planets",
+          "columnsFrom": [
+            "origin_planet_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.galaxies": {
+      "name": "galaxies",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.messages": {
+      "name": "messages",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type": {
+          "name": "type",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_read": {
+          "name": "is_read",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "messages_user_id_idx": {
+          "name": "messages_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "messages_user_id_read_idx": {
+          "name": "messages_user_id_read_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "is_read",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "messages_user_id_created_idx": {
+          "name": "messages_user_id_created_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "messages_user_id_users_id_fk": {
+          "name": "messages_user_id_users_id_fk",
+          "tableFrom": "messages",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.password_resets": {
+      "name": "password_resets",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "token": {
+          "name": "token",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "password_resets_user_id_users_id_fk": {
+          "name": "password_resets_user_id_users_id_fk",
+          "tableFrom": "password_resets",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "password_resets_token_unique": {
+          "name": "password_resets_token_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "token"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.planet_buildings": {
+      "name": "planet_buildings",
+      "schema": "",
+      "columns": {
+        "planet_id": {
+          "name": "planet_id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "metal_mine": {
+          "name": "metal_mine",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "crystal_mine": {
+          "name": "crystal_mine",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "gas_extractor": {
+          "name": "gas_extractor",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "solar_plant": {
+          "name": "solar_plant",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "shipyard": {
+          "name": "shipyard",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "research_lab": {
+          "name": "research_lab",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "robotics_factory": {
+          "name": "robotics_factory",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "nanite_factory": {
+          "name": "nanite_factory",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "metal_storage": {
+          "name": "metal_storage",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "crystal_storage": {
+          "name": "crystal_storage",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "gas_storage": {
+          "name": "gas_storage",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "planet_buildings_planet_id_planets_id_fk": {
+          "name": "planet_buildings_planet_id_planets_id_fk",
+          "tableFrom": "planet_buildings",
+          "tableTo": "planets",
+          "columnsFrom": [
+            "planet_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.planet_defenses": {
+      "name": "planet_defenses",
+      "schema": "",
+      "columns": {
+        "planet_id": {
+          "name": "planet_id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "rocket_launcher": {
+          "name": "rocket_launcher",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "light_laser": {
+          "name": "light_laser",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "heavy_laser": {
+          "name": "heavy_laser",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "gauss_cannon": {
+          "name": "gauss_cannon",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "ion_cannon": {
+          "name": "ion_cannon",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "plasma_turret": {
+          "name": "plasma_turret",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "small_shield_dome": {
+          "name": "small_shield_dome",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "large_shield_dome": {
+          "name": "large_shield_dome",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "planet_defenses_planet_id_planets_id_fk": {
+          "name": "planet_defenses_planet_id_planets_id_fk",
+          "tableFrom": "planet_defenses",
+          "tableTo": "planets",
+          "columnsFrom": [
+            "planet_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.planet_resources": {
+      "name": "planet_resources",
+      "schema": "",
+      "columns": {
+        "planet_id": {
+          "name": "planet_id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "metal": {
+          "name": "metal",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 500
+        },
+        "crystal": {
+          "name": "crystal",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 500
+        },
+        "gas": {
+          "name": "gas",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "energy": {
+          "name": "energy",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "last_update": {
+          "name": "last_update",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "planet_resources_planet_id_planets_id_fk": {
+          "name": "planet_resources_planet_id_planets_id_fk",
+          "tableFrom": "planet_resources",
+          "tableTo": "planets",
+          "columnsFrom": [
+            "planet_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.planet_ships": {
+      "name": "planet_ships",
+      "schema": "",
+      "columns": {
+        "planet_id": {
+          "name": "planet_id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "light_fighter": {
+          "name": "light_fighter",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "heavy_fighter": {
+          "name": "heavy_fighter",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "cruiser": {
+          "name": "cruiser",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "battleship": {
+          "name": "battleship",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "battle_cruiser": {
+          "name": "battle_cruiser",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "bomber": {
+          "name": "bomber",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "destroyer": {
+          "name": "destroyer",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "death_star": {
+          "name": "death_star",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "small_cargo": {
+          "name": "small_cargo",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "large_cargo": {
+          "name": "large_cargo",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "colony_ship": {
+          "name": "colony_ship",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "espionage_probe": {
+          "name": "espionage_probe",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "recycler": {
+          "name": "recycler",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "planet_ships_planet_id_planets_id_fk": {
+          "name": "planet_ships_planet_id_planets_id_fk",
+          "tableFrom": "planet_ships",
+          "tableTo": "planets",
+          "columnsFrom": [
+            "planet_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.planets": {
+      "name": "planets",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "galaxy_id": {
+          "name": "galaxy_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "system_id": {
+          "name": "system_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "planet_number": {
+          "name": "planet_number",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'Colony'"
+        },
+        "planet_type": {
+          "name": "planet_type",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fields_used": {
+          "name": "fields_used",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "fields_max": {
+          "name": "fields_max",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 163
+        },
+        "temperature_min": {
+          "name": "temperature_min",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "temperature_max": {
+          "name": "temperature_max",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "image_variant": {
+          "name": "image_variant",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "planets_user_id_users_id_fk": {
+          "name": "planets_user_id_users_id_fk",
+          "tableFrom": "planets",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "planets_galaxy_id_system_id_planet_number_unique": {
+          "name": "planets_galaxy_id_system_id_planet_number_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "galaxy_id",
+            "system_id",
+            "planet_number"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.private_messages": {
+      "name": "private_messages",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "from_user_id": {
+          "name": "from_user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "to_user_id": {
+          "name": "to_user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "subject": {
+          "name": "subject",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "message_type": {
+          "name": "message_type",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'private'"
+        },
+        "is_read": {
+          "name": "is_read",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "private_messages_from_user_idx": {
+          "name": "private_messages_from_user_idx",
+          "columns": [
+            {
+              "expression": "from_user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "private_messages_to_user_idx": {
+          "name": "private_messages_to_user_idx",
+          "columns": [
+            {
+              "expression": "to_user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "private_messages_from_to_idx": {
+          "name": "private_messages_from_to_idx",
+          "columns": [
+            {
+              "expression": "from_user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "to_user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "private_messages_created_idx": {
+          "name": "private_messages_created_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "private_messages_from_user_id_users_id_fk": {
+          "name": "private_messages_from_user_id_users_id_fk",
+          "tableFrom": "private_messages",
+          "tableTo": "users",
+          "columnsFrom": [
+            "from_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "private_messages_to_user_id_users_id_fk": {
+          "name": "private_messages_to_user_id_users_id_fk",
+          "tableFrom": "private_messages",
+          "tableTo": "users",
+          "columnsFrom": [
+            "to_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.research_queue": {
+      "name": "research_queue",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "research_type_id": {
+          "name": "research_type_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "level": {
+          "name": "level",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "completion_at": {
+          "name": "completion_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "planet_id": {
+          "name": "planet_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "research_queue_user_idx": {
+          "name": "research_queue_user_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "research_queue_completion_idx": {
+          "name": "research_queue_completion_idx",
+          "columns": [
+            {
+              "expression": "completion_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "research_queue_user_id_users_id_fk": {
+          "name": "research_queue_user_id_users_id_fk",
+          "tableFrom": "research_queue",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "research_queue_research_type_id_research_types_id_fk": {
+          "name": "research_queue_research_type_id_research_types_id_fk",
+          "tableFrom": "research_queue",
+          "tableTo": "research_types",
+          "columnsFrom": [
+            "research_type_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "research_queue_planet_id_planets_id_fk": {
+          "name": "research_queue_planet_id_planets_id_fk",
+          "tableFrom": "research_queue",
+          "tableTo": "planets",
+          "columnsFrom": [
+            "planet_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.research_types": {
+      "name": "research_types",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "category": {
+          "name": "category",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "base_cost": {
+          "name": "base_cost",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "base_research_time": {
+          "name": "base_research_time",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 60
+        },
+        "max_level": {
+          "name": "max_level",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 100
+        },
+        "prerequisites": {
+          "name": "prerequisites",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'{}'::jsonb"
+        },
+        "icon": {
+          "name": "icon",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'🔬'"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.sessions": {
+      "name": "sessions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "sessions_user_id_users_id_fk": {
+          "name": "sessions_user_id_users_id_fk",
+          "tableFrom": "sessions",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.shipyard_queue": {
+      "name": "shipyard_queue",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "planet_id": {
+          "name": "planet_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ship_type": {
+          "name": "ship_type",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "amount": {
+          "name": "amount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "completion_at": {
+          "name": "completion_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "shipyard_queue_user_idx": {
+          "name": "shipyard_queue_user_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "shipyard_queue_planet_idx": {
+          "name": "shipyard_queue_planet_idx",
+          "columns": [
+            {
+              "expression": "planet_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "shipyard_queue_completion_idx": {
+          "name": "shipyard_queue_completion_idx",
+          "columns": [
+            {
+              "expression": "completion_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "shipyard_queue_user_id_users_id_fk": {
+          "name": "shipyard_queue_user_id_users_id_fk",
+          "tableFrom": "shipyard_queue",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "shipyard_queue_planet_id_planets_id_fk": {
+          "name": "shipyard_queue_planet_id_planets_id_fk",
+          "tableFrom": "shipyard_queue",
+          "tableTo": "planets",
+          "columnsFrom": [
+            "planet_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.solar_systems": {
+      "name": "solar_systems",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "galaxy_id": {
+          "name": "galaxy_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "system_number": {
+          "name": "system_number",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "solar_systems_galaxy_id_galaxies_id_fk": {
+          "name": "solar_systems_galaxy_id_galaxies_id_fk",
+          "tableFrom": "solar_systems",
+          "tableTo": "galaxies",
+          "columnsFrom": [
+            "galaxy_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "solar_systems_galaxy_id_system_number_unique": {
+          "name": "solar_systems_galaxy_id_system_number_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "galaxy_id",
+            "system_number"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.user_boosters": {
+      "name": "user_boosters",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "booster_id": {
+          "name": "booster_id",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "user_boosters_user_id_users_id_fk": {
+          "name": "user_boosters_user_id_users_id_fk",
+          "tableFrom": "user_boosters",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.user_commanders": {
+      "name": "user_commanders",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "commander_id": {
+          "name": "commander_id",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "user_commanders_user_id_users_id_fk": {
+          "name": "user_commanders_user_id_users_id_fk",
+          "tableFrom": "user_commanders",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "user_commanders_user_id_commander_id_pk": {
+          "name": "user_commanders_user_id_commander_id_pk",
+          "columns": [
+            "user_id",
+            "commander_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.user_research": {
+      "name": "user_research",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "energy_tech": {
+          "name": "energy_tech",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "laser_tech": {
+          "name": "laser_tech",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "ion_tech": {
+          "name": "ion_tech",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "hyperspace_tech": {
+          "name": "hyperspace_tech",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "plasma_tech": {
+          "name": "plasma_tech",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "combustion_drive": {
+          "name": "combustion_drive",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "impulse_drive": {
+          "name": "impulse_drive",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "hyperspace_drive": {
+          "name": "hyperspace_drive",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "espionage_tech": {
+          "name": "espionage_tech",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "computer_tech": {
+          "name": "computer_tech",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "astrophysics": {
+          "name": "astrophysics",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "weapons_tech": {
+          "name": "weapons_tech",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "shielding_tech": {
+          "name": "shielding_tech",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "armour_tech": {
+          "name": "armour_tech",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "user_research_user_id_users_id_fk": {
+          "name": "user_research_user_id_users_id_fk",
+          "tableFrom": "user_research",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.user_research_levels": {
+      "name": "user_research_levels",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "research_type_id": {
+          "name": "research_type_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "level": {
+          "name": "level",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "is_researching": {
+          "name": "is_researching",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "research_completion_at": {
+          "name": "research_completion_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "user_research_levels_user_research_idx": {
+          "name": "user_research_levels_user_research_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "research_type_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "user_research_levels_researching_idx": {
+          "name": "user_research_levels_researching_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "is_researching",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "user_research_levels_user_id_users_id_fk": {
+          "name": "user_research_levels_user_id_users_id_fk",
+          "tableFrom": "user_research_levels",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "user_research_levels_research_type_id_research_types_id_fk": {
+          "name": "user_research_levels_research_type_id_research_types_id_fk",
+          "tableFrom": "user_research_levels",
+          "tableTo": "research_types",
+          "columnsFrom": [
+            "research_type_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "username": {
+          "name": "username",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "password_hash": {
+          "name": "password_hash",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "avatar_id": {
+          "name": "avatar_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 1
+        },
+        "dark_matter": {
+          "name": "dark_matter",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "points": {
+          "name": "points",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "last_login": {
+          "name": "last_login",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "alliance_id": {
+          "name": "alliance_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "users_username_unique": {
+          "name": "users_username_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "username"
+          ]
+        },
+        "users_email_unique": {
+          "name": "users_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
