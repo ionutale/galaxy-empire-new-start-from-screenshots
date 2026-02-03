@@ -4,6 +4,7 @@ import { eq, sql } from 'drizzle-orm';
 import { getProduction } from '$lib/game-config';
 import { getCommanderBonus } from './commanders';
 import { getBoosterMultipliers } from './shop';
+import { BuildingService } from './building-service';
 
 export async function updatePlanetResources(planetId: number) {
 	return await db.transaction(async (tx) => {
@@ -92,13 +93,21 @@ export async function updatePlanetResources(planetId: number) {
 		const newCrystal = (data.crystal || 0) + crystalProd * seconds * productionFactor;
 		const newGas = (data.gas || 0) + gasProd * seconds * productionFactor;
 
+		// Get storage capacity
+		const storageCapacity = await BuildingService.calculatePlanetStorage(planetId);
+
+		// Cap resources to storage limits
+		const cappedMetal = Math.min(newMetal, storageCapacity.metal);
+		const cappedCrystal = Math.min(newCrystal, storageCapacity.crystal);
+		const cappedGas = Math.min(newGas, storageCapacity.gas);
+
 		// Update DB
 		await tx
 			.update(planetResources)
 			.set({
-				metal: newMetal,
-				crystal: newCrystal,
-				gas: newGas,
+				metal: cappedMetal,
+				crystal: cappedCrystal,
+				gas: cappedGas,
 				energy: energy,
 				lastUpdate: sql`NOW()`
 			})
@@ -106,9 +115,9 @@ export async function updatePlanetResources(planetId: number) {
 
 		return {
 			...data,
-			metal: newMetal,
-			crystal: newCrystal,
-			gas: newGas,
+			metal: cappedMetal,
+			crystal: cappedCrystal,
+			gas: cappedGas,
 			energy
 		};
 	});

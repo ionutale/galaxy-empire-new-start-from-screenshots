@@ -1,5 +1,5 @@
 import { db } from '$lib/server/db';
-import { planetBuildings, planetResources, planets, buildingQueue } from '$lib/server/db/schema';
+import { planetBuildings, planetResources, planets, buildingQueue, planetShips, planetDefenses, fleets } from '$lib/server/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { error, fail } from '@sveltejs/kit';
 import { BuildingService } from '$lib/server/building-service';
@@ -136,6 +136,75 @@ export const actions: Actions = {
 		} catch (error) {
 			console.error('Queue cancel error:', error);
 			return fail(500, { error: 'Failed to cancel building' });
+		}
+	},
+
+	abandon: async ({ locals, params }) => {
+		if (!locals.user) return fail(401);
+
+		const planetId = Number(params.id);
+
+		if (!planetId) return fail(400);
+
+		try {
+			// Check if this is the user's only planet
+			const userPlanets = await db
+				.select({ id: planets.id })
+				.from(planets)
+				.where(eq(planets.userId, locals.user.id));
+
+			if (userPlanets.length <= 1) {
+				return fail(400, { error: 'Cannot abandon your last planet' });
+			}
+
+			// Verify planet ownership
+			const planet = await db
+				.select()
+				.from(planets)
+				.where(eq(planets.id, planetId))
+				.limit(1);
+
+			if (!planet.length || planet[0].userId !== locals.user.id) {
+				return fail(404, { error: 'Planet not found' });
+			}
+
+			// Delete all related data in correct order (foreign key constraints)
+			await db.transaction(async (tx) => {
+				// Delete building queue
+				await tx.delete(buildingQueue).where(eq(buildingQueue.planet_id, planetId));
+
+				// Delete fleets (set to return to another planet or delete)
+				const otherPlanet = userPlanets.find(p => p.id !== planetId);
+				if (otherPlanet) {
+					// Move fleets to another planet
+					await tx
+						.update(fleets)
+						.set({
+							originPlanetId: otherPlanet.id,
+							mission: 'return',
+							arrivalTime: sql`NOW() + INTERVAL '1 minute'`,
+							returnTime: null
+						})
+						.where(eq(fleets.originPlanetId, planetId));
+				} else {
+					// Delete fleets if no other planet
+					await tx.delete(fleets).where(eq(fleets.originPlanetId, planetId));
+				}
+
+				// Delete planet data
+				await tx.delete(planetShips).where(eq(planetShips.planetId, planetId));
+				await tx.delete(planetDefenses).where(eq(planetDefenses.planetId, planetId));
+				await tx.delete(planetBuildings).where(eq(planetBuildings.planetId, planetId));
+				await tx.delete(planetResources).where(eq(planetResources.planetId, planetId));
+
+				// Finally delete the planet
+				await tx.delete(planets).where(eq(planets.id, planetId));
+			});
+
+			return { success: true };
+		} catch (error) {
+			console.error('Planet abandonment error:', error);
+			return fail(500, { error: 'Failed to abandon planet' });
 		}
 	}
 };

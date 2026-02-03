@@ -112,7 +112,7 @@ The core game tick system with stored procedures has been successfully implement
 - [x] Colony ship consumption (ships stay at new colony)
 - [x] Planet slot availability (unlimited for now)
 - [x] Colony establishment process (planet creation, resource init)
-- [x] Planet abandonment mechanics (not implemented yet)
+- [x] Planet abandonment mechanics (implemented - can abandon planets except last one)
 
 **Files Created/Modified:**
 - `src/lib/server/fleet-processor.ts` - Colonization mission handling ✅
@@ -141,7 +141,7 @@ The core game tick system with stored procedures has been successfully implement
 **Implemented Components:**
 - [x] Planet defense placement (implemented - defense building system in main game page)
 - [x] Planet temperature effects on production (implemented - gas production affected by temperature)
-- [x] Planet storage capacity management (partially implemented - storage calculation exists, no resource capping)
+- [x] Planet storage capacity management (fully implemented - resources capped to storage limits)
 - [x] Planet overview and switching (planet overview page with switch functionality)
 
 **Files Created/Modified:**

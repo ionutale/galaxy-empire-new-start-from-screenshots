@@ -27,10 +27,20 @@
 	let ships = $derived(data.ships || {}) as any;
 
 	// Get query params for pre-filling
-	let targetGalaxy = $state($page.url.searchParams.get('galaxy') || data.currentPlanet.galaxyId);
-	let targetSystem = $state($page.url.searchParams.get('system') || data.currentPlanet.systemId);
+	let targetGalaxy = $state($page.url.searchParams.get('galaxy') || '1');
+	let targetSystem = $state($page.url.searchParams.get('system') || '1');
 	let targetPlanet = $state($page.url.searchParams.get('planet') || '');
 	let targetMission = $state($page.url.searchParams.get('mission') || 'attack');
+
+	// Set defaults from current planet if available
+	$effect(() => {
+		if (data.currentPlanet && !targetGalaxy) {
+			targetGalaxy = data.currentPlanet.galaxyId.toString();
+		}
+		if (data.currentPlanet && !targetSystem) {
+			targetSystem = data.currentPlanet.systemId.toString();
+		}
+	});
 	let newTemplateName = $state('');
 	let loading = $state(false);
 	let deletingTemplate = $state<Record<string, boolean>>({});

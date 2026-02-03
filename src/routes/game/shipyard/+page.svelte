@@ -25,7 +25,7 @@
 	});
 
 	// Track input amounts
-	let amounts = $state(Object.fromEntries(shipyardInfo.map((ship) => [ship.shipType, 1])));
+	let amounts = $state({});
 
 	// Update amounts when shipyardInfo changes
 	$effect(() => {

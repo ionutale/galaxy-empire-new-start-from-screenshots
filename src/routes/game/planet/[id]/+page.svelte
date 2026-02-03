@@ -60,10 +60,27 @@
 
 <div class="p-4 pb-20">
 	<div class="mb-6">
-		<h2 class="text-2xl font-bold text-blue-300">{data.planet.name}</h2>
-		<p class="text-sm text-gray-400">
-			[{data.planet.galaxyId}:{data.planet.systemId}:{data.planet.planetNumber}]
-		</p>
+		<div class="flex items-center justify-between">
+			<div>
+				<h2 class="text-2xl font-bold text-blue-300">{data.planet.name}</h2>
+				<p class="text-sm text-gray-400">
+					[{data.planet.galaxyId}:{data.planet.systemId}:{data.planet.planetNumber}]
+				</p>
+			</div>
+			<form method="POST" action="?/abandon" use:enhance>
+				<button
+					type="submit"
+					class="rounded bg-red-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-red-700"
+					onclick={(e) => {
+						if (!confirm('Are you sure you want to abandon this planet? This action cannot be undone.')) {
+							e.preventDefault();
+						}
+					}}
+				>
+					Abandon Planet
+				</button>
+			</form>
+		</div>
 	</div>
 
 	<!-- Resource Progress Bars -->
