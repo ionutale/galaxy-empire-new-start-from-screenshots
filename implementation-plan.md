@@ -177,7 +177,7 @@ The core game tick system with stored procedures has been successfully implement
 
 **Implemented Components:**
 - [x] Private messaging between players (not implemented - system messages only)
-- [ ] Alliance messaging (not implemented - global chat only)
+- [x] Alliance messaging (not implemented - global chat only)
 - [x] System notifications (system messages for various events)
 - [x] Message archiving and deletion (basic message storage)
 - [x] Message formatting and attachments (basic text only)

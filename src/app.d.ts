@@ -8,6 +8,7 @@ declare global {
 				id: number;
 				username: string;
 				darkMatter: number;
+				allianceId?: number | null;
 			};
 		}
 		// interface PageData {}

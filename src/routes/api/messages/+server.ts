@@ -37,7 +37,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 			content: privateMessages.content,
 			isRead: privateMessages.isRead,
 			createdAt: privateMessages.createdAt,
-			messageType: 'private',
+			messageType: privateMessages.messageType,
 			fromUsername: users.username,
 			isSent: eq(privateMessages.fromUserId, locals.user.id)
 		})

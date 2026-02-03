@@ -9,7 +9,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	}
 
 	try {
-		const { toUsername, subject, content } = await request.json();
+		const { toUsername, subject, content, messageType = 'private' } = await request.json();
 
 		if (!toUsername || !subject || !content) {
 			return json({ error: 'Missing required fields' }, { status: 400 });
@@ -38,12 +38,20 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			return json({ error: 'Cannot send message to yourself' }, { status: 400 });
 		}
 
+		// Validate alliance membership for alliance messages
+		if (messageType === 'alliance') {
+			if (!locals.user.allianceId || !recipient.allianceId || locals.user.allianceId !== recipient.allianceId) {
+				return json({ error: 'Can only send alliance messages to alliance members' }, { status: 403 });
+			}
+		}
+
 		// Insert message
 		await db.insert(privateMessages).values({
 			fromUserId: locals.user.id,
 			toUserId: recipient.id,
 			subject,
-			content
+			content,
+			messageType: messageType
 		});
 
 		return json({ success: true });

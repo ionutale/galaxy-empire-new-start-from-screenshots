@@ -10,6 +10,8 @@
 	let hasMore = $state(true);
 	let showSendForm = $state(false);
 	let sending = $state(false);
+	let messageType = $state('private');
+	let selectedAllianceMember = $state('');
 
 	let allMessages = $derived([...data.messages, ...extraMessages]);
 
@@ -43,6 +45,7 @@
 		switch (type) {
 			case 'system': return '📢';
 			case 'private': return '💬';
+			case 'alliance': return '🤝';
 			default: return '📧';
 		}
 	}
@@ -61,7 +64,7 @@
 
 	{#if showSendForm}
 		<div class="mb-6 rounded border border-gray-700 bg-gray-800 p-4">
-			<h3 class="mb-4 text-lg font-bold text-gray-200">Send Private Message</h3>
+			<h3 class="mb-4 text-lg font-bold text-gray-200">Send Message</h3>
 			<form method="POST" action="/api/messages/send" use:enhance={() => {
 				sending = true;
 				return async ({ update }) => {
@@ -72,16 +75,47 @@
 				};
 			}}>
 				<div class="mb-4">
-					<label for="toUsername" class="block text-sm font-medium text-gray-300">Recipient Username</label>
-					<input
-						type="text"
-						id="toUsername"
-						name="toUsername"
-						required
-						class="mt-1 block w-full rounded border border-gray-600 bg-gray-700 px-3 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
-						placeholder="Enter username"
-					/>
+					<label for="messageType" class="block text-sm font-medium text-gray-300">Message Type</label>
+					<select
+						id="messageType"
+						bind:value={messageType}
+						class="mt-1 block w-full rounded border border-gray-600 bg-gray-700 px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+					>
+						<option value="private">Private Message</option>
+						{#if data.allianceMembers && data.allianceMembers.length > 0}
+							<option value="alliance">Alliance Message</option>
+						{/if}
+					</select>
 				</div>
+				{#if messageType === 'private'}
+					<div class="mb-4">
+						<label for="toUsername" class="block text-sm font-medium text-gray-300">Recipient Username</label>
+						<input
+							type="text"
+							id="toUsername"
+							name="toUsername"
+							required
+							class="mt-1 block w-full rounded border border-gray-600 bg-gray-700 px-3 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+							placeholder="Enter username"
+						/>
+					</div>
+				{:else if messageType === 'alliance'}
+					<div class="mb-4">
+						<label for="allianceMember" class="block text-sm font-medium text-gray-300">Alliance Member</label>
+						<select
+							id="allianceMember"
+							name="toUsername"
+							bind:value={selectedAllianceMember}
+							required
+							class="mt-1 block w-full rounded border border-gray-600 bg-gray-700 px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+						>
+							<option value="">Select a member</option>
+							{#each data.allianceMembers as member}
+								<option value={member.username}>{member.username}</option>
+							{/each}
+						</select>
+					</div>
+				{/if}
 				<div class="mb-4">
 					<label for="subject" class="block text-sm font-medium text-gray-300">Subject</label>
 					<input
@@ -135,7 +169,7 @@
 						<div class="flex items-center space-x-2">
 							<span class="text-lg">{getMessageIcon(msg.messageType || msg.type)}</span>
 							<h3 class="font-bold text-gray-200">{msg.title}</h3>
-							{#if msg.messageType === 'private'}
+							{#if msg.messageType === 'private' || msg.messageType === 'alliance'}
 								{#if msg.isSent}
 									<span class="text-xs text-green-400">(Sent)</span>
 								{:else}

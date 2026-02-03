@@ -317,6 +317,7 @@ export const privateMessages = pgTable(
 		toUserId: integer('to_user_id').references(() => users.id),
 		subject: varchar('subject', { length: 100 }),
 		content: text('content'),
+		messageType: varchar('message_type', { length: 20 }).default('private'),
 		isRead: boolean('is_read').default(false),
 		createdAt: timestamp('created_at').defaultNow()
 	},

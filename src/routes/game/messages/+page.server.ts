@@ -1,9 +1,9 @@
-import { db, messages } from '$lib/server/db';
+import { db, messages, users, alliances } from '$lib/server/db';
 import { desc, eq } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
-	if (!locals.user) return { messages: [] };
+	if (!locals.user) return { messages: [], allianceMembers: [] };
 
 	const res = await db
 		.select()
@@ -15,7 +15,21 @@ export const load: PageServerLoad = async ({ locals }) => {
 	// Mark as read (simplified: mark all as read on open)
 	await db.update(messages).set({ isRead: true }).where(eq(messages.userId, locals.user.id));
 
+	// Load alliance members if user is in an alliance
+	let allianceMembers = [];
+	if (locals.user.allianceId) {
+		allianceMembers = await db
+			.select({
+				id: users.id,
+				username: users.username
+			})
+			.from(users)
+			.where(eq(users.allianceId, locals.user.allianceId))
+			.orderBy(users.username);
+	}
+
 	return {
-		messages: res
+		messages: res,
+		allianceMembers
 	};
 };

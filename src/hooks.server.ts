@@ -45,7 +45,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 			event.locals.user = {
 				id: session.userId,
 				username: session.username,
-				darkMatter: session.darkMatter || 0
+				darkMatter: session.darkMatter || 0,
+				allianceId: session.allianceId
 			};
 		}
 	}
