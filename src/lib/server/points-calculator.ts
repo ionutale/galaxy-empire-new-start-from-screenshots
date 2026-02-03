@@ -11,7 +11,7 @@ import {
 import { BUILDINGS, RESEARCH, SHIPS, DEFENSES } from '$lib/game-config';
 import { eq } from 'drizzle-orm';
 
-function calculateBuildingPoints(type: string, level: number): number {
+export function calculateBuildingPoints(type: string, level: number): number {
 	const building = BUILDINGS[type as keyof typeof BUILDINGS];
 	if (!building || level < 1) return 0;
 
@@ -30,7 +30,7 @@ function calculateBuildingPoints(type: string, level: number): number {
 	return (totalMetal + totalCrystal + totalGas) / 1000;
 }
 
-function calculateResearchPoints(type: string, level: number): number {
+export function calculateResearchPoints(type: string, level: number): number {
 	const tech = RESEARCH[type as keyof typeof RESEARCH];
 	if (!tech || level < 1) return 0;
 

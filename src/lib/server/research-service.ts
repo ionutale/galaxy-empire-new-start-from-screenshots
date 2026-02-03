@@ -106,7 +106,7 @@ export class ResearchService {
 		const timeResult = await db.execute(sql`
 			SELECT extract(epoch from calculate_research_time(${researchTypeId}, ${validation.target_level}, ${labLevel})) as research_seconds
 		`);
-		const researchSeconds = timeResult.rows[0].research_seconds;
+		const researchSeconds = timeResult.rows[0].research_seconds as number;
 		const completionTime = new Date(Date.now() + researchSeconds * 1000);
 
 		// Start transaction
@@ -167,7 +167,7 @@ export class ResearchService {
 
 		const userLevels: Record<string, number> = {};
 		result.rows.forEach(row => {
-			userLevels[row.name] = row.level;
+			userLevels[row.name as string] = row.level as number;
 		});
 
 		for (const [techName, requiredLevel] of Object.entries(prerequisites)) {
@@ -196,9 +196,9 @@ export class ResearchService {
 		if (result.rows.length === 0) return false;
 
 		const resources = result.rows[0];
-		return resources.metal >= cost.metal &&
-			   resources.crystal >= cost.crystal &&
-			   resources.gas >= cost.gas;
+		return (resources.metal as number) >= cost.metal &&
+			   (resources.crystal as number) >= cost.crystal &&
+			   (resources.gas as number) >= cost.gas;
 	}
 
 	/**

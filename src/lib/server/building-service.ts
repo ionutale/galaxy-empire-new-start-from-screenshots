@@ -128,7 +128,7 @@ export class BuildingService {
 			const timeResult = await db.execute(sql`
 				SELECT extract(epoch from calculate_building_time(${buildingTypeId}, ${targetLevel}, ${roboticsLevel}, ${naniteLevel})) as build_seconds
 			`);
-			const buildSeconds = timeResult.rows[0].build_seconds;
+			const buildSeconds = timeResult.rows[0].build_seconds as number;
 			const completionTime = new Date(Date.now() + buildSeconds * 1000);
 
 			// Reserve resources and add to queue
@@ -213,8 +213,8 @@ export class BuildingService {
 		let energyProduction = 0;
 
 		for (const row of result.rows) {
-			const level = row.level;
-			const temperature = row.temperature || 50; // Default temperature
+			const level = row.level as number;
+			const temperature = row.temperature as number || 50; // Default temperature
 
 			if (row.base_production) {
 				const production = row.base_production as any;
@@ -265,14 +265,15 @@ export class BuildingService {
 		let storage = { metal: 10000, crystal: 10000, gas: 10000 }; // Base storage
 
 		for (const row of result.rows) {
-			const level = row.level;
+			const level = row.level as number;
 			const multiplier = Math.pow(1.5, level);
 
-			if (row.name.includes('Metal')) {
+			const name = row.name as string;
+			if (name.includes('Metal')) {
 				storage.metal += Math.floor(10000 * multiplier);
-			} else if (row.name.includes('Crystal')) {
+			} else if (name.includes('Crystal')) {
 				storage.crystal += Math.floor(10000 * multiplier);
-			} else if (row.name.includes('Gas')) {
+			} else if (name.includes('Gas')) {
 				storage.gas += Math.floor(10000 * multiplier);
 			}
 		}
@@ -394,66 +395,17 @@ export class BuildingService {
 	}
 
 	/**
-	 * Process completed building constructions
-	 */
-	static async processCompletedBuildings() {
-		const completed = await db
-			.select({
-				id: buildingQueue.id,
-				planetId: buildingQueue.planet_id,
-				buildingTypeId: buildingQueue.building_type_id,
-				targetLevel: buildingQueue.target_level
-			})
-			.from(buildingQueue)
-			.where(sql`${buildingQueue.completion_at} <= NOW()`);
-
-		for (const item of completed) {
-			await db.transaction(async (tx) => {
-				// Update building level
-				const existing = await tx
-					.select({ level: planetBuildings.level })
-					.from(planetBuildings)
-					.where(eq(planetBuildings.planet_id, item.planetId))
-					.limit(1);
-
-				if (existing.length > 0) {
-					await tx
-						.update(planetBuildings)
-						.set({ level: item.targetLevel })
-						.where(eq(planetBuildings.planet_id, item.planetId));
-				} else {
-					await tx.insert(planetBuildings).values({
-						planet_id: item.planetId,
-						level: item.targetLevel
-					});
-				}
-
-				// Remove from queue
-				await tx.delete(buildingQueue).where(eq(buildingQueue.id, item.id));
-
-				// Give commander experience for building completion
-				const planet = await tx
-					.select({ userId: planets.userId })
-					.from(planets)
-					.where(eq(planets.id, item.planetId))
-					.limit(1);
-
-				if (planet.length > 0) {
-					// Give experience to relevant commanders (engineer for facilities, etc.)
-					const experienceGained = 10; // Base experience for building completion
-					await this.giveCommanderExperience(planet[0].userId, 'engineer', experienceGained);
-				}
-			});
-		}
-	}
-
-	/**
 	 * Give experience to a user's commander
 	 */
 	static async giveCommanderExperience(userId: number, commanderId: string, experience: number) {
 		const { addCommanderExperience } = await import('$lib/server/commanders');
 		await addCommanderExperience(userId, commanderId, experience);
 	}
+
+	/**
+	 * Get building icon based on name
+	 */
+	static getBuildingIcon(name: string): string {
 		const iconMap: Record<string, string> = {
 			'Metal Mine': '⛏️',
 			'Crystal Mine': '💎',

@@ -9,22 +9,23 @@ export interface AchievementDefinition {
 	description: string;
 	category: string;
 	icon: string;
-	rewardType?: string;
-	rewardAmount?: number;
+	rewardType: string | null;
+	rewardAmount: number | null;
 	requirementType: string;
 	requirementTarget: string;
-	requirementValue: number;
-	isHidden: boolean;
-	sortOrder: number;
+	requirementValue: number | null;
+	isHidden: boolean | null;
+	sortOrder: number | null;
+	createdAt: Date | null;
 }
 
 export interface UserAchievement {
 	id: number;
-	userId: number;
-	achievementId: number;
-	unlockedAt: Date;
-	progress: number;
-	isCompleted: boolean;
+	userId: number | null;
+	achievementId: number | null;
+	unlockedAt: Date | null;
+	progress: number | null;
+	isCompleted: boolean | null;
 	achievement?: AchievementDefinition;
 }
 

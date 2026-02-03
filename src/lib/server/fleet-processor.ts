@@ -258,7 +258,7 @@ async function processArrivingFleet(tx: any, fleet: any) {
 			// We can just pass them to simulateCombat, assuming it handles extra props or we clean them.
 			// The original code deleted id and planet_id.
 
-			const result = simulateCombat(fleet.ships, defenderShips, defenderDefenses);
+			const result = await simulateCombat(fleet.ships, defenderShips, defenderDefenses);
 
 			// Apply losses to Attacker (Fleet)
 			const remainingFleet = { ...fleet.ships } as any;
@@ -298,6 +298,10 @@ async function processArrivingFleet(tx: any, fleet: any) {
 
 			// Looting (if attacker won)
 			let lootMsg = '';
+			let stolenMetal = 0;
+			let stolenCrystal = 0;
+			let stolenGas = 0;
+
 			if (result.winner === 'attacker' && !fleetDestroyed) {
 				// Calculate fleet capacity
 				let fleetCapacity = 0;

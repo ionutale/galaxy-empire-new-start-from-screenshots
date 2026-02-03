@@ -49,7 +49,9 @@ export class ShipyardService {
 			.from(planetShips)
 			.where(eq(planetShips.planetId, planetId));
 
-		const ships = shipsRes[0] || {};
+		const ships = shipsRes[0] ? Object.fromEntries(
+			Object.entries(shipsRes[0]).map(([key, value]) => [key, value || 0])
+		) : {};
 
 		// Get shipyard level
 		const buildRes = await db
@@ -70,7 +72,12 @@ export class ShipyardService {
 			.from(planetResources)
 			.where(eq(planetResources.planetId, planetId));
 
-		const resources = resRes[0] || { metal: 0, crystal: 0, gas: 0, energy: 0 };
+		const resources = resRes[0] ? {
+			metal: resRes[0].metal || 0,
+			crystal: resRes[0].crystal || 0,
+			gas: resRes[0].gas || 0,
+			energy: resRes[0].energy || 0
+		} : { metal: 0, crystal: 0, gas: 0, energy: 0 };
 
 		// Get shipyard queue
 		const queueRes = await db
@@ -95,13 +102,13 @@ export class ShipyardService {
 			if (shipyardLevel < 1) {
 				canBuild = false;
 				reason = 'Shipyard required';
-			} else if (resources.metal < ship.cost.metal) {
+			} else if ((resources.metal || 0) < ship.cost.metal) {
 				canBuild = false;
 				reason = 'Not enough metal';
-			} else if (resources.crystal < ship.cost.crystal) {
+			} else if ((resources.crystal || 0) < ship.cost.crystal) {
 				canBuild = false;
 				reason = 'Not enough crystal';
-			} else if (resources.gas < (ship.cost.gas || 0)) {
+			} else if ((resources.gas || 0) < (ship.cost.gas || 0)) {
 				canBuild = false;
 				reason = 'Not enough gas';
 			}
