@@ -1,6 +1,8 @@
 -- Fix ambiguous column references in cancel_ship_construction
 -- Use p_ prefix for parameters
 
+DROP FUNCTION IF EXISTS cancel_ship_construction(int, int);
+
 CREATE OR REPLACE FUNCTION cancel_ship_construction(
     p_user_id int,
     p_queue_id int

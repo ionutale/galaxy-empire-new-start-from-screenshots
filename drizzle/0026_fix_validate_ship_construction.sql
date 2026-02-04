@@ -1,6 +1,8 @@
 -- Fix ambiguous column references in validate_ship_construction
 -- Use p_ prefix for parameters to avoid conflict with column names
 
+DROP FUNCTION IF EXISTS validate_ship_construction(int, int, text, int);
+
 CREATE OR REPLACE FUNCTION validate_ship_construction(
     p_user_id int,
     p_planet_id int,
