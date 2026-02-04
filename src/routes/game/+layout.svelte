@@ -112,10 +112,21 @@
 		</div>
 
 		<div class="flex items-center space-x-4">
-			<div class="flex space-x-1">
-				<!-- Officers Icons (Placeholders) -->
-				<div class="h-6 w-6 rounded-full border border-gray-600 bg-gray-700"></div>
-				<div class="h-6 w-6 rounded-full border border-gray-600 bg-gray-700"></div>
+			<div class="flex space-x-2">
+				<a
+					href="/game/commanders"
+					class="flex h-8 w-8 items-center justify-center rounded-full border border-gray-600 bg-gray-700 hover:bg-gray-600 transition-colors"
+					title="Officers"
+				>
+					<span class="text-sm">👨‍✈️</span>
+				</a>
+				<a
+					href="/game/shop"
+					class="flex h-8 w-8 items-center justify-center rounded-full border border-gray-600 bg-gray-700 hover:bg-gray-600 transition-colors"
+					title="Shop"
+				>
+					<span class="text-sm">🛒</span>
+				</a>
 			</div>
 			<button
 				onclick={() => (isDarkMode = !isDarkMode)}
