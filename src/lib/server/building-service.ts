@@ -132,27 +132,27 @@ export class BuildingService {
 			const completionTime = new Date(Date.now() + buildSeconds * 1000);
 
 			// Reserve resources and add to queue
+			// Ensure we have a valid cost object (fallback to 0 if validation failed to return one, which shouldn't happen here)
+			const reservedResources = validation.cost || { metal: 0, crystal: 0, gas: 0 };
+			
 			await db.execute(sql`
 				INSERT INTO building_queue (
 					planet_id, building_type_id, target_level,
 					completion_at, resources_reserved
 				) VALUES (
 					${planetId}, ${buildingTypeId}, ${targetLevel},
-					${completionTime}, ${JSON.stringify(validation.cost)}
+					${completionTime}, ${JSON.stringify(reservedResources)}
 				)
 			`);
 
-			// Deduct resources from planet
+			// Deduct resources from planet (Updating normalized planet_resources table)
 			await db.execute(sql`
-				UPDATE planets
-				SET resources = jsonb_set(
-					jsonb_set(
-						jsonb_set(resources, '{metal}', (COALESCE(resources->>'metal', '0')::int - ${validation.cost.metal})::text::jsonb),
-						'{crystal}', (COALESCE(resources->>'crystal', '0')::int - ${validation.cost.crystal})::text::jsonb
-					),
-					'{gas}', (COALESCE(resources->>'gas', '0')::int - ${validation.cost.gas})::text::jsonb
-				)
-				WHERE id = ${planetId}
+				UPDATE planet_resources
+				SET 
+					metal = GREATEST(0, metal - ${(reservedResources.metal || 0)}),
+					crystal = GREATEST(0, crystal - ${(reservedResources.crystal || 0)}),
+					gas = GREATEST(0, gas - ${(reservedResources.gas || 0)})
+				WHERE planet_id = ${planetId}
 			`);
 
 			// Mark building as upgrading
