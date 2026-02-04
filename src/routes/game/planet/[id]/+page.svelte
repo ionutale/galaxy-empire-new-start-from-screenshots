@@ -155,7 +155,7 @@
 		<div class="rounded border border-gray-700 bg-gray-800 p-4">
 			<div class="mb-2 flex items-center justify-between">
 				<span class="text-sm font-medium text-gray-300">Metal</span>
-				<span class="text-sm text-gray-400">{resources.metal.toLocaleString()}</span>
+				<span class="text-sm text-gray-400">{(resources.metal ?? 0).toLocaleString()}</span>
 			</div>
 			<div class="h-2 rounded-full bg-gray-700">
 				<div class="h-2 rounded-full bg-gray-400" style="width: 60%"></div>
@@ -164,7 +164,7 @@
 		<div class="rounded border border-gray-700 bg-gray-800 p-4">
 			<div class="mb-2 flex items-center justify-between">
 				<span class="text-sm font-medium text-blue-300">Crystal</span>
-				<span class="text-sm text-gray-400">{resources.crystal.toLocaleString()}</span>
+				<span class="text-sm text-gray-400">{(resources.crystal ?? 0).toLocaleString()}</span>
 			</div>
 			<div class="h-2 rounded-full bg-gray-700">
 				<div class="h-2 rounded-full bg-blue-400" style="width: 45%"></div>
@@ -173,7 +173,7 @@
 		<div class="rounded border border-gray-700 bg-gray-800 p-4">
 			<div class="mb-2 flex items-center justify-between">
 				<span class="text-sm font-medium text-purple-300">Gas</span>
-				<span class="text-sm text-gray-400">{resources.gas.toLocaleString()}</span>
+				<span class="text-sm text-gray-400">{(resources.gas ?? 0).toLocaleString()}</span>
 			</div>
 			<div class="h-2 rounded-full bg-gray-700">
 				<div class="h-2 rounded-full bg-purple-400" style="width: 30%"></div>
@@ -233,17 +233,17 @@
 
 						<div class="mb-2 flex flex-wrap gap-2 text-xs text-gray-400">
 							{#if building.cost.metal > 0}
-								<span class={resources.metal < building.cost.metal ? 'text-red-400' : 'text-gray-300'}>
+								<span class={(resources.metal ?? 0) < building.cost.metal ? 'text-red-400' : 'text-gray-300'}>
 									Metal: {building.cost.metal.toLocaleString()}
 								</span>
 							{/if}
 							{#if building.cost.crystal > 0}
-								<span class={resources.crystal < building.cost.crystal ? 'text-red-400' : 'text-gray-300'}>
+								<span class={(resources.crystal ?? 0) < building.cost.crystal ? 'text-red-400' : 'text-gray-300'}>
 									Crystal: {building.cost.crystal.toLocaleString()}
 								</span>
 							{/if}
 							{#if building.cost.gas > 0}
-								<span class={resources.gas < building.cost.gas ? 'text-red-400' : 'text-gray-300'}>
+								<span class={(resources.gas ?? 0) < building.cost.gas ? 'text-red-400' : 'text-gray-300'}>
 									Gas: {building.cost.gas.toLocaleString()}
 								</span>
 							{/if}
@@ -260,9 +260,9 @@
 						onclick={() => handleUpgrade(building.id, data.planet.id)}
 						disabled={!building.canUpgrade ||
 							building.isUpgrading ||
-							resources.metal < building.cost.metal ||
-							resources.crystal < building.cost.crystal ||
-							resources.gas < building.cost.gas ||
+							(resources.metal ?? 0) < building.cost.metal ||
+							(resources.crystal ?? 0) < building.cost.crystal ||
+							(resources.gas ?? 0) < building.cost.gas ||
 							loading[building.id]}
 						class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
 					>
@@ -305,17 +305,17 @@
 
 						<div class="mb-2 flex flex-wrap gap-2 text-xs text-gray-400">
 							{#if building.cost.metal > 0}
-								<span class={resources.metal < building.cost.metal ? 'text-red-400' : 'text-gray-300'}>
+								<span class={(resources.metal ?? 0) < building.cost.metal ? 'text-red-400' : 'text-gray-300'}>
 									Metal: {building.cost.metal.toLocaleString()}
 								</span>
 							{/if}
 							{#if building.cost.crystal > 0}
-								<span class={resources.crystal < building.cost.crystal ? 'text-red-400' : 'text-gray-300'}>
+								<span class={(resources.crystal ?? 0) < building.cost.crystal ? 'text-red-400' : 'text-gray-300'}>
 									Crystal: {building.cost.crystal.toLocaleString()}
 								</span>
 							{/if}
 							{#if building.cost.gas > 0}
-								<span class={resources.gas < building.cost.gas ? 'text-red-400' : 'text-gray-300'}>
+								<span class={(resources.gas ?? 0) < building.cost.gas ? 'text-red-400' : 'text-gray-300'}>
 									Gas: {building.cost.gas.toLocaleString()}
 								</span>
 							{/if}
@@ -332,9 +332,9 @@
 						onclick={() => handleUpgrade(building.id, data.planet.id)}
 						disabled={!building.canUpgrade ||
 							building.isUpgrading ||
-							resources.metal < building.cost.metal ||
-							resources.crystal < building.cost.crystal ||
-							resources.gas < building.cost.gas ||
+							(resources.metal ?? 0) < building.cost.metal ||
+							(resources.crystal ?? 0) < building.cost.crystal ||
+							(resources.gas ?? 0) < building.cost.gas ||
 							loading[building.id]}
 						class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
 					>
@@ -377,17 +377,17 @@
 
 						<div class="mb-2 flex flex-wrap gap-2 text-xs text-gray-400">
 							{#if building.cost.metal > 0}
-								<span class={resources.metal < building.cost.metal ? 'text-red-400' : 'text-gray-300'}>
+								<span class={(resources.metal ?? 0) < building.cost.metal ? 'text-red-400' : 'text-gray-300'}>
 									Metal: {building.cost.metal.toLocaleString()}
 								</span>
 							{/if}
 							{#if building.cost.crystal > 0}
-								<span class={resources.crystal < building.cost.crystal ? 'text-red-400' : 'text-gray-300'}>
+								<span class={(resources.crystal ?? 0) < building.cost.crystal ? 'text-red-400' : 'text-gray-300'}>
 									Crystal: {building.cost.crystal.toLocaleString()}
 								</span>
 							{/if}
 							{#if building.cost.gas > 0}
-								<span class={resources.gas < building.cost.gas ? 'text-red-400' : 'text-gray-300'}>
+								<span class={(resources.gas ?? 0) < building.cost.gas ? 'text-red-400' : 'text-gray-300'}>
 									Gas: {building.cost.gas.toLocaleString()}
 								</span>
 							{/if}
@@ -404,9 +404,9 @@
 						onclick={() => handleUpgrade(building.id, data.planet.id)}
 						disabled={!building.canUpgrade ||
 							building.isUpgrading ||
-							resources.metal < building.cost.metal ||
-							resources.crystal < building.cost.crystal ||
-							resources.gas < building.cost.gas ||
+							(resources.metal ?? 0) < building.cost.metal ||
+							(resources.crystal ?? 0) < building.cost.crystal ||
+							(resources.gas ?? 0) < building.cost.gas ||
 							loading[building.id]}
 						class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
 					>

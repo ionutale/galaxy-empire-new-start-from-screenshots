@@ -34,7 +34,8 @@ export const getSession = async (sessionId: string) => {
 			expiresAt: sessions.expiresAt,
 			username: users.username,
 			darkMatter: users.darkMatter,
-			allianceId: users.allianceId
+			allianceId: users.allianceId,
+			role: users.role
 		})
 		.from(sessions)
 		.innerJoin(users, eq(sessions.userId, users.id))

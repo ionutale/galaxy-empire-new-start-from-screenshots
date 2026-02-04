@@ -23,20 +23,22 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 			.leftJoin(alliances, eq(users.allianceId, alliances.id));
 
 		// Filter by channel
+		let whereClause;
 		if (channel === 'alliance') {
 			// Check if user is in an alliance
 			if (!locals.user.allianceId) {
 				return json({ error: 'Not in an alliance' }, { status: 403 });
 			}
-			query = query.where(and(
+			whereClause = and(
 				eq(chatMessages.channel, 'alliance'),
 				eq(users.allianceId, locals.user.allianceId)
-			));
+			);
 		} else {
-			query = query.where(eq(chatMessages.channel, 'global'));
+			whereClause = eq(chatMessages.channel, 'global');
 		}
 
 		const res = await query
+			.where(whereClause)
 			.orderBy(desc(chatMessages.createdAt))
 			.limit(50);
 

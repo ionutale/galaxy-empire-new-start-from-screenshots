@@ -18,6 +18,3 @@ export const load: PageServerLoad = async ({ locals }) => {
 		profile: userRes[0]
 	};
 };
-
-
-```,oldString:

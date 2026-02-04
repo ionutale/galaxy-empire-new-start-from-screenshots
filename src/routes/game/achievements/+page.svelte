@@ -7,7 +7,7 @@
 	$: newlyUnlocked = data.newlyUnlocked;
 
 	// Group achievements by category
-	$: achievementsByCategory = achievements.reduce((acc, userAchievement) => {
+	$: achievementsByCategory = achievements.reduce((acc: Record<string, any[]>, userAchievement: any) => {
 		const category = userAchievement.achievement?.category || 'other';
 		if (!acc[category]) {
 			acc[category] = [];
@@ -17,7 +17,7 @@
 	}, {} as Record<string, any[]>);
 
 	// Category display names and colors
-	const categoryInfo = {
+	const categoryInfo: Record<string, {name: string, color: string}> = {
 		building: { name: '🏗️ Building', color: 'bg-blue-600' },
 		combat: { name: '⚔️ Combat', color: 'bg-red-600' },
 		economy: { name: '💰 Economy', color: 'bg-green-600' },

@@ -46,7 +46,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 				id: session.userId,
 				username: session.username,
 				darkMatter: session.darkMatter || 0,
-				allianceId: session.allianceId
+				allianceId: session.allianceId,
+				role: session.role || 'player'
 			};
 		}
 	}

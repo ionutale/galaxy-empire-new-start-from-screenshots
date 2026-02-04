@@ -23,7 +23,7 @@ describe('Advanced Game Features', () => {
       await db.execute(sql`CALL update_game_config('combat_rules', ${JSON.stringify(defaultConfig)}::jsonb, 'Reset to default combat rules')`);
 
       const result = await db.execute(sql`SELECT get_game_config('combat_rules') as config`);
-      const config = result.rows[0].config;
+      const config = result.rows[0].config as any;
 
       expect(config).toBeDefined();
       expect(config.rounds_per_battle).toBe(1);
@@ -33,7 +33,7 @@ describe('Advanced Game Features', () => {
 
     it('should have expedition rewards configuration', async () => {
       const result = await db.execute(sql`SELECT get_game_config('expedition_rewards') as config`);
-      const config = result.rows[0].config;
+      const config = result.rows[0].config as any;
 
       expect(config).toBeDefined();
       expect(config.resource_min).toBe(1000);
@@ -54,7 +54,7 @@ describe('Advanced Game Features', () => {
       await db.execute(sql`CALL update_game_config('combat_rules', ${JSON.stringify(newConfig)}::jsonb, 'Updated combat rules')`);
 
       const result = await db.execute(sql`SELECT get_game_config('combat_rules') as config`);
-      const config = result.rows[0].config;
+      const config = result.rows[0].config as any;
 
       expect(config.rounds_per_battle).toBe(2);
       expect(config.attacker_loss_multiplier).toBe(0.3);
@@ -69,7 +69,7 @@ describe('Advanced Game Features', () => {
 
       expect(ships.length).toBeGreaterThan(10);
 
-      const lightFighter = ships.find(s => s.ship_type === 'light_fighter');
+      const lightFighter = ships.find(s => s.ship_type === 'light_fighter') as any;
       expect(lightFighter).toBeDefined();
       expect(lightFighter.attack).toBe(50);
       expect(lightFighter.defense).toBe(10);
@@ -83,7 +83,7 @@ describe('Advanced Game Features', () => {
 
       expect(defenses.length).toBeGreaterThan(5);
 
-      const rocketLauncher = defenses.find(d => d.ship_type === 'rocket_launcher');
+      const rocketLauncher = defenses.find(d => d.ship_type === 'rocket_launcher') as any;
       expect(rocketLauncher).toBeDefined();
       expect(rocketLauncher.attack).toBe(80);
       expect(rocketLauncher.defense).toBe(20);
@@ -101,7 +101,7 @@ describe('Advanced Game Features', () => {
         ) as combat_result
       `);
 
-      const combatResult = result.rows[0].combat_result;
+      const combatResult = result.rows[0].combat_result as any;
       expect(combatResult.winner).toBe('attacker');
       expect(combatResult.attackerLosses.light_fighter).toBeDefined();
       expect(combatResult.defenderLosses.light_fighter).toBeDefined();
@@ -134,7 +134,7 @@ describe('Advanced Game Features', () => {
   describe('Cleanup Settings', () => {
     it('should have cleanup configuration', async () => {
       const result = await db.execute(sql`SELECT get_game_config('cleanup_settings') as config`);
-      const config = result.rows[0].config;
+      const config = result.rows[0].config as any;
 
       expect(config).toBeDefined();
       expect(config.completed_fleets_days).toBe(30);

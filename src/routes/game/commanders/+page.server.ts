@@ -65,6 +65,3 @@ export const load: PageServerLoad = async ({ locals }) => {
 		autoExploreSettings: settings
 	};
 };
-
-
-```,oldString:

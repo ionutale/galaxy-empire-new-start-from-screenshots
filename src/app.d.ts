@@ -9,6 +9,7 @@ declare global {
 				username: string;
 				darkMatter: number;
 				allianceId?: number | null;
+				role: string;
 			};
 		}
 		// interface PageData {}

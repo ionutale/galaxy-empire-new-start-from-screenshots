@@ -1,8 +1,8 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
-import { planetBuildings, planetDefenses, planetResources } from '$lib/server/db/schema';
-import { eq, sql } from 'drizzle-orm';
+import { planetBuildings, buildingTypes, planetDefenses, planetResources } from '$lib/server/db/schema';
+import { eq, and, sql } from 'drizzle-orm';
 import { DEFENSES } from '$lib/game-config';
 import { updatePlanetResources } from '$lib/server/game';
 import { updateUserPoints } from '$lib/server/points-calculator';
@@ -28,11 +28,15 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         await db.transaction(async (tx) => {
             // Check Shipyard Level
             const buildRes = await tx
-                .select({ shipyard: planetBuildings.shipyard })
+                .select({ level: planetBuildings.level })
                 .from(planetBuildings)
-                .where(eq(planetBuildings.planetId, planetId));
+                .innerJoin(buildingTypes, eq(planetBuildings.buildingTypeId, buildingTypes.id))
+                .where(and(
+                    eq(planetBuildings.planetId, planetId),
+                    eq(buildingTypes.name, 'Shipyard')
+                ));
 
-            if ((buildRes[0]?.shipyard || 0) < 1) {
+            if ((buildRes[0]?.level || 0) < 1) {
                 throw new Error('Shipyard required');
             }
 

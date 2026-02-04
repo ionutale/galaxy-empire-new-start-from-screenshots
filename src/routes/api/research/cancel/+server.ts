@@ -40,7 +40,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			.where(
 				and(
 					eq(userResearchLevels.userId, locals.user.id),
-					eq(userResearchLevels.researchTypeId, queueItem[0].researchTypeId)
+					eq(userResearchLevels.researchTypeId, queueItem[0].researchTypeId as number)
 				)
 			);
 

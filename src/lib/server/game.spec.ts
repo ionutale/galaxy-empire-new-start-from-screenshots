@@ -82,7 +82,7 @@ describe('Game Service', () => {
 				secondsElapsed: 3600
 			};
 
-			mockDb.transaction.mockImplementation(async (callback) => {
+			mockDb.transaction.mockImplementation(async (callback: any) => {
 				return callback({
 					select: vi.fn().mockResolvedValue([mockData]),
 					update: vi.fn().mockResolvedValue({})
@@ -106,7 +106,7 @@ describe('Game Service', () => {
 		it('should return null when planet not found', async () => {
 			const mockDb = db as any;
 
-			mockDb.transaction.mockImplementation(async (callback) => {
+			mockDb.transaction.mockImplementation(async (callback: any) => {
 				return callback({
 					select: vi.fn().mockResolvedValue([]),
 					update: vi.fn().mockResolvedValue({})
@@ -134,7 +134,7 @@ describe('Game Service', () => {
 				secondsElapsed: 0.5
 			};
 
-			mockDb.transaction.mockImplementation(async (callback) => {
+			mockDb.transaction.mockImplementation(async (callback: any) => {
 				return callback({
 					select: vi.fn().mockResolvedValue([mockData]),
 					update: vi.fn().mockResolvedValue({})
@@ -180,7 +180,7 @@ describe('Game Service', () => {
 				secondsElapsed: 3600
 			};
 
-			mockDb.transaction.mockImplementation(async (callback) => {
+			mockDb.transaction.mockImplementation(async (callback: any) => {
 				return callback({
 					select: vi.fn().mockResolvedValue([mockData]),
 					update: vi.fn().mockResolvedValue({})
@@ -225,7 +225,7 @@ describe('Game Service', () => {
 				secondsElapsed: 3600
 			};
 
-			mockDb.transaction.mockImplementation(async (callback) => {
+			mockDb.transaction.mockImplementation(async (callback: any) => {
 				return callback({
 					select: vi.fn().mockResolvedValue([mockData]),
 					update: vi.fn().mockResolvedValue({})
@@ -269,7 +269,7 @@ describe('Game Service', () => {
 				secondsElapsed: 3600
 			};
 
-			mockDb.transaction.mockImplementation(async (callback) => {
+			mockDb.transaction.mockImplementation(async (callback: any) => {
 				return callback({
 					select: vi.fn().mockResolvedValue([mockData]),
 					update: vi.fn().mockResolvedValue({})
@@ -314,7 +314,7 @@ describe('Game Service', () => {
 				secondsElapsed: 3600
 			};
 
-			mockDb.transaction.mockImplementation(async (callback) => {
+			mockDb.transaction.mockImplementation(async (callback: any) => {
 				return callback({
 					select: vi.fn().mockResolvedValue([mockData]),
 					update: vi.fn().mockResolvedValue({})
@@ -362,7 +362,7 @@ describe('Game Service', () => {
 			};
 
 			let updateCall: any;
-			mockDb.transaction.mockImplementation(async (callback) => {
+			mockDb.transaction.mockImplementation(async (callback: any) => {
 				return callback({
 					select: vi.fn().mockResolvedValue([mockData]),
 					update: vi.fn().mockImplementation((...args) => {

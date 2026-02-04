@@ -1,5 +1,5 @@
 import { db } from './db';
-import { shipyardQueue, planetShips, planetBuildings, planetResources, users } from './db/schema';
+import { shipyardQueue, planetShips, planetBuildings, buildingTypes, planetResources, users } from './db/schema';
 import { eq, sql, and, desc } from 'drizzle-orm';
 import { SHIPS } from '$lib/game-config';
 
@@ -55,11 +55,15 @@ export class ShipyardService {
 
 		// Get shipyard level
 		const buildRes = await db
-			.select({ shipyard: planetBuildings.shipyard })
+			.select({ level: planetBuildings.level })
 			.from(planetBuildings)
-			.where(eq(planetBuildings.planetId, planetId));
+			.innerJoin(buildingTypes, eq(planetBuildings.buildingTypeId, buildingTypes.id))
+			.where(and(
+				eq(planetBuildings.planetId, planetId),
+				eq(buildingTypes.name, 'Shipyard')
+			));
 
-		const shipyardLevel = buildRes[0]?.shipyard || 0;
+		const shipyardLevel = buildRes[0]?.level || 0;
 
 		// Get resources
 		const resRes = await db

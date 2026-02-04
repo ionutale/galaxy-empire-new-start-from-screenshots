@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import { db, messages, privateMessages, users } from '$lib/server/db';
-import { desc, eq, or } from 'drizzle-orm';
+import { desc, eq, or, sql } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ locals, url }) => {
@@ -20,7 +20,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 			content: messages.content,
 			isRead: messages.isRead,
 			createdAt: messages.createdAt,
-			messageType: 'system'
+			messageType: sql<'system'>`'system'`
 		})
 		.from(messages)
 		.where(eq(messages.userId, locals.user.id))
@@ -32,7 +32,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	const privateMsgs = await db
 		.select({
 			id: privateMessages.id,
-			type: 'private',
+			type: sql<'private'>`'private'`,
 			title: privateMessages.subject,
 			content: privateMessages.content,
 			isRead: privateMessages.isRead,
@@ -57,7 +57,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	const allMessages = [
 		...systemMessages.map(msg => ({ ...msg, fromUsername: null, isSent: false })),
 		...privateMsgs
-	].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+	].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
 
 	return json({ messages: allMessages.slice(0, limit) });
 };

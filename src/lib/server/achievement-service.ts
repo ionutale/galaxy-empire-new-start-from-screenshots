@@ -326,11 +326,11 @@ export class AchievementService {
 
 		switch (achievement.requirementType) {
 			case 'stat_value':
-				return targetValue >= achievement.requirementValue;
+				return targetValue >= (achievement.requirementValue || 0);
 			case 'boolean_flag':
-				return targetValue === achievement.requirementValue;
+				return targetValue === (achievement.requirementValue || 0);
 			case 'count_value':
-				return targetValue >= achievement.requirementValue;
+				return targetValue >= (achievement.requirementValue || 0);
 			default:
 				return false;
 		}
@@ -388,7 +388,8 @@ export class AchievementService {
 					requirementTarget: achievements.requirementTarget,
 					requirementValue: achievements.requirementValue,
 					isHidden: achievements.isHidden,
-					sortOrder: achievements.sortOrder
+					sortOrder: achievements.sortOrder,
+					createdAt: achievements.createdAt
 				}
 			})
 			.from(userAchievements)
@@ -418,7 +419,8 @@ export class AchievementService {
 		const userResult = await db
 			.select({
 				darkMatter: users.darkMatter,
-				points: users.points
+				points: users.points,
+				allianceId: users.allianceId
 			})
 			.from(users)
 			.where(eq(users.id, userId));

@@ -127,7 +127,7 @@ describe('Fleet Service', () => {
 			const shipUpdates = updateCalls.slice(0, 2);
 			expect(shipUpdates.some(call =>
 				call[0] === planetShips &&
-				call[1].set.smallTransporter === sql`${planetShips.smallTransporter} - ${2}`
+				call[1].set.smallCargo === sql`${planetShips.smallCargo} - ${2}`
 			)).toBe(true);
 
 			expect(shipUpdates.some(call =>

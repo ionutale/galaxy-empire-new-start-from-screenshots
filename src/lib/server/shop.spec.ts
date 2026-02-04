@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, beforeEach, vi, mocked } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
 import { purchaseShopItem, getActiveBoosters, getBoosterMultipliers } from './shop';
 import { db } from './db';
 import { users, userBoosters, transactions } from './db/schema';
