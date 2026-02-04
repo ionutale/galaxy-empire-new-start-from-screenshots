@@ -94,22 +94,22 @@ export const planetResources = pgTable('planet_resources', {
 	lastUpdate: timestamp('last_update').defaultNow()
 });
 
-export const planetBuildings = pgTable('planet_buildings', {
-	planetId: integer('planet_id')
-		.primaryKey()
-		.references(() => planets.id),
-	metalMine: integer('metal_mine').default(0),
-	crystalMine: integer('crystal_mine').default(0),
-	gasExtractor: integer('gas_extractor').default(0),
-	solarPlant: integer('solar_plant').default(0),
-	shipyard: integer('shipyard').default(0),
-	researchLab: integer('research_lab').default(0),
-	roboticsFactory: integer('robotics_factory').default(0),
-	naniteFactory: integer('nanite_factory').default(0),
-	metalStorage: integer('metal_storage').default(0),
-	crystalStorage: integer('crystal_storage').default(0),
-	gasStorage: integer('gas_storage').default(0)
-});
+export const planetBuildings = pgTable(
+	'planet_buildings',
+	{
+		id: serial('id').primaryKey(),
+		planetId: integer('planet_id').references(() => planets.id, { onDelete: 'cascade' }),
+		buildingTypeId: integer('building_type_id').references(() => buildingTypes.id),
+		level: integer('level').default(0),
+		isUpgrading: boolean('is_upgrading').default(false),
+		upgradeStartedAt: timestamp('upgrade_started_at'),
+		upgradeCompletionAt: timestamp('upgrade_completion_at'),
+		createdAt: timestamp('created_at').defaultNow()
+	},
+	(t) => ({
+		unq: unique().on(t.planetId, t.buildingTypeId)
+	})
+);
 
 // Building system tables
 export const buildingTypes = pgTable('building_types', {

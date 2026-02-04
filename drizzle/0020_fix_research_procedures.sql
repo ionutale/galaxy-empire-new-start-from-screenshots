@@ -1,5 +1,8 @@
--- Migration: Add stored procedures for research queue processing
--- This migration moves research queue processing logic to the database
+-- Fix ambiguous column references in stored procedures
+-- Renaming parameters to avoid conflict with column names
+
+-- Drop existing procedure to allow parameter renaming
+DROP PROCEDURE IF EXISTS process_completed_research(int);
 
 -- Procedure to process completed research for a user
 CREATE OR REPLACE PROCEDURE process_completed_research(p_user_id int) AS $$
@@ -46,74 +49,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Function to calculate research cost for a specific level
-CREATE OR REPLACE FUNCTION calculate_research_cost(
-    research_type_id int,
-    target_level int
-) RETURNS jsonb AS $$
-DECLARE
-    base_cost jsonb;
-    cost_multiplier float;
-BEGIN
-    -- Get base cost
-    SELECT base_cost INTO base_cost
-    FROM research_types
-    WHERE id = research_type_id;
-
-    IF base_cost IS NULL THEN
-        RETURN NULL;
-    END IF;
-
-    -- Calculate cost multiplier (exponential growth)
-    cost_multiplier := power(2, target_level - 1);
-
-    -- Apply multiplier to each resource
-    RETURN jsonb_build_object(
-        'metal', (base_cost->>'metal')::float * cost_multiplier,
-        'crystal', (base_cost->>'crystal')::float * cost_multiplier,
-        'gas', (base_cost->>'gas')::float * cost_multiplier
-    );
-END;
-$$ LANGUAGE plpgsql;
-
--- Function to calculate research time
-CREATE OR REPLACE FUNCTION calculate_research_time(
-    research_type_id int,
-    target_level int,
-    research_lab_level int DEFAULT 0,
-    interstellar_research_network_level int DEFAULT 0
-) RETURNS interval AS $$
-DECLARE
-    base_time int;
-    time_multiplier float;
-    lab_reduction float := 0;
-    network_reduction float := 0;
-BEGIN
-    -- Get base research time
-    SELECT base_research_time INTO base_time
-    FROM research_types
-    WHERE id = research_type_id;
-
-    IF base_time IS NULL THEN
-        RETURN NULL;
-    END IF;
-
-    -- Apply level multiplier (exponential)
-    base_time := base_time * power(1.75, target_level - 1);
-
-    -- Research Lab reduces time by 10% per level
-    lab_reduction := research_lab_level * 0.1;
-
-    -- Interstellar Research Network reduces time by 25% per level (very expensive)
-    network_reduction := interstellar_research_network_level * 0.25;
-
-    -- Apply reductions (capped at 90% total reduction)
-    time_multiplier := GREATEST(0.1, 1.0 - lab_reduction - network_reduction);
-
-    -- Return as interval (seconds)
-    RETURN make_interval(secs => base_time * time_multiplier);
-END;
-$$ LANGUAGE plpgsql;
+-- Drop existing function to allow parameter renaming
+DROP FUNCTION IF EXISTS check_research_prerequisites(int, int, int);
 
 -- Function to check if research can be started (prerequisites)
 CREATE OR REPLACE FUNCTION check_research_prerequisites(
@@ -174,5 +111,4 @@ BEGIN
 
     RETURN true;
 END;
-$$ LANGUAGE plpgsql;</content>
-<parameter name="filePath">/Users/ionutale/developer-playground/galaxy-empire-new-start-from-screenshots/drizzle/0014_research_queue_procedures.sql
+$$ LANGUAGE plpgsql;

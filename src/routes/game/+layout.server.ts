@@ -134,9 +134,6 @@ export const load: LayoutServerLoad = async ({ locals, depends, url, cookies }) 
 				energy: 0
 			});
 
-			// Initialize Planet Buildings
-			await tx.insert(planetBuildings).values({ planetId: newPlanet.id });
-
 			// Initialize Planet Defenses
 			await tx.insert(planetDefenses).values({ planetId: newPlanet.id });
 
@@ -174,15 +171,13 @@ export const load: LayoutServerLoad = async ({ locals, depends, url, cookies }) 
 	const resources = await updatePlanetResources(currentPlanet.id);
 
 	// Fetch unread messages count
-	// Drizzle count() helper or raw sql
-	// Using length of array for simplicity if not too many messages, or count query
-	// Better to use count query
+	// Using count() would be more efficient, but let's check the array length for now to ensure type safety
 	const msgRes = await db
 		.select({ id: messages.id })
 		.from(messages)
 		.where(and(eq(messages.userId, locals.user.id), eq(messages.isRead, false)));
 
-	const unreadMessages = msgRes.length;
+	const unreadMessages = msgRes ? msgRes.length : 0;
 
 	return {
 		user: locals.user,

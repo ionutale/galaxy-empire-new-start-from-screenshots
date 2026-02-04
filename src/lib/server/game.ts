@@ -8,7 +8,7 @@ import { BuildingService } from './building-service';
 
 export async function updatePlanetResources(planetId: number) {
 	return await db.transaction(async (tx) => {
-		// Get current resources and building levels
+		// Get current resources and user id
 		const res = await tx
 			.select({
 				metal: planetResources.metal,
@@ -16,15 +16,10 @@ export async function updatePlanetResources(planetId: number) {
 				gas: planetResources.gas,
 				energy: planetResources.energy,
 				lastUpdate: planetResources.lastUpdate,
-				metalMine: planetBuildings.metalMine,
-				crystalMine: planetBuildings.crystalMine,
-				gasExtractor: planetBuildings.gasExtractor,
-				solarPlant: planetBuildings.solarPlant,
 				userId: planets.userId,
 				secondsElapsed: sql<number>`EXTRACT(EPOCH FROM (NOW() - ${planetResources.lastUpdate}))`
 			})
 			.from(planetResources)
-			.innerJoin(planetBuildings, eq(planetResources.planetId, planetBuildings.planetId))
 			.innerJoin(planets, eq(planetResources.planetId, planets.id))
 			.where(eq(planetResources.planetId, planetId));
 
@@ -37,6 +32,30 @@ export async function updatePlanetResources(planetId: number) {
 
 		if (seconds < 1) {
 			return data; // No significant time passed
+		}
+
+		// Fetch building levels
+		const buildings = await tx
+			.select({
+				buildingTypeId: planetBuildings.buildingTypeId,
+				level: planetBuildings.level
+			})
+			.from(planetBuildings)
+			.where(eq(planetBuildings.planetId, planetId));
+
+		// Map levels
+		const levels = {
+			metalMine: 0,
+			crystalMine: 0,
+			gasExtractor: 0,
+			solarPlant: 0
+		};
+
+		for (const b of buildings) {
+			if (b.buildingTypeId === 1) levels.metalMine = b.level || 0;
+			if (b.buildingTypeId === 2) levels.crystalMine = b.level || 0;
+			if (b.buildingTypeId === 3) levels.gasExtractor = b.level || 0;
+			if (b.buildingTypeId === 4) levels.solarPlant = b.level || 0;
 		}
 
 		// Get Commander Bonuses
@@ -54,30 +73,30 @@ export async function updatePlanetResources(planetId: number) {
 		// Formula: (Base + MineProd) * CommanderBonus * BoosterBonus
 
 		const metalProd =
-			(getProduction('metal_mine', data.metalMine!) *
+			(getProduction('metal_mine', levels.metalMine) *
 				productionMultiplier *
 				boosterMultipliers.metal +
 				30) /
 			3600;
 		const crystalProd =
-			(getProduction('crystal_mine', data.crystalMine!) *
+			(getProduction('crystal_mine', levels.crystalMine) *
 				productionMultiplier *
 				boosterMultipliers.crystal +
 				15) /
 			3600;
 		const gasProd =
-			(getProduction('gas_extractor', data.gasExtractor!) *
+			(getProduction('gas_extractor', levels.gasExtractor) *
 				productionMultiplier *
 				boosterMultipliers.gas) /
 			3600;
 
 		// Energy calculation (static, not accumulated)
 		const energyProd =
-			getProduction('solar_plant', data.solarPlant!) * energyMultiplier * boosterMultipliers.energy;
+			getProduction('solar_plant', levels.solarPlant) * energyMultiplier * boosterMultipliers.energy;
 		const energyCons =
-			Math.ceil(10 * data.metalMine! * Math.pow(1.1, data.metalMine!)) +
-			Math.ceil(10 * data.crystalMine! * Math.pow(1.1, data.crystalMine!)) +
-			Math.ceil(20 * data.gasExtractor! * Math.pow(1.1, data.gasExtractor!));
+			Math.ceil(10 * levels.metalMine * Math.pow(1.1, levels.metalMine)) +
+			Math.ceil(10 * levels.crystalMine * Math.pow(1.1, levels.crystalMine)) +
+			Math.ceil(20 * levels.gasExtractor * Math.pow(1.1, levels.gasExtractor));
 
 		const energy = Math.floor(energyProd - energyCons);
 
