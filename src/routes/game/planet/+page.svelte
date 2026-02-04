@@ -33,45 +33,45 @@
 </script>
 
 <div class="p-4 pb-20">
-	<h2 class="mb-6 text-2xl font-bold text-blue-300">Planet Overview</h2>
+	<h2 class="mb-6 text-2xl font-bold text-blue-600 dark:text-blue-300">Planet Overview</h2>
 
 	{#if data.planets.length === 0}
-		<div class="text-center text-gray-400">
+		<div class="text-center text-gray-600 dark:text-gray-400">
 			<p>You don't have any planets yet.</p>
 		</div>
 	{:else}
 		<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
 			{#each data.planets as planet}
 				{@const production = calculateProduction(planet)}
-				<div class="rounded-lg border border-gray-700 bg-gray-800 p-4">
+				<div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
 					<div class="mb-3 flex items-center justify-between">
-						<h3 class="text-lg font-bold text-blue-200">{planet.name}</h3>
-						<span class="rounded bg-gray-700 px-2 py-1 text-xs text-gray-300">
+						<h3 class="text-lg font-bold text-blue-700 dark:text-blue-200">{planet.name}</h3>
+						<span class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 dark:bg-gray-700 dark:text-gray-300">
 							[{planet.galaxyId}:{planet.systemId}:{planet.planetNumber}]
 						</span>
 					</div>
 
-					<div class="mb-3 text-sm text-gray-400">
+					<div class="mb-3 text-sm text-gray-600 dark:text-gray-400">
 						{planet.planetType} • {planet.fieldsMax} fields
 					</div>
 
 					<!-- Resources -->
 					<div class="mb-4 space-y-1">
 						<div class="flex justify-between text-sm">
-							<span class="text-gray-400">Metal:</span>
-							<span class="text-yellow-400">{Math.floor(planet.metal || 0).toLocaleString()}</span>
+							<span class="text-gray-600 dark:text-gray-400">Metal:</span>
+							<span class="text-yellow-600 dark:text-yellow-400">{Math.floor(planet.metal || 0).toLocaleString()}</span>
 						</div>
 						<div class="flex justify-between text-sm">
-							<span class="text-gray-400">Crystal:</span>
-							<span class="text-blue-400">{Math.floor(planet.crystal || 0).toLocaleString()}</span>
+							<span class="text-gray-600 dark:text-gray-400">Crystal:</span>
+							<span class="text-blue-600 dark:text-blue-400">{Math.floor(planet.crystal || 0).toLocaleString()}</span>
 						</div>
 						<div class="flex justify-between text-sm">
-							<span class="text-gray-400">Gas:</span>
-							<span class="text-purple-400">{Math.floor(planet.gas || 0).toLocaleString()}</span>
+							<span class="text-gray-600 dark:text-gray-400">Gas:</span>
+							<span class="text-purple-600 dark:text-purple-400">{Math.floor(planet.gas || 0).toLocaleString()}</span>
 						</div>
 						<div class="flex justify-between text-sm">
-							<span class="text-gray-400">Energy:</span>
-							<span class="{production.netEnergy >= 0 ? 'text-green-400' : 'text-red-400'}">
+							<span class="text-gray-600 dark:text-gray-400">Energy:</span>
+							<span class="{production.netEnergy >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">
 								{production.netEnergy >= 0 ? '+' : ''}{production.netEnergy}
 							</span>
 						</div>
@@ -79,18 +79,18 @@
 
 					<!-- Production -->
 					<div class="mb-4 space-y-1">
-						<div class="text-xs font-bold text-gray-300 uppercase">Production /h</div>
+						<div class="text-xs font-bold uppercase text-gray-500 dark:text-gray-300">Production /h</div>
 						<div class="flex justify-between text-sm">
-							<span class="text-gray-400">Metal:</span>
-							<span class="text-yellow-400">+{production.metal}</span>
+							<span class="text-gray-600 dark:text-gray-400">Metal:</span>
+							<span class="text-yellow-600 dark:text-yellow-400">+{production.metal}</span>
 						</div>
 						<div class="flex justify-between text-sm">
-							<span class="text-gray-400">Crystal:</span>
-							<span class="text-blue-400">+{production.crystal}</span>
+							<span class="text-gray-600 dark:text-gray-400">Crystal:</span>
+							<span class="text-blue-600 dark:text-blue-400">+{production.crystal}</span>
 						</div>
 						<div class="flex justify-between text-sm">
-							<span class="text-gray-400">Gas:</span>
-							<span class="text-purple-400">+{production.gas}</span>
+							<span class="text-gray-600 dark:text-gray-400">Gas:</span>
+							<span class="text-purple-600 dark:text-purple-400">+{production.gas}</span>
 						</div>
 					</div>
 
@@ -104,7 +104,7 @@
 						</button>
 						<a
 							href="/game/planet/{planet.id}"
-							class="flex-1 rounded border border-gray-600 py-2 text-center text-sm font-bold text-gray-300 transition hover:bg-gray-700"
+							class="flex-1 rounded border border-gray-300 py-2 text-center text-sm font-bold text-gray-700 transition hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
 						>
 							Manage
 						</a>

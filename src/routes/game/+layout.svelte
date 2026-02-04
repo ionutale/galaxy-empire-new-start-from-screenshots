@@ -90,7 +90,7 @@
 
 			<!-- Planet Selector -->
 			<select
-				class="max-w-[150px] rounded border border-gray-600 bg-gray-700 px-2 py-1 text-xs text-white focus:border-blue-500 focus:outline-none sm:max-w-[200px] sm:text-sm"
+				class="max-w-[150px] rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-900 focus:border-blue-500 focus:outline-none sm:max-w-[200px] sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
 				value={data.currentPlanet?.id}
 				onchange={(e) => {
 					const newId = e.currentTarget.value;
@@ -107,7 +107,7 @@
 			</select>
 		</div>
 
-		<div class="hidden text-lg font-bold tracking-wider text-blue-300 md:block">
+		<div class="hidden text-lg font-bold tracking-wider text-blue-600 md:block dark:text-blue-300">
 			{data.user.username}
 		</div>
 

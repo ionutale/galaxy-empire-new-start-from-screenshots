@@ -53,7 +53,7 @@
 
 <div class="p-4 pb-20">
 	<div class="mb-6 flex items-center justify-between">
-		<h2 class="text-2xl font-bold text-blue-300">Communications</h2>
+		<h2 class="text-2xl font-bold text-blue-600 dark:text-blue-300">Communications</h2>
 		<button
 			class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-500"
 			onclick={() => showSendForm = !showSendForm}
@@ -63,8 +63,8 @@
 	</div>
 
 	{#if showSendForm}
-		<div class="mb-6 rounded border border-gray-700 bg-gray-800 p-4">
-			<h3 class="mb-4 text-lg font-bold text-gray-200">Send Message</h3>
+		<div class="mb-6 rounded border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+			<h3 class="mb-4 text-lg font-bold text-gray-900 dark:text-gray-200">Send Message</h3>
 			<form method="POST" action="/api/messages/send" use:enhance={() => {
 				sending = true;
 				return async ({ update }) => {
@@ -75,11 +75,11 @@
 				};
 			}}>
 				<div class="mb-4">
-					<label for="messageType" class="block text-sm font-medium text-gray-300">Message Type</label>
+					<label for="messageType" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Message Type</label>
 					<select
 						id="messageType"
 						bind:value={messageType}
-						class="mt-1 block w-full rounded border border-gray-600 bg-gray-700 px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+						class="mt-1 block w-full rounded border border-gray-300 bg-gray-50 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
 					>
 						<option value="private">Private Message</option>
 						{#if data.allianceMembers && data.allianceMembers.length > 0}
@@ -89,25 +89,25 @@
 				</div>
 				{#if messageType === 'private'}
 					<div class="mb-4">
-						<label for="toUsername" class="block text-sm font-medium text-gray-300">Recipient Username</label>
+						<label for="toUsername" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Recipient Username</label>
 						<input
 							type="text"
 							id="toUsername"
 							name="toUsername"
 							required
-							class="mt-1 block w-full rounded border border-gray-600 bg-gray-700 px-3 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+							class="mt-1 block w-full rounded border border-gray-300 bg-gray-50 px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
 							placeholder="Enter username"
 						/>
 					</div>
 				{:else if messageType === 'alliance'}
 					<div class="mb-4">
-						<label for="allianceMember" class="block text-sm font-medium text-gray-300">Alliance Member</label>
+						<label for="allianceMember" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Alliance Member</label>
 						<select
 							id="allianceMember"
 							name="toUsername"
 							bind:value={selectedAllianceMember}
 							required
-							class="mt-1 block w-full rounded border border-gray-600 bg-gray-700 px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+							class="mt-1 block w-full rounded border border-gray-300 bg-gray-50 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
 						>
 							<option value="">Select a member</option>
 							{#each data.allianceMembers as member}
@@ -117,26 +117,26 @@
 					</div>
 				{/if}
 				<div class="mb-4">
-					<label for="subject" class="block text-sm font-medium text-gray-300">Subject</label>
+					<label for="subject" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Subject</label>
 					<input
 						type="text"
 						id="subject"
 						name="subject"
 						required
 						maxlength="100"
-						class="mt-1 block w-full rounded border border-gray-600 bg-gray-700 px-3 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+						class="mt-1 block w-full rounded border border-gray-300 bg-gray-50 px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
 						placeholder="Message subject"
 					/>
 				</div>
 				<div class="mb-4">
-					<label for="content" class="block text-sm font-medium text-gray-300">Message</label>
+					<label for="content" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Message</label>
 					<textarea
 						id="content"
 						name="content"
 						required
 						rows="4"
 						maxlength="10000"
-						class="mt-1 block w-full rounded border border-gray-600 bg-gray-700 px-3 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+						class="mt-1 block w-full rounded border border-gray-300 bg-gray-50 px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
 						placeholder="Your message..."
 					></textarea>
 				</div>
@@ -161,19 +161,19 @@
 		{:else}
 			{#each allMessages as msg}
 				<div
-					class="rounded border border-gray-700 bg-gray-800 p-4 shadow-sm {msg.isRead
+					class="rounded border border-gray-200 bg-white p-4 shadow-sm {msg.isRead
 						? 'opacity-75'
-						: 'border-l-4 border-l-blue-500'}"
+						: 'border-l-4 border-l-blue-500'} dark:border-gray-700 dark:bg-gray-800"
 				>
 					<div class="mb-2 flex items-start justify-between">
 						<div class="flex items-center space-x-2">
 							<span class="text-lg">{getMessageIcon(msg.messageType || msg.type)}</span>
-							<h3 class="font-bold text-gray-200">{msg.title}</h3>
+							<h3 class="font-bold text-gray-900 dark:text-gray-200">{msg.title}</h3>
 							{#if msg.messageType === 'private' || msg.messageType === 'alliance'}
 								{#if msg.isSent}
-									<span class="text-xs text-green-400">(Sent)</span>
+									<span class="text-xs text-green-600 dark:text-green-400">(Sent)</span>
 								{:else}
-									<span class="text-xs text-blue-400">(From: {msg.fromUsername})</span>
+									<span class="text-xs text-blue-600 dark:text-blue-400">(From: {msg.fromUsername})</span>
 								{/if}
 							{/if}
 						</div>
@@ -181,7 +181,7 @@
 							>{msg.createdAt ? new Date(msg.createdAt).toLocaleString() : ''}</span
 						>
 					</div>
-					<p class="text-sm text-gray-400 whitespace-pre-wrap">{msg.content}</p>
+					<p class="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{msg.content}</p>
 				</div>
 			{/each}
 		{/if}

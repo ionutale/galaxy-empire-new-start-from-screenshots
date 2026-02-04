@@ -133,13 +133,13 @@
 						type="text"
 						name="name"
 						value={data.currentPlanet.name}
-						class="rounded border border-blue-500 bg-gray-700 px-2 py-1 text-white focus:outline-none"
+						class="rounded border border-blue-500 bg-white px-2 py-1 text-gray-900 focus:outline-none dark:bg-gray-700 dark:text-white"
 						maxlength="20"
 					/>
 					<button
 						type="submit"
 						disabled={loading['rename']}
-						class="text-green-400 hover:text-green-300 disabled:opacity-50"
+						class="text-green-600 hover:text-green-500 disabled:opacity-50 dark:text-green-400 dark:hover:text-green-300"
 					>
 						{#if loading['rename']}
 							<Spinner size="sm" />
@@ -150,25 +150,25 @@
 					<button
 						type="button"
 						onclick={() => (isRenaming = false)}
-						class="text-red-400 hover:text-red-300">✕</button
+						class="text-red-600 hover:text-red-500 dark:text-red-400 dark:hover:text-red-300">✕</button
 					>
 				</form>
 			{:else}
-				<h2 class="flex items-center justify-center gap-2 text-2xl font-bold text-blue-300">
+				<h2 class="flex items-center justify-center gap-2 text-2xl font-bold text-blue-600 dark:text-blue-300">
 					{data.currentPlanet.name}
 					<button
 						onclick={() => (isRenaming = true)}
-						class="text-sm text-gray-500 opacity-0 transition-opacity group-hover:opacity-100 hover:text-white"
+						class="text-sm text-gray-400 opacity-0 transition-opacity group-hover:opacity-100 hover:text-gray-600 dark:text-gray-500 dark:hover:text-white"
 						>✎</button
 					>
 				</h2>
 			{/if}
-			<p class="text-sm text-gray-400">
+			<p class="text-sm text-gray-600 dark:text-gray-400">
 				[{data.currentPlanet.galaxyId}:{data.currentPlanet.systemId}:{data.currentPlanet
 					.planetNumber}]
 				<a
 					href="/game/planet/{data.currentPlanet.id}"
-					class="ml-4 text-blue-400 hover:text-blue-300 underline"
+					class="ml-4 text-blue-600 underline hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
 				>
 					View Details
 				</a>
@@ -176,11 +176,11 @@
 		</div>
 
 		<!-- Resources Section -->
-		<h3 class="mb-4 border-b border-gray-700 pb-2 text-xl font-bold text-gray-300">Resources</h3>
+		<h3 class="mb-4 border-b border-gray-200 pb-2 text-xl font-bold text-gray-800 dark:border-gray-700 dark:text-gray-300">Resources</h3>
 		<div class="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
 			{#each resourceBuildings as building}
 				<div
-					class="flex flex-col rounded-lg border border-gray-700 bg-gray-800/80 p-4 shadow-lg backdrop-blur-sm"
+					class="flex flex-col rounded-lg border border-gray-200 bg-white/80 p-4 shadow-lg backdrop-blur-sm dark:border-gray-700 dark:bg-gray-800/80"
 				>
 					<div class="mb-2 flex items-center justify-between">
 						<div class="flex items-center space-x-3">
@@ -193,10 +193,10 @@
 								{/if}
 							</span>
 							<div>
-								<h3 class="text-lg font-bold text-gray-200">{building.name}</h3>
-								<span class="font-mono text-xs text-blue-400">Level {building.level}</span>
+								<h3 class="text-lg font-bold text-gray-900 dark:text-gray-200">{building.name}</h3>
+								<span class="font-mono text-xs text-blue-600 dark:text-blue-400">Level {building.level}</span>
 								{#if building.isUpgrading}
-									<span class="ml-2 text-xs text-yellow-400">Upgrading...</span>
+									<span class="ml-2 text-xs text-yellow-600 dark:text-yellow-400">Upgrading...</span>
 								{/if}
 							</div>
 						</div>

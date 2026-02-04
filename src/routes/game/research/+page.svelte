@@ -113,29 +113,29 @@
 	}
 </script>
 <div class="p-4 pb-20">
-	<h2 class="mb-6 text-2xl font-bold text-blue-300">Research Lab</h2>
+	<h2 class="mb-6 text-2xl font-bold text-blue-600 dark:text-blue-300">Research Lab</h2>
 
 	{#if !hasResearchLab}
-		<div class="mb-6 rounded border border-red-500 bg-red-900/50 p-4 text-center text-red-200">
+		<div class="mb-6 rounded border border-red-500 bg-red-50 p-4 text-center text-red-800 dark:bg-red-900/50 dark:text-red-200">
 			You need a Research Lab to conduct research. <a
 				href="/game"
-				class="font-bold underline hover:text-white">Build one in the Facilities menu.</a
+				class="font-bold underline hover:text-red-900 dark:hover:text-white">Build one in the Facilities menu.</a
 			>
 		</div>
 	{/if}
 
 	<!-- Research Queue -->
 	{#if queue.length > 0}
-		<div class="mb-6 rounded-lg border border-blue-500 bg-blue-900/20 p-4">
-			<h3 class="mb-3 text-lg font-bold text-blue-300">Research Queue</h3>
+		<div class="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-500 dark:bg-blue-900/20">
+			<h3 class="mb-3 text-lg font-bold text-blue-600 dark:text-blue-300">Research Queue</h3>
 			<div class="space-y-2">
 				{#each queue as item}
-					<div class="flex items-center justify-between rounded bg-gray-800 p-3">
+					<div class="flex items-center justify-between rounded bg-white p-3 dark:bg-gray-800">
 						<div class="flex items-center space-x-3">
 							<span class="text-2xl">{getResearchIcon(item.researchTypeId || 0)}</span>
 							<div>
-								<span class="font-medium text-gray-200">Research Level {item.level}</span>
-								<div class="text-sm text-yellow-400">{formatTimeRemaining(new Date(item.completionAt))}</div>
+								<span class="font-medium text-gray-900 dark:text-gray-200">Research Level {item.level}</span>
+								<div class="text-sm text-yellow-600 dark:text-yellow-400">{formatTimeRemaining(new Date(item.completionAt))}</div>
 							</div>
 						</div>
 						<button

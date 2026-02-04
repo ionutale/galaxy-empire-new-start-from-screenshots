@@ -17,30 +17,30 @@
 			if (system.playerCount > 2) return 'bg-yellow-600'; // Medium activity
 			return 'bg-green-600'; // Low activity
 		}
-		return 'bg-gray-700'; // Empty
+		return 'bg-gray-200 dark:bg-gray-700'; // Empty
 	}
 </script>
 
 <div class="p-4 pb-20">
 	<!-- Navigation Header -->
 	<div
-		class="mb-4 flex items-center justify-between rounded-lg border border-gray-700 bg-gray-800 p-4"
+		class="mb-4 flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
 	>
 		<a
 			href={prevGalaxy()}
-			class="rounded bg-gray-700 p-2 transition hover:bg-gray-600 {data.galaxy <= 1
+			class="rounded bg-gray-200 p-2 transition hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 {data.galaxy <= 1
 				? 'pointer-events-none opacity-50'
 				: ''}"
 		>
 			◀
 		</a>
 		<div class="text-center">
-			<h2 class="text-xl font-bold text-blue-300">Universe Map</h2>
-			<div class="font-mono text-2xl font-bold">Galaxy {data.galaxy}</div>
+			<h2 class="text-xl font-bold text-blue-600 dark:text-blue-300">Universe Map</h2>
+			<div class="font-mono text-2xl font-bold text-gray-900 dark:text-white">Galaxy {data.galaxy}</div>
 		</div>
 		<a
 			href={nextGalaxy()}
-			class="rounded bg-gray-700 p-2 transition hover:bg-gray-600 {data.galaxy >= 9
+			class="rounded bg-gray-200 p-2 transition hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 {data.galaxy >= 9
 				? 'pointer-events-none opacity-50'
 				: ''}"
 		>
@@ -49,9 +49,9 @@
 	</div>
 
 	<!-- Legend -->
-	<div class="mb-4 flex flex-wrap justify-center gap-4 text-sm">
+	<div class="mb-4 flex flex-wrap justify-center gap-4 text-sm text-gray-600 dark:text-gray-400">
 		<div class="flex items-center space-x-2">
-			<div class="h-4 w-4 rounded bg-gray-700"></div>
+			<div class="h-4 w-4 rounded bg-gray-200 dark:bg-gray-700"></div>
 			<span>Empty System</span>
 		</div>
 		<div class="flex items-center space-x-2">
@@ -73,7 +73,7 @@
 		{#each data.systems as system}
 			<a
 				href="/game/system?galaxy={data.galaxy}&system={system.systemId}"
-				class="flex aspect-square items-center justify-center rounded border border-gray-600 text-xs font-bold transition hover:border-gray-400 hover:shadow-lg {getSystemColor(
+				class="flex aspect-square items-center justify-center rounded border border-gray-300 text-xs font-bold text-gray-900 transition hover:border-gray-400 hover:shadow-lg dark:border-gray-600 dark:text-white {getSystemColor(
 					system
 				)}"
 				title="System {system.systemId}: {system.planetCount} planets, {system.playerCount} players"
