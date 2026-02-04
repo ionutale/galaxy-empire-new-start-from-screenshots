@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import { onMount } from 'svelte';
 
@@ -66,6 +66,52 @@
 			return `${seconds}s`;
 		}
 	}
+
+	async function handleBuild(shipType: string) {
+		loading[shipType] = true;
+		const amount = amounts[shipType] || 1;
+		try {
+			const response = await fetch('/api/shipyard', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					action: 'build',
+					planetId: data.currentPlanet.id,
+					shipType,
+					amount
+				})
+			});
+			if (response.ok) {
+				await invalidateAll();
+			} else {
+				console.error('Failed to build ships');
+			}
+		} catch (error) {
+			console.error('Error building ships:', error);
+		} finally {
+			loading[shipType] = false;
+		}
+	}
+
+	async function handleCancel(queueId: number) {
+		try {
+			const response = await fetch('/api/shipyard', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					action: 'cancel',
+					queueId
+				})
+			});
+			if (response.ok) {
+				await invalidateAll();
+			} else {
+				console.error('Failed to cancel construction');
+			}
+		} catch (error) {
+			console.error('Error canceling construction:', error);
+		}
+	}
 </script>
 
 <div class="p-4 pb-20">
@@ -92,15 +138,12 @@
 							<span class="text-sm text-gray-400">x{item.amount}</span>
 							<span class="text-sm text-yellow-400">{formatTimeRemaining(new Date(item.completionAt))}</span>
 						</div>
-						<form method="POST" action="?/cancel" use:enhance>
-							<input type="hidden" name="queue_id" value={item.id} />
-							<button
-								type="submit"
-								class="rounded bg-red-600 px-3 py-1 text-sm font-bold text-white hover:bg-red-500"
-							>
-								Cancel
-							</button>
-						</form>
+						<button
+							onclick={() => handleCancel(item.id)}
+							class="rounded bg-red-600 px-3 py-1 text-sm font-bold text-white hover:bg-red-500"
+						>
+							Cancel
+						</button>
 					</div>
 				{/each}
 			</div>
@@ -165,30 +208,16 @@
 						<div class="mb-2 text-xs text-red-400">{ship.reason}</div>
 					{/if}
 
-					<form
-						method="POST"
-						action="?/build"
-						use:enhance={() => {
-							loading[ship.shipType] = true;
-							return async ({ update }) => {
-								loading[ship.shipType] = false;
-								await update();
-							};
-						}}
-						class="flex space-x-2"
-					>
-						<input type="hidden" name="type" value={ship.shipType} />
-						<input type="hidden" name="planet_id" value={data.currentPlanet.id} />
+					<div class="flex space-x-2">
 						<input
 							type="number"
-							name="amount"
 							min="1"
 							bind:value={amounts[ship.shipType]}
 							class="w-16 rounded border border-gray-600 bg-gray-700 px-2 py-1 text-center text-white"
 							disabled={shipyardLevel === 0}
 						/>
 						<button
-							type="submit"
+							onclick={() => handleBuild(ship.shipType)}
 							class="flex flex-1 transform items-center justify-center rounded bg-blue-600 text-sm font-bold transition hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-600 disabled:opacity-50"
 							disabled={shipyardLevel === 0 || !canBuild(ship) || loading[ship.shipType]}
 						>
@@ -197,7 +226,7 @@
 							{/if}
 							Build
 						</button>
-					</form>
+					</div>
 				</div>
 			</div>
 		{/each}

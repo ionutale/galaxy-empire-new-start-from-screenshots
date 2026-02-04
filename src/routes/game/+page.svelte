@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import type { BuildingInfo } from '$lib/server/building-service';
 	import { DEFENSES } from '$lib/game-config';
+	import { invalidateAll } from '$app/navigation';
 
 	let { data } = $props();
 	let loading = $state<Record<string, boolean>>({});
-
+	
 	let resources = $derived({
 		metal: data.resources?.metal || 0,
 		crystal: data.resources?.crystal || 0,
@@ -31,6 +31,87 @@
 	}
 
 	let isRenaming = $state(false);
+	
+	// Defense amounts
+	let defenseAmounts = $state<Record<string, number>>({});
+
+	async function handleRename(e: SubmitEvent) {
+		e.preventDefault();
+		if (!data.currentPlanet) return;
+		
+		loading['rename'] = true;
+		const formData = new FormData(e.target as HTMLFormElement);
+		const name = formData.get('name') as string;
+
+		try {
+			const response = await fetch(`/api/planet/${data.currentPlanet.id}/rename`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ name })
+			});
+			
+			if (response.ok) {
+				await invalidateAll();
+				isRenaming = false;
+			}
+		} catch (error) {
+			console.error('Rename failed', error);
+		} finally {
+			loading['rename'] = false;
+		}
+	}
+
+	async function handleUpgrade(building: BuildingInfo) {
+		if (!data.currentPlanet) return;
+		const id = building.id || building.building_type_id;
+		loading[id] = true;
+
+		try {
+			const response = await fetch('/api/buildings', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					building_type_id: id,
+					planet_id: data.currentPlanet.id
+				})
+			});
+			
+			if (response.ok) {
+				await invalidateAll();
+			}
+		} catch (error) {
+			console.error('Upgrade failed', error);
+		} finally {
+			loading[id] = false;
+		}
+	}
+
+	async function handleBuildDefense(type: string) {
+		if (!data.currentPlanet) return;
+		loading[type] = true;
+		const amount = defenseAmounts[type] || 1;
+
+		try {
+			const response = await fetch('/api/defense', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					type,
+					amount,
+					planet_id: data.currentPlanet.id
+				})
+			});
+			
+			if (response.ok) {
+				await invalidateAll();
+				defenseAmounts[type] = 1; // Reset amount
+			}
+		} catch (error) {
+			console.error('Defense build failed', error);
+		} finally {
+			loading[type] = false;
+		}
+	}
 </script>
 
 <div class="p-4 pb-20">
@@ -45,19 +126,9 @@
 		<div class="group relative mb-6 text-center">
 			{#if isRenaming}
 				<form
-					method="POST"
-					action="?/renamePlanet"
-					use:enhance={() => {
-						loading['rename'] = true;
-						return async ({ update }) => {
-							loading['rename'] = false;
-							await update();
-							isRenaming = false;
-						};
-					}}
+					onsubmit={handleRename}
 					class="flex items-center justify-center gap-2"
 				>
-					<input type="hidden" name="planet_id" value={data.currentPlanet.id} />
 					<input
 						type="text"
 						name="name"
@@ -161,38 +232,24 @@
 							<span class="text-gray-500">Time: {Math.ceil(building.buildTime / 60)}m</span>
 						</div>
 
-						<form
-							method="POST"
-							action="?/upgrade"
-							use:enhance={() => {
-								loading[building.id] = true;
-								return async ({ update }) => {
-									loading[building.id] = false;
-									await update();
-								};
-							}}
+						<button
+							onclick={() => handleUpgrade(building)}
+							disabled={!building.canUpgrade ||
+								building.isUpgrading ||
+								resources.metal < building.cost.metal ||
+								resources.crystal < building.cost.crystal ||
+								resources.gas < building.cost.gas ||
+								loading[building.id]}
+							class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
 						>
-							<input type="hidden" name="building_type_id" value={building.id} />
-							<input type="hidden" name="planet_id" value={data.currentPlanet.id} />
-							<button
-								type="submit"
-								disabled={!building.canUpgrade ||
-									building.isUpgrading ||
-									resources.metal < building.cost.metal ||
-									resources.crystal < building.cost.crystal ||
-									resources.gas < building.cost.gas ||
-									loading[building.id]}
-								class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
-							>
-								{#if loading[building.id]}
-									<Spinner size="sm" class="mr-2" />
-								{:else if building.isUpgrading}
-									Upgrading...
-								{:else}
-									Upgrade to Level {building.level + 1}
-								{/if}
-							</button>
-						</form>
+							{#if loading[building.id]}
+								<Spinner size="sm" class="mr-2" />
+							{:else if building.isUpgrading}
+								Upgrading...
+							{:else}
+								Upgrade to Level {building.level + 1}
+							{/if}
+						</button>
 					</div>
 				</div>
 			{/each}
@@ -236,38 +293,24 @@
 							{/if}
 						</div>
 
-						<form
-							method="POST"
-							action="?/upgrade"
-							use:enhance={() => {
-								loading[building.building_type_id] = true;
-								return async ({ update }) => {
-									loading[building.building_type_id] = false;
-									await update();
-								};
-							}}
+						<button
+							onclick={() => handleUpgrade(building)}
+							disabled={!building.upgradeCost ||
+								resources.metal < building.upgradeCost.metal ||
+								resources.crystal < building.upgradeCost.crystal ||
+								((building.upgradeCost.gas || 0) > 0 && resources.gas < (building.upgradeCost.gas || 0)) ||
+								building.isUpgrading ||
+								loading[building.building_type_id]}
+							class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
 						>
-							<input type="hidden" name="type" value={building.building_type_id} />
-							<input type="hidden" name="planet_id" value={data.currentPlanet.id} />
-							<button
-								type="submit"
-								disabled={!building.upgradeCost ||
-									resources.metal < building.upgradeCost.metal ||
-									resources.crystal < building.upgradeCost.crystal ||
-									((building.upgradeCost.gas || 0) > 0 && resources.gas < (building.upgradeCost.gas || 0)) ||
-									building.isUpgrading ||
-									loading[building.building_type_id]}
-								class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
-							>
-								{#if loading[building.building_type_id]}
-									<Spinner size="sm" class="mr-2" />
-								{:else if building.isUpgrading}
-									Upgrading...
-								{:else}
-									Upgrade to Level {building.level + 1}
-								{/if}
-							</button>
-						</form>
+							{#if loading[building.building_type_id]}
+								<Spinner size="sm" class="mr-2" />
+							{:else if building.isUpgrading}
+								Upgrading...
+							{:else}
+								Upgrade to Level {building.level + 1}
+							{/if}
+						</button>
 					</div>
 				</div>
 			{/each}
@@ -321,21 +364,7 @@
 								>{/if}
 						</div>
 
-						<form
-							method="POST"
-							action="?/build_defense"
-							use:enhance={() => {
-								loading[type] = true;
-								return async ({ update }) => {
-									loading[type] = false;
-									await update();
-								};
-							}}
-							class="flex space-x-2"
-						>
-							<input type="hidden" name="type" value={type} />
-							<input type="hidden" name="planet_id" value={data.currentPlanet.id} />
-
+						<div class="flex space-x-2">
 							{#if defense.max && count >= defense.max}
 								<button
 									disabled
@@ -345,14 +374,13 @@
 							{:else}
 								<input
 									type="number"
-									name="amount"
 									min="1"
-									value="1"
+									bind:value={defenseAmounts[type]}
 									class="w-16 rounded border border-gray-600 bg-gray-700 px-2 py-1 text-center text-white"
 									disabled={(buildings.find(b => b.name === 'Shipyard')?.level || 0) === 0}
 								/>
 								<button
-									type="submit"
+									onclick={() => handleBuildDefense(type)}
 									class="flex flex-1 transform items-center justify-center rounded bg-blue-600 text-sm font-bold transition hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-600 disabled:opacity-50"
 									disabled={(buildings.find(b => b.name === 'Shipyard')?.level || 0) === 0 || loading[type]}
 								>
@@ -362,7 +390,7 @@
 									Build
 								</button>
 							{/if}
-						</form>
+						</div>
 					</div>
 				</div>
 			{/each}
@@ -406,38 +434,24 @@
 							{/if}
 						</div>
 
-						<form
-							method="POST"
-							action="?/upgrade"
-							use:enhance={() => {
-								loading[building.building_type_id] = true;
-								return async ({ update }) => {
-									loading[building.building_type_id] = false;
-									await update();
-								};
-							}}
+						<button
+							onclick={() => handleUpgrade(building)}
+							disabled={!building.upgradeCost ||
+								resources.metal < building.upgradeCost.metal ||
+								resources.crystal < building.upgradeCost.crystal ||
+								((building.upgradeCost.gas || 0) > 0 && resources.gas < (building.upgradeCost.gas || 0)) ||
+								building.isUpgrading ||
+								loading[building.building_type_id]}
+							class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
 						>
-							<input type="hidden" name="type" value={building.building_type_id} />
-							<input type="hidden" name="planet_id" value={data.currentPlanet.id} />
-							<button
-								type="submit"
-								disabled={!building.upgradeCost ||
-									resources.metal < building.upgradeCost.metal ||
-									resources.crystal < building.upgradeCost.crystal ||
-									((building.upgradeCost.gas || 0) > 0 && resources.gas < (building.upgradeCost.gas || 0)) ||
-									building.isUpgrading ||
-									loading[building.building_type_id]}
-								class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
-							>
-								{#if loading[building.building_type_id]}
-									<Spinner size="sm" class="mr-2" />
-								{:else if building.isUpgrading}
-									Upgrading...
-								{:else}
-									Upgrade to Level {building.level + 1}
-								{/if}
-							</button>
-						</form>
+							{#if loading[building.building_type_id]}
+								<Spinner size="sm" class="mr-2" />
+							{:else if building.isUpgrading}
+								Upgrading...
+							{:else}
+								Upgrade to Level {building.level + 1}
+							{/if}
+						</button>
 					</div>
 				</div>
 			{/each}

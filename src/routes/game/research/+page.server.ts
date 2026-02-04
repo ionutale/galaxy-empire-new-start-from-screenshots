@@ -1,9 +1,8 @@
 import { ResearchService } from '$lib/server/research-service';
 import { db } from '$lib/server/db';
-import { researchQueue, userResearchLevels } from '$lib/server/db/schema';
-import { eq, and, sql } from 'drizzle-orm';
-import type { PageServerLoad, Actions } from './$types';
-import { fail } from '@sveltejs/kit';
+import { researchQueue } from '$lib/server/db/schema';
+import { eq, sql } from 'drizzle-orm';
+import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, parent }) => {
 	if (!locals.user) return {};
@@ -49,74 +48,3 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 	}
 };
 
-export const actions: Actions = {
-	research: async ({ request, locals }) => {
-		if (!locals.user) return fail(401, { error: 'Unauthorized' });
-
-		const data = await request.formData();
-		const researchTypeId = Number(data.get('research_type_id'));
-		const planetId = Number(data.get('planet_id'));
-
-		if (!researchTypeId || !planetId) return fail(400, { error: 'Missing required fields' });
-
-		try {
-			const result = await ResearchService.startResearch(locals.user.id, researchTypeId, planetId);
-
-			if (!result.success) {
-				return fail(400, { error: result.error });
-			}
-
-			return { success: true, completionTime: result.completionTime };
-		} catch (error) {
-			console.error('Research start error:', error);
-			return fail(500, { error: 'Failed to start research' });
-		}
-	},
-
-	cancel: async ({ request, locals }) => {
-		if (!locals.user) return fail(401, { error: 'Unauthorized' });
-
-		const data = await request.formData();
-		const queueId = Number(data.get('queue_id'));
-
-		if (!queueId) return fail(400, { error: 'Missing queue ID' });
-
-		try {
-			// Get queue item and verify ownership
-			const queueItem = await db
-				.select({
-					researchTypeId: researchQueue.researchTypeId,
-					level: researchQueue.level
-				})
-				.from(researchQueue)
-				.where(eq(researchQueue.id, queueId))
-				.limit(1);
-
-			if (!queueItem.length) return fail(404, { error: 'Queue item not found' });
-
-			// Reset research status
-			await db
-				.update(userResearchLevels)
-				.set({
-					isResearching: false,
-					researchCompletionAt: null
-				})
-				.where(
-					and(
-						eq(userResearchLevels.userId, locals.user.id),
-						eq(userResearchLevels.researchTypeId, queueItem[0].researchTypeId)
-					)
-				);
-
-			// Remove from queue
-			await db
-				.delete(researchQueue)
-				.where(eq(researchQueue.id, queueId));
-
-			return { success: true };
-		} catch (error) {
-			console.error('Research cancel error:', error);
-			return fail(500, { error: 'Failed to cancel research' });
-		}
-	}
-};

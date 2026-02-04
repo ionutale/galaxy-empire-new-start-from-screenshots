@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import type { BuildingInfo } from '$lib/server/building-service';
 	import { onMount } from 'svelte';
+	import { invalidateAll } from '$app/navigation';
 
 	let { data } = $props();
 	let loading = $state<Record<string, boolean>>({});
@@ -21,6 +21,80 @@
 
 		return () => clearInterval(interval);
 	});
+	
+	async function handleUpgrade(buildingTypeId: number, planetId: number) {
+		loading[buildingTypeId] = true;
+		try {
+			const res = await fetch('/api/buildings/upgrade', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ buildingTypeId, planetId })
+			});
+			
+			if (!res.ok) {
+				const err = await res.json();
+				alert(err.error || 'Upgrade failed');
+				return;
+			}
+			
+			await invalidateAll();
+		} catch (e) {
+			console.error(e);
+			alert('Network error during upgrade');
+		} finally {
+			loading[buildingTypeId] = false;
+		}
+	}
+
+	async function handleCancel(queueId: number, planetId: number) {
+		// Use a temporary loading state key for cancellation if needed, or just block UI
+		if (!confirm('Cancel this construction?')) return;
+		
+		try {
+			// Optimistic UI update or global loading could be added here
+			const res = await fetch('/api/buildings/cancel', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ queueId, planetId })
+			});
+
+			if (!res.ok) {
+				const err = await res.json();
+				alert(err.error || 'Cancel failed');
+				return;
+			}
+
+			await invalidateAll();
+		} catch (e) {
+			console.error(e);
+			alert('Network error during cancellation');
+		}
+	}
+
+	async function handleAbandon(planetId: number) {
+		if (!confirm('Are you sure you want to abandon this planet? This action cannot be undone.')) return;
+
+		try {
+			const res = await fetch('/api/planets/abandon', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ planetId })
+			});
+
+			if (!res.ok) {
+				const err = await res.json();
+				alert(err.error || 'Abandon failed');
+				return;
+			}
+			
+			// Redirect or reload is handled by invalidateAll -> load function reruns -> 
+			// if planet is gone, load function might 404. We should probably redirect to game home.
+			window.location.href = '/game';
+		} catch (e) {
+			console.error(e);
+			alert('Network error during abandon');
+		}
+	}
 
 	// Group buildings by category
 	let resourceBuildings = $derived(buildings.filter(b => b.category === 'resource'));
@@ -67,19 +141,12 @@
 					[{data.planet.galaxyId}:{data.planet.systemId}:{data.planet.planetNumber}]
 				</p>
 			</div>
-			<form method="POST" action="?/abandon" use:enhance>
-				<button
-					type="submit"
-					class="rounded bg-red-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-red-700"
-					onclick={(e) => {
-						if (!confirm('Are you sure you want to abandon this planet? This action cannot be undone.')) {
-							e.preventDefault();
-						}
-					}}
-				>
-					Abandon Planet
-				</button>
-			</form>
+			<button
+				onclick={() => handleAbandon(data.planet.id)}
+				class="rounded bg-red-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-red-700"
+			>
+				Abandon Planet
+			</button>
 		</div>
 	</div>
 
@@ -128,15 +195,12 @@
 								<div class="text-sm text-yellow-400">{formatTimeRemaining(new Date(item.completionAt))}</div>
 							</div>
 						</div>
-						<form method="POST" action="?/cancel" use:enhance>
-							<input type="hidden" name="queue_id" value={item.id} />
-							<button
-								type="submit"
-								class="rounded bg-red-600 px-3 py-1 text-sm font-bold text-white hover:bg-red-500"
-							>
-								Cancel
-							</button>
-						</form>
+						<button
+							onclick={() => handleCancel(item.id, data.planet.id)}
+							class="rounded bg-red-600 px-3 py-1 text-sm font-bold text-white hover:bg-red-500"
+						>
+							Cancel
+						</button>
 					</div>
 				{/each}
 			</div>
@@ -192,38 +256,24 @@
 						{/if}
 					</div>
 
-					<form
-						method="POST"
-						action="?/upgrade"
-						use:enhance={() => {
-							loading[building.id] = true;
-							return async ({ update }) => {
-								loading[building.id] = false;
-								await update();
-							};
-						}}
+					<button
+						onclick={() => handleUpgrade(building.id, data.planet.id)}
+						disabled={!building.canUpgrade ||
+							building.isUpgrading ||
+							resources.metal < building.cost.metal ||
+							resources.crystal < building.cost.crystal ||
+							resources.gas < building.cost.gas ||
+							loading[building.id]}
+						class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
 					>
-						<input type="hidden" name="building_type_id" value={building.id} />
-						<input type="hidden" name="planet_id" value={data.planet.id} />
-						<button
-							type="submit"
-							disabled={!building.canUpgrade ||
-								building.isUpgrading ||
-								resources.metal < building.cost.metal ||
-								resources.crystal < building.cost.crystal ||
-								resources.gas < building.cost.gas ||
-								loading[building.id]}
-							class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
-						>
-							{#if loading[building.id]}
-								<Spinner size="sm" class="mr-2" />
-							{:else if building.isUpgrading}
-								Upgrading...
-							{:else}
-								Upgrade to Level {building.level + 1}
-							{/if}
-						</button>
-					</form>
+						{#if loading[building.id]}
+							<Spinner size="sm" class="mr-2" />
+						{:else if building.isUpgrading}
+							Upgrading...
+						{:else}
+							Upgrade to Level {building.level + 1}
+						{/if}
+					</button>
 				</div>
 			{/each}
 		</div>
@@ -278,38 +328,24 @@
 						{/if}
 					</div>
 
-					<form
-						method="POST"
-						action="?/upgrade"
-						use:enhance={() => {
-							loading[building.id] = true;
-							return async ({ update }) => {
-								loading[building.id] = false;
-								await update();
-							};
-						}}
+					<button
+						onclick={() => handleUpgrade(building.id, data.planet.id)}
+						disabled={!building.canUpgrade ||
+							building.isUpgrading ||
+							resources.metal < building.cost.metal ||
+							resources.crystal < building.cost.crystal ||
+							resources.gas < building.cost.gas ||
+							loading[building.id]}
+						class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
 					>
-						<input type="hidden" name="building_type_id" value={building.id} />
-						<input type="hidden" name="planet_id" value={data.planet.id} />
-						<button
-							type="submit"
-							disabled={!building.canUpgrade ||
-								building.isUpgrading ||
-								resources.metal < building.cost.metal ||
-								resources.crystal < building.cost.crystal ||
-								resources.gas < building.cost.gas ||
-								loading[building.id]}
-							class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
-						>
-							{#if loading[building.id]}
-								<Spinner size="sm" class="mr-2" />
-							{:else if building.isUpgrading}
-								Upgrading...
-							{:else}
-								Upgrade to Level {building.level + 1}
-							{/if}
-						</button>
-					</form>
+						{#if loading[building.id]}
+							<Spinner size="sm" class="mr-2" />
+						{:else if building.isUpgrading}
+							Upgrading...
+						{:else}
+							Upgrade to Level {building.level + 1}
+						{/if}
+					</button>
 				</div>
 			{/each}
 		</div>
@@ -364,38 +400,24 @@
 						{/if}
 					</div>
 
-					<form
-						method="POST"
-						action="?/upgrade"
-						use:enhance={() => {
-							loading[building.id] = true;
-							return async ({ update }) => {
-								loading[building.id] = false;
-								await update();
-							};
-						}}
+					<button
+						onclick={() => handleUpgrade(building.id, data.planet.id)}
+						disabled={!building.canUpgrade ||
+							building.isUpgrading ||
+							resources.metal < building.cost.metal ||
+							resources.crystal < building.cost.crystal ||
+							resources.gas < building.cost.gas ||
+							loading[building.id]}
+						class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
 					>
-						<input type="hidden" name="building_type_id" value={building.id} />
-						<input type="hidden" name="planet_id" value={data.planet.id} />
-						<button
-							type="submit"
-							disabled={!building.canUpgrade ||
-								building.isUpgrading ||
-								resources.metal < building.cost.metal ||
-								resources.crystal < building.cost.crystal ||
-								resources.gas < building.cost.gas ||
-								loading[building.id]}
-							class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
-						>
-							{#if loading[building.id]}
-								<Spinner size="sm" class="mr-2" />
-							{:else if building.isUpgrading}
-								Upgrading...
-							{:else}
-								Upgrade to Level {building.level + 1}
-							{/if}
-						</button>
-					</form>
+						{#if loading[building.id]}
+							<Spinner size="sm" class="mr-2" />
+						{:else if building.isUpgrading}
+							Upgrading...
+						{:else}
+							Upgrade to Level {building.level + 1}
+						{/if}
+					</button>
 				</div>
 			{/each}
 		</div>

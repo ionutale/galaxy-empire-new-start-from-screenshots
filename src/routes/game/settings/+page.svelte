@@ -1,9 +1,23 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import Spinner from '$lib/components/Spinner.svelte';
+	import { invalidateAll, goto } from '$app/navigation';
 
-	let { data, form } = $props();
+	let { data } = $props();
 	let loading = $state<Record<string, boolean>>({});
+	let message = $state<string | null>(null);
+	let error = $state<string | null>(null);
+
+	// Form states
+	let email = $state(data.profile.email);
+	let avatarId = $state(data.profile.avatarId);
+	let currentPassword = $state('');
+	let newPassword = $state('');
+	let confirmPassword = $state('');
+
+	$effect(() => {
+		email = data.profile.email;
+		avatarId = data.profile.avatarId;
+	});
 
 	const avatars = [
 		{ id: 1, icon: '👨‍🚀', name: 'Commander' },
@@ -13,20 +27,101 @@
 		{ id: 5, icon: '👩‍🚀', name: 'Captain' },
 		{ id: 6, icon: '🧛', name: 'Overlord' }
 	];
+
+	async function handleUpdateProfile(e: Event) {
+		e.preventDefault();
+		loading['profile'] = true;
+		message = null;
+		error = null;
+
+		try {
+			const response = await fetch('/api/settings', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					action: 'updateProfile',
+					email,
+					avatar_id: avatarId
+				})
+			});
+			const result = await response.json();
+
+			if (result.success) {
+				message = result.message;
+				await invalidateAll();
+			} else {
+				error = result.error;
+			}
+		} catch (e: any) {
+			error = 'An error occurred';
+		} finally {
+			loading['profile'] = false;
+		}
+	}
+
+	async function handleChangePassword(e: Event) {
+		e.preventDefault();
+		loading['password'] = true;
+		message = null;
+		error = null;
+
+		try {
+			const response = await fetch('/api/settings', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					action: 'changePassword',
+					current_password: currentPassword,
+					new_password: newPassword,
+					confirm_password: confirmPassword
+				})
+			});
+			const result = await response.json();
+
+			if (result.success) {
+				message = result.message;
+				currentPassword = '';
+				newPassword = '';
+				confirmPassword = '';
+			} else {
+				error = result.error;
+			}
+		} catch (e: any) {
+			error = 'An error occurred';
+		} finally {
+			loading['password'] = false;
+		}
+	}
+
+	async function handleLogout() {
+		try {
+			const response = await fetch('/api/settings', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ action: 'logout' })
+			});
+			const result = await response.json();
+			if (result.redirect) {
+				goto(result.redirect);
+			}
+		} catch (e) {
+			console.error('Logout failed', e);
+		}
+	}
 </script>
 
 <div class="mx-auto max-w-2xl p-4 pb-20">
 	<h2 class="mb-6 text-2xl font-bold text-blue-300">Settings</h2>
 
-	{#if form?.message}
+	{#if message}
 		<div class="mb-6 rounded border border-green-500 bg-green-900/50 p-4 text-green-200">
-			{form.message}
+			{message}
 		</div>
 	{/if}
 
-	{#if form?.error}
+	{#if error}
 		<div class="mb-6 rounded border border-red-500 bg-red-900/50 p-4 text-red-200">
-			{form.error}
+			{error}
 		</div>
 	{/if}
 
@@ -34,25 +129,13 @@
 	<div class="mb-6 rounded-lg border border-gray-700 bg-gray-800 p-6 shadow-lg">
 		<h3 class="mb-4 text-xl font-bold text-gray-200">Profile</h3>
 
-		<form
-			method="POST"
-			action="?/updateProfile"
-			use:enhance={() => {
-				loading['profile'] = true;
-				return async ({ update }) => {
-					loading['profile'] = false;
-					await update();
-				};
-			}}
-			class="space-y-4"
-		>
+		<form onsubmit={handleUpdateProfile} class="space-y-4">
 			<div>
 				<label class="mb-2 block text-sm text-gray-400" for="email">Email Address</label>
 				<input
 					type="email"
-					name="email"
 					id="email"
-					value={data.profile.email}
+					bind:value={email}
 					class="w-full rounded border border-gray-600 bg-gray-700 px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
 				/>
 			</div>
@@ -68,7 +151,7 @@
 								id="avatar-{avatar.id}"
 								value={avatar.id}
 								class="peer sr-only"
-								checked={data.profile.avatarId === avatar.id}
+								bind:group={avatarId}
 							/>
 							<div
 								class="flex flex-col items-center rounded border border-gray-700 bg-gray-700/50 p-2 transition peer-checked:border-blue-400 peer-checked:bg-blue-600 hover:bg-gray-600"
@@ -98,18 +181,7 @@
 	<div class="mb-8 rounded-lg border border-gray-700 bg-gray-800 p-6">
 		<h3 class="mb-4 text-xl font-bold text-gray-300">Change Password</h3>
 
-		<form
-			method="POST"
-			action="?/changePassword"
-			use:enhance={() => {
-				loading['password'] = true;
-				return async ({ update }) => {
-					loading['password'] = false;
-					await update();
-				};
-			}}
-			class="space-y-4"
-		>
+		<form onsubmit={handleChangePassword} class="space-y-4">
 			<!-- Hidden username field for accessibility/password managers -->
 			<input
 				type="text"
@@ -126,9 +198,9 @@
 				>
 				<input
 					type="password"
-					name="current_password"
 					id="current_password"
 					autocomplete="current-password"
+					bind:value={currentPassword}
 					class="w-full rounded border border-gray-600 bg-gray-700 px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
 				/>
 			</div>
@@ -137,9 +209,9 @@
 				<label class="mb-2 block text-sm text-gray-400" for="new_password">New Password</label>
 				<input
 					type="password"
-					name="new_password"
 					id="new_password"
 					autocomplete="new-password"
+					bind:value={newPassword}
 					class="w-full rounded border border-gray-600 bg-gray-700 px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
 				/>
 			</div>
@@ -150,9 +222,9 @@
 				>
 				<input
 					type="password"
-					name="confirm_password"
 					id="confirm_password"
 					autocomplete="new-password"
+					bind:value={confirmPassword}
 					class="w-full rounded border border-gray-600 bg-gray-700 px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
 				/>
 			</div>
@@ -172,8 +244,11 @@
 
 	<!-- Logout -->
 	<div class="text-center">
-		<form method="POST" action="?/logout" use:enhance>
-			<button class="text-sm text-red-400 underline hover:text-red-300"> Log Out </button>
-		</form>
+		<button
+			onclick={handleLogout}
+			class="text-sm text-red-400 underline hover:text-red-300"
+		>
+			Log Out
+		</button>
 	</div>
 </div>

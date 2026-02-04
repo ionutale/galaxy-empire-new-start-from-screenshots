@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import type { PageData } from './$types';
 	import Spinner from '$lib/components/Spinner.svelte';
+	import { invalidateAll } from '$app/navigation';
 
 	let { data }: { data: PageData } = $props();
 
@@ -15,8 +16,73 @@
 	let loading = $state<Record<string, boolean>>({});
 	let savingSettings = $state(false);
 
+	// Settings state
+	let settingsEnabled = $state(false);
+	let settingsTemplateId = $state('');
+	let settingsOriginPlanetId = $state('');
+	
+	// Initialize settings from data when available
+	$effect(() => {
+		if (data.autoExploreSettings) {
+			settingsEnabled = data.autoExploreSettings.enabled;
+			settingsTemplateId = data.autoExploreSettings.templateId || '';
+			settingsOriginPlanetId = data.autoExploreSettings.originPlanetId || '';
+		}
+	});
+
 	function formatDate(dateStr: string | Date) {
 		return new Date(dateStr).toLocaleDateString() + ' ' + new Date(dateStr).toLocaleTimeString();
+	}
+
+	async function handlePurchase(commanderId: string) {
+		loading[commanderId] = true;
+		try {
+			const response = await fetch('/api/commanders', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ 
+					action: 'purchase',
+					commanderId, 
+					duration: selectedDuration 
+				})
+			});
+			
+			if (response.ok) {
+				await invalidateAll();
+			} else {
+				console.error('Failed to purchase commander');
+			}
+		} catch (error) {
+			console.error('Error purchasing commander:', error);
+		} finally {
+			loading[commanderId] = false;
+		}
+	}
+
+	async function handleSaveSettings() {
+		savingSettings = true;
+		try {
+			const response = await fetch('/api/commanders', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ 
+					action: 'saveSettings',
+					enabled: settingsEnabled,
+					templateId: settingsTemplateId,
+					originPlanetId: settingsOriginPlanetId
+				})
+			});
+			
+			if (response.ok) {
+				await invalidateAll();
+			} else {
+				console.error('Failed to save settings');
+			}
+		} catch (error) {
+			console.error('Error saving settings:', error);
+		} finally {
+			savingSettings = false;
+		}
 	}
 </script>
 
@@ -93,108 +159,82 @@
 					{#if commander.id === 'nebula_explorer' && activeCommanders[commander.id]}
 						<div class="mt-4 border-t border-gray-700 pt-4">
 							<h4 class="mb-2 text-sm font-bold text-purple-400">Auto-Explore Settings</h4>
-							<form
-								method="POST"
-								action="?/saveSettings"
-								use:enhance={() => {
-									savingSettings = true;
-									return async ({ update }) => {
-										savingSettings = false;
-										await update();
-									};
-								}}
-							>
-								<div class="space-y-2">
-									<label class="flex items-center space-x-2 text-sm text-gray-300">
-										<input
-											type="checkbox"
-											name="enabled"
-											checked={data.autoExploreSettings?.enabled}
-											class="rounded border-gray-600 bg-gray-800 text-purple-500 focus:ring-purple-500"
-										/>
-										<span>Enable Auto-Explore</span>
-									</label>
+							<div class="space-y-2">
+								<label class="flex items-center space-x-2 text-sm text-gray-300">
+									<input
+										type="checkbox"
+										name="enabled"
+										bind:checked={settingsEnabled}
+										class="rounded border-gray-600 bg-gray-800 text-purple-500 focus:ring-purple-500"
+									/>
+									<span>Enable Auto-Explore</span>
+								</label>
 
-									<select
-										name="templateId"
-										class="w-full rounded border border-gray-600 bg-gray-800 px-2 py-1 text-xs text-white"
-									>
-										<option value="">Select Template</option>
-										{#each data.templates as template}
-											<option
-												value={template.id}
-												selected={data.autoExploreSettings?.templateId === template.id}
-												>{template.name}</option
-											>
-										{/each}
-									</select>
+								<select
+									name="templateId"
+									bind:value={settingsTemplateId}
+									class="w-full rounded border border-gray-600 bg-gray-800 px-2 py-1 text-xs text-white"
+								>
+									<option value="">Select Template</option>
+									{#each data.templates as template}
+										<option
+											value={template.id}
+											>{template.name}</option
+										>
+									{/each}
+								</select>
 
-									<select
-										name="originPlanetId"
-										class="w-full rounded border border-gray-600 bg-gray-800 px-2 py-1 text-xs text-white"
-									>
-										<option value="">Select Origin Planet</option>
-										{#each data.userPlanets as planet}
-											<option
-												value={planet.id}
-												selected={data.autoExploreSettings?.originPlanetId === planet.id}
-												>{planet.name} [{planet.galaxyId}:{planet.systemId}:{planet.planetNumber}]</option
-											>
-										{/each}
-									</select>
+								<select
+									name="originPlanetId"
+									bind:value={settingsOriginPlanetId}
+									class="w-full rounded border border-gray-600 bg-gray-800 px-2 py-1 text-xs text-white"
+								>
+									<option value="">Select Origin Planet</option>
+									{#each data.userPlanets as planet}
+										<option
+											value={planet.id}
+											>{planet.name} [{planet.galaxyId}:{planet.systemId}:{planet.planetNumber}]</option
+										>
+									{/each}
+								</select>
 
-									<button
-										type="submit"
-										disabled={savingSettings}
-										class="flex w-full items-center justify-center rounded bg-blue-600 px-2 py-1 text-xs text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
-									>
-										{#if savingSettings}
-											<Spinner size="sm" class="mr-2" />
-										{/if}
-										Save Settings
-									</button>
-								</div>
-							</form>
+								<button
+									onclick={handleSaveSettings}
+									disabled={savingSettings}
+									class="flex w-full items-center justify-center rounded bg-blue-600 px-2 py-1 text-xs text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+								>
+									{#if savingSettings}
+										<Spinner size="sm" class="mr-2" />
+									{/if}
+									Save Settings
+								</button>
+							</div>
 						</div>
 					{/if}
 
-					<form
-						method="POST"
-						action="?/purchase"
-						use:enhance={() => {
-							loading[commander.id] = true;
-							return async ({ update }) => {
-								loading[commander.id] = false;
-								await update();
-							};
-						}}
-					>
-						<input type="hidden" name="commanderId" value={commander.id} />
+					<div class="mt-4 space-y-3">
+						<select
+							name="duration"
+							class="w-full rounded border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-white outline-none focus:border-purple-500"
+							bind:value={selectedDuration}
+						>
+							{#each Object.entries(durationCosts) as [days, cost]}
+								<option value={days}>{days} Days - {cost} DM</option>
+							{/each}
+						</select>
 
-						<div class="mt-4 space-y-3">
-							<select
-								name="duration"
-								class="w-full rounded border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-white outline-none focus:border-purple-500"
-								bind:value={selectedDuration}
-							>
-								{#each Object.entries(durationCosts) as [days, cost]}
-									<option value={days}>{days} Days - {cost} DM</option>
-								{/each}
-							</select>
-
-							<button
-								type="submit"
-								class="flex w-full transform items-center justify-center rounded bg-purple-600 px-4 py-2 font-bold text-white transition-colors hover:bg-purple-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
-								disabled={darkMatter < durationCosts[selectedDuration as any] ||
-									loading[commander.id]}
-							>
-								{#if loading[commander.id]}
-									<Spinner size="sm" class="mr-2" />
-								{/if}
-								{activeCommanders[commander.id] ? 'Extend' : 'Recruit'}
-							</button>
-						</div>
-					</form>
+						<button
+							onclick={() => handlePurchase(commander.id)}
+							class="flex w-full transform items-center justify-center rounded bg-purple-600 px-4 py-2 font-bold text-white transition-colors hover:bg-purple-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+							disabled={darkMatter < durationCosts[selectedDuration as any] ||
+								loading[commander.id]}
+						>
+							{#if loading[commander.id]}
+								<Spinner size="sm" class="mr-2" />
+							{/if}
+							{activeCommanders[commander.id] ? 'Extend' : 'Recruit'}
+						</button>
+					</div>
 				</div>
 			</div>
 		{/each}

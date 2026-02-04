@@ -1,6 +1,6 @@
-import { fail, redirect } from '@sveltejs/kit';
-import type { PageServerLoad, Actions } from './$types';
-import { SHOP_ITEMS, purchaseShopItem, getActiveBoosters } from '$lib/server/shop';
+import { redirect } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types';
+import { SHOP_ITEMS, getActiveBoosters } from '$lib/server/shop';
 import { db } from '$lib/server/db';
 import { users } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
@@ -29,25 +29,4 @@ export const load: PageServerLoad = async ({ locals }) => {
 		),
 		darkMatter
 	};
-};
-
-export const actions: Actions = {
-	purchase: async ({ request, locals }) => {
-		if (!locals.user) return fail(401, { error: 'Unauthorized' });
-
-		const data = await request.formData();
-		const itemId = data.get('itemId') as string;
-
-		if (!itemId) {
-			return fail(400, { error: 'Missing item ID' });
-		}
-
-		try {
-			const userId = locals.user.id;
-			const result = await purchaseShopItem(userId, itemId);
-			return result;
-		} catch (e: any) {
-			return fail(400, { error: e.message });
-		}
-	}
 };

@@ -1,5 +1,5 @@
-import { fail, redirect } from '@sveltejs/kit';
-import type { PageServerLoad, Actions } from './$types';
+import { redirect } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types';
 import {
 	COMMANDERS,
 	DURATION_COSTS,
@@ -66,60 +66,5 @@ export const load: PageServerLoad = async ({ locals }) => {
 	};
 };
 
-export const actions: Actions = {
-	purchase: async ({ request, locals }) => {
-		if (!locals.user) return fail(401, { error: 'Unauthorized' });
 
-		const data = await request.formData();
-		const commanderId = data.get('commanderId') as string;
-		const duration = parseInt(data.get('duration') as string);
-
-		if (!commanderId || !duration) {
-			return fail(400, { error: 'Missing parameters' });
-		}
-
-		try {
-			const userId = locals.user.id;
-			const result = await purchaseCommander(userId, commanderId, duration);
-			return result;
-		} catch (e: any) {
-			return fail(400, { error: e.message });
-		}
-	},
-
-	saveSettings: async ({ request, locals }) => {
-		if (!locals.user) return fail(401, { error: 'Unauthorized' });
-
-		const data = await request.formData();
-		const enabled = data.get('enabled') === 'on';
-		const templateId = Number(data.get('templateId'));
-		const originPlanetId = Number(data.get('originPlanetId'));
-
-		if (enabled && (!templateId || !originPlanetId)) {
-			return fail(400, { error: 'Template and Planet are required when enabled' });
-		}
-
-		try {
-			await db
-				.insert(autoExploreSettings)
-				.values({
-					userId: locals.user.id,
-					enabled,
-					templateId: templateId || null,
-					originPlanetId: originPlanetId || null
-				})
-				.onConflictDoUpdate({
-					target: autoExploreSettings.userId,
-					set: {
-						enabled,
-						templateId: templateId || null,
-						originPlanetId: originPlanetId || null
-					}
-				});
-
-			return { success: true };
-		} catch (e: any) {
-			return fail(400, { error: e.message });
-		}
-	}
-};
+```,oldString:

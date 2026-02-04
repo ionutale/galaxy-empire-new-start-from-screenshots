@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import { page } from '$app/stores';
 	import { invalidateAll } from '$app/navigation';
 	import Spinner from '$lib/components/Spinner.svelte';
@@ -25,6 +24,11 @@
 	// Reactive state for ship inputs
 	let shipCounts = $state(Object.fromEntries(shipTypes.map((s) => [s.id, 0])));
 	let ships = $derived(data.ships || {}) as any;
+
+	// Resources
+	let resourceMetal = $state(0);
+	let resourceCrystal = $state(0);
+	let resourceGas = $state(0);
 
 	// Get query params for pre-filling
 	let targetGalaxy = $state($page.url.searchParams.get('galaxy') || '1');
@@ -126,6 +130,102 @@
 			}
 		}
 	}
+
+	async function handleDeleteTemplate(id: number) {
+		deletingTemplate[id] = true;
+		try {
+			const response = await fetch('/api/fleet', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ action: 'deleteTemplate', id })
+			});
+			if (response.ok) {
+				await invalidateAll();
+			} else {
+				console.error('Failed to delete template');
+			}
+		} catch (error) {
+			console.error('Error deleting template:', error);
+		} finally {
+			deletingTemplate[id] = false;
+		}
+	}
+
+	async function handleCreateTemplate() {
+		if (!newTemplateName) return;
+		savingTemplate = true;
+
+		const ships: Record<string, number> = {};
+		for (const [id, count] of Object.entries(shipCounts)) {
+			if (count > 0) ships[id] = count;
+		}
+
+		try {
+			const response = await fetch('/api/fleet', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ action: 'createTemplate', name: newTemplateName, ships })
+			});
+			if (response.ok) {
+				newTemplateName = '';
+				await invalidateAll();
+			} else {
+				console.error('Failed to create template');
+			}
+		} catch (error) {
+			console.error('Error creating template:', error);
+		} finally {
+			savingTemplate = false;
+		}
+	}
+
+	async function handleDispatch() {
+		loading = true;
+		const ships: Record<string, number> = {};
+		for (const [id, count] of Object.entries(shipCounts)) {
+			if (count > 0) ships[id] = count;
+		}
+
+		const resources = {
+			metal: resourceMetal,
+			crystal: resourceCrystal,
+			gas: resourceGas
+		};
+
+		try {
+			const response = await fetch('/api/fleet', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					action: 'dispatch',
+					planetId: data.currentPlanet.id,
+					galaxy: Number(targetGalaxy),
+					system: Number(targetSystem),
+					planet: Number(targetPlanet),
+					mission: targetMission,
+					ships,
+					resources
+				})
+			});
+			
+			const result = await response.json();
+
+			if (response.ok) {
+				await invalidateAll();
+				// Reset form? maybe keep it for repeat missions?
+				// Typically clearing ships is good
+				for (const key in shipCounts) shipCounts[key] = 0;
+			} else {
+				console.error('Failed to dispatch fleet', result.error);
+				alert(result.error); // Simple feedback
+			}
+		} catch (error) {
+			console.error('Error dispatching fleet:', error);
+		} finally {
+			loading = false;
+		}
+	}
+
 </script>
 
 <div class="p-4 pb-20">
@@ -163,30 +263,17 @@
 							>
 								Load
 							</button>
-							<form
-								method="POST"
-								action="?/deleteTemplate"
-								use:enhance={() => {
-									deletingTemplate[template.id] = true;
-									return async ({ update }) => {
-										deletingTemplate[template.id] = false;
-										await update();
-									};
-								}}
+							<button
+								onclick={() => handleDeleteTemplate(template.id)}
+								disabled={deletingTemplate[template.id]}
+								class="flex items-center justify-center rounded border border-red-800 bg-red-900/50 px-2 py-1 text-xs text-red-200 transition-transform hover:bg-red-800 active:scale-95 disabled:opacity-50"
 							>
-								<input type="hidden" name="id" value={template.id} />
-								<button
-									type="submit"
-									disabled={deletingTemplate[template.id]}
-									class="flex items-center justify-center rounded border border-red-800 bg-red-900/50 px-2 py-1 text-xs text-red-200 transition-transform hover:bg-red-800 active:scale-95 disabled:opacity-50"
-								>
-									{#if deletingTemplate[template.id]}
-										<Spinner size="sm" />
-									{:else}
-										✕
-									{/if}
-								</button>
-							</form>
+								{#if deletingTemplate[template.id]}
+									<Spinner size="sm" />
+								{:else}
+									✕
+								{/if}
+							</button>
 						</div>
 					</div>
 				{/each}
@@ -198,16 +285,8 @@
 	<div class="rounded-lg border border-gray-700 bg-gray-800 p-4">
 		<h3 class="mb-4 text-lg font-bold text-gray-300">Dispatch Fleet</h3>
 
-		<form
-			method="POST"
-			action="?/dispatch"
-			use:enhance={() => {
-				return async ({ update }) => {
-					await update({ reset: false });
-				};
-			}}
-		>
-			<input type="hidden" name="planet_id" value={data.currentPlanet.id} />
+		<div>
+
 
 			<!-- Ship Selection -->
 			<div class="mb-6 space-y-2">
@@ -245,25 +324,7 @@
 						<button
 							type="button"
 							disabled={savingTemplate}
-							onclick={() => {
-								if (!newTemplateName) return;
-								savingTemplate = true;
-
-								const formData = new FormData();
-								formData.append('name', newTemplateName);
-								for (const [id, count] of Object.entries(shipCounts)) {
-									if (count > 0) formData.append(id, count.toString());
-								}
-
-								fetch('?/createTemplate', {
-									method: 'POST',
-									body: formData
-								}).then(async () => {
-									newTemplateName = '';
-									await invalidateAll();
-									savingTemplate = false;
-								});
-							}}
+							onclick={handleCreateTemplate}
 							class="flex items-center justify-center rounded bg-green-700 px-3 py-1 text-sm text-white transition-transform hover:bg-green-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
 						>
 							{#if savingTemplate}
@@ -284,8 +345,8 @@
 						<input
 							id="metal"
 							type="number"
-							name="metal"
 							min="0"
+							bind:value={resourceMetal}
 							class="w-full rounded border border-gray-600 bg-gray-700 px-2 py-1 text-right text-white"
 							placeholder="0"
 						/>
@@ -295,8 +356,8 @@
 						<input
 							id="crystal"
 							type="number"
-							name="crystal"
 							min="0"
+							bind:value={resourceCrystal}
 							class="w-full rounded border border-gray-600 bg-gray-700 px-2 py-1 text-right text-white"
 							placeholder="0"
 						/>
@@ -306,8 +367,8 @@
 						<input
 							id="gas"
 							type="number"
-							name="gas"
 							min="0"
+							bind:value={resourceGas}
 							class="w-full rounded border border-gray-600 bg-gray-700 px-2 py-1 text-right text-white"
 							placeholder="0"
 						/>
@@ -322,8 +383,7 @@
 					<input
 						id="galaxy"
 						type="number"
-						name="galaxy"
-						value={targetGalaxy}
+						bind:value={targetGalaxy}
 						class="w-full rounded border border-gray-600 bg-gray-700 px-2 py-1 text-white"
 					/>
 				</div>
@@ -332,8 +392,7 @@
 					<input
 						id="system"
 						type="number"
-						name="system"
-						value={targetSystem}
+						bind:value={targetSystem}
 						class="w-full rounded border border-gray-600 bg-gray-700 px-2 py-1 text-white"
 					/>
 				</div>
@@ -342,8 +401,7 @@
 					<input
 						id="planet"
 						type="number"
-						name="planet"
-						value={targetPlanet}
+						bind:value={targetPlanet}
 						class="w-full rounded border border-gray-600 bg-gray-700 px-2 py-1 text-white"
 						placeholder="1-15"
 					/>
@@ -404,7 +462,8 @@
 			{/if}
 
 			<button
-				type="submit"
+				type="button"
+				onclick={handleDispatch}
 				disabled={loading || (movementInfo && !movementInfo.canReach)}
 				class="flex w-full items-center justify-center rounded bg-blue-600 py-3 font-bold text-white transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
 			>
@@ -413,6 +472,6 @@
 				{/if}
 				Send Fleet
 			</button>
-		</form>
+		</div>
 	</div>
 </div>

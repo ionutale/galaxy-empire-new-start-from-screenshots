@@ -1,8 +1,7 @@
 import { db } from '$lib/server/db';
 import { users, alliances, allianceDiplomacy } from '$lib/server/db/schema';
-import { eq, desc, sql, or, and } from 'drizzle-orm';
-import type { PageServerLoad, Actions } from './$types';
-import { fail } from '@sveltejs/kit';
+import { eq, desc, sql, or } from 'drizzle-orm';
+import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) return {};
@@ -101,94 +100,5 @@ export const load: PageServerLoad = async ({ locals }) => {
 			inAlliance: false,
 			alliances: alliancesRes
 		};
-	}
-};
-
-export const actions: Actions = {
-	create: async ({ request, locals }) => {
-		const data = await request.formData();
-		const name = data.get('name') as string;
-		const tag = data.get('tag') as string;
-
-		if (!locals.user) return fail(401, { error: 'Unauthorized' });
-		const userId = locals.user.id;
-		if (!name || !tag) return fail(400, { error: 'Name and Tag required' });
-
-		try {
-			await db.transaction(async (tx) => {
-				// Create alliance
-				const res = await tx
-					.insert(alliances)
-					.values({
-						name,
-						tag,
-						ownerId: userId
-					})
-					.returning({ id: alliances.id });
-
-				const allianceId = res[0].id;
-
-				// Update user
-				await tx.update(users).set({ allianceId }).where(eq(users.id, userId));
-			});
-
-			return { success: true };
-		} catch (e) {
-			console.error(e);
-			return fail(500, { error: 'Failed to create alliance' });
-		}
-	},
-	join: async ({ request, locals }) => {
-		const data = await request.formData();
-		const allianceId = Number(data.get('allianceId'));
-
-		if (!locals.user) return fail(401, { error: 'Unauthorized' });
-
-		await db.update(users).set({ allianceId }).where(eq(users.id, locals.user.id));
-
-		return { success: true };
-	},
-	leave: async ({ locals }) => {
-		if (!locals.user) return fail(401, { error: 'Unauthorized' });
-
-		await db.update(users).set({ allianceId: null }).where(eq(users.id, locals.user.id));
-
-		return { success: true };
-	},
-	declareWar: async ({ request, locals }) => {
-		const data = await request.formData();
-		const targetAllianceId = Number(data.get('targetAllianceId'));
-
-		if (!locals.user?.allianceId) return fail(401, { error: 'Not in alliance' });
-
-		try {
-			await db.insert(allianceDiplomacy).values({
-				initiatorAllianceId: locals.user.allianceId,
-				targetAllianceId,
-				type: 'war',
-				status: 'active'
-			});
-			return { success: true };
-		} catch (e) {
-			return fail(500, { error: 'Failed to declare war' });
-		}
-	},
-	declarePeace: async ({ request, locals }) => {
-		const data = await request.formData();
-		const targetAllianceId = Number(data.get('targetAllianceId'));
-
-		if (!locals.user?.allianceId) return fail(401, { error: 'Not in alliance' });
-
-		try {
-			await db.insert(allianceDiplomacy).values({
-				initiatorAllianceId: locals.user.allianceId,
-				targetAllianceId,
-				type: 'peace',
-				status: 'active'
-			});
-			return { success: true };
-		} catch (e) {
-			return fail(500, { error: 'Failed to declare peace' });
-		}
 	}
 };

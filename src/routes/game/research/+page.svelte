@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import type { ResearchInfo } from '$lib/server/research-service';
 	import { onMount } from 'svelte';
+	import { invalidateAll } from '$app/navigation';
 
 	let { data } = $props();
 	let loading = $state<Record<string, boolean>>({});
@@ -28,6 +28,53 @@
 
 		return () => clearInterval(interval);
 	});
+	
+	async function handleResearch(researchTypeId: number, planetId: number) {
+		loading[researchTypeId] = true;
+		try {
+			const res = await fetch('/api/research/start', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ researchTypeId, planetId })
+			});
+			
+			if (!res.ok) {
+				const err = await res.json();
+				alert(err.error || 'Research failed');
+				return;
+			}
+			
+			await invalidateAll();
+		} catch (e) {
+			console.error(e);
+			alert('Network error during research start');
+		} finally {
+			loading[researchTypeId] = false;
+		}
+	}
+
+	async function handleCancel(queueId: number) {
+		if (!confirm('Cancel this research?')) return;
+		
+		try {
+			const res = await fetch('/api/research/cancel', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ queueId })
+			});
+
+			if (!res.ok) {
+				const err = await res.json();
+				alert(err.error || 'Cancel failed');
+				return;
+			}
+
+			await invalidateAll();
+		} catch (e) {
+			console.error(e);
+			alert('Network error during cancellation');
+		}
+	}
 
 	// Group research by category
 	let energyResearch = $derived(research.filter(r => r.category === 'energy'));
@@ -91,15 +138,12 @@
 								<div class="text-sm text-yellow-400">{formatTimeRemaining(new Date(item.completionAt))}</div>
 							</div>
 						</div>
-						<form method="POST" action="?/cancel" use:enhance>
-							<input type="hidden" name="queue_id" value={item.id} />
-							<button
-								type="submit"
-								class="rounded bg-red-600 px-3 py-1 text-sm font-bold text-white hover:bg-red-500"
-							>
-								Cancel
-							</button>
-						</form>
+						<button
+							onclick={() => handleCancel(item.id)}
+							class="rounded bg-red-600 px-3 py-1 text-sm font-bold text-white hover:bg-red-500"
+						>
+							Cancel
+						</button>
 					</div>
 				{/each}
 			</div>
@@ -156,39 +200,25 @@
 						{/if}
 					</div>
 
-					<form
-						method="POST"
-						action="?/research"
-						use:enhance={() => {
-							loading[tech.id] = true;
-							return async ({ update }) => {
-								loading[tech.id] = false;
-								await update();
-							};
-						}}
+					<button
+						onclick={() => handleResearch(tech.id, data.currentPlanet.id)}
+						disabled={!hasResearchLab ||
+							!tech.canResearch ||
+							resources.metal < tech.cost.metal ||
+							resources.crystal < tech.cost.crystal ||
+							resources.gas < tech.cost.gas ||
+							tech.isResearching ||
+							loading[tech.id]}
+						class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
 					>
-						<input type="hidden" name="research_type_id" value={tech.id} />
-						<input type="hidden" name="planet_id" value={data.currentPlanet.id} />
-						<button
-							type="submit"
-							disabled={!hasResearchLab ||
-								!tech.canResearch ||
-								resources.metal < tech.cost.metal ||
-								resources.crystal < tech.cost.crystal ||
-								resources.gas < tech.cost.gas ||
-								tech.isResearching ||
-								loading[tech.id]}
-							class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
-						>
-							{#if loading[tech.id]}
-								<Spinner size="sm" class="mr-2" />
-							{:else if tech.isResearching}
-								Researching...
-							{:else}
-								Research Level {tech.level + 1}
-							{/if}
-						</button>
-					</form>
+						{#if loading[tech.id]}
+							<Spinner size="sm" class="mr-2" />
+						{:else if tech.isResearching}
+							Researching...
+						{:else}
+							Research Level {tech.level + 1}
+						{/if}
+					</button>
 				</div>
 			{/each}
 		</div>
@@ -244,39 +274,25 @@
 						{/if}
 					</div>
 
-					<form
-						method="POST"
-						action="?/research"
-						use:enhance={() => {
-							loading[tech.id] = true;
-							return async ({ update }) => {
-								loading[tech.id] = false;
-								await update();
-							};
-						}}
+					<button
+						onclick={() => handleResearch(tech.id, data.currentPlanet.id)}
+						disabled={!hasResearchLab ||
+							!tech.canResearch ||
+							resources.metal < tech.cost.metal ||
+							resources.crystal < tech.cost.crystal ||
+							resources.gas < tech.cost.gas ||
+							tech.isResearching ||
+							loading[tech.id]}
+						class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
 					>
-						<input type="hidden" name="research_type_id" value={tech.id} />
-						<input type="hidden" name="planet_id" value={data.currentPlanet.id} />
-						<button
-							type="submit"
-							disabled={!hasResearchLab ||
-								!tech.canResearch ||
-								resources.metal < tech.cost.metal ||
-								resources.crystal < tech.cost.crystal ||
-								resources.gas < tech.cost.gas ||
-								tech.isResearching ||
-								loading[tech.id]}
-							class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
-						>
-							{#if loading[tech.id]}
-								<Spinner size="sm" class="mr-2" />
-							{:else if tech.isResearching}
-								Researching...
-							{:else}
-								Research Level {tech.level + 1}
-							{/if}
-						</button>
-					</form>
+						{#if loading[tech.id]}
+							<Spinner size="sm" class="mr-2" />
+						{:else if tech.isResearching}
+							Researching...
+						{:else}
+							Research Level {tech.level + 1}
+						{/if}
+					</button>
 				</div>
 			{/each}
 		</div>
@@ -332,39 +348,25 @@
 						{/if}
 					</div>
 
-					<form
-						method="POST"
-						action="?/research"
-						use:enhance={() => {
-							loading[tech.id] = true;
-							return async ({ update }) => {
-								loading[tech.id] = false;
-								await update();
-							};
-						}}
+					<button
+						onclick={() => handleResearch(tech.id, data.currentPlanet.id)}
+						disabled={!hasResearchLab ||
+							!tech.canResearch ||
+							resources.metal < tech.cost.metal ||
+							resources.crystal < tech.cost.crystal ||
+							resources.gas < tech.cost.gas ||
+							tech.isResearching ||
+							loading[tech.id]}
+						class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
 					>
-						<input type="hidden" name="research_type_id" value={tech.id} />
-						<input type="hidden" name="planet_id" value={data.currentPlanet.id} />
-						<button
-							type="submit"
-							disabled={!hasResearchLab ||
-								!tech.canResearch ||
-								resources.metal < tech.cost.metal ||
-								resources.crystal < tech.cost.crystal ||
-								resources.gas < tech.cost.gas ||
-								tech.isResearching ||
-								loading[tech.id]}
-							class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
-						>
-							{#if loading[tech.id]}
-								<Spinner size="sm" class="mr-2" />
-							{:else if tech.isResearching}
-								Researching...
-							{:else}
-								Research Level {tech.level + 1}
-							{/if}
-						</button>
-					</form>
+						{#if loading[tech.id]}
+							<Spinner size="sm" class="mr-2" />
+						{:else if tech.isResearching}
+							Researching...
+						{:else}
+							Research Level {tech.level + 1}
+						{/if}
+					</button>
 				</div>
 			{/each}
 		</div>
@@ -420,39 +422,25 @@
 						{/if}
 					</div>
 
-					<form
-						method="POST"
-						action="?/research"
-						use:enhance={() => {
-							loading[tech.id] = true;
-							return async ({ update }) => {
-								loading[tech.id] = false;
-								await update();
-							};
-						}}
+					<button
+						onclick={() => handleResearch(tech.id, data.currentPlanet.id)}
+						disabled={!hasResearchLab ||
+							!tech.canResearch ||
+							resources.metal < tech.cost.metal ||
+							resources.crystal < tech.cost.crystal ||
+							resources.gas < tech.cost.gas ||
+							tech.isResearching ||
+							loading[tech.id]}
+						class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
 					>
-						<input type="hidden" name="research_type_id" value={tech.id} />
-						<input type="hidden" name="planet_id" value={data.currentPlanet.id} />
-						<button
-							type="submit"
-							disabled={!hasResearchLab ||
-								!tech.canResearch ||
-								resources.metal < tech.cost.metal ||
-								resources.crystal < tech.cost.crystal ||
-								resources.gas < tech.cost.gas ||
-								tech.isResearching ||
-								loading[tech.id]}
-							class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
-						>
-							{#if loading[tech.id]}
-								<Spinner size="sm" class="mr-2" />
-							{:else if tech.isResearching}
-								Researching...
-							{:else}
-								Research Level {tech.level + 1}
-							{/if}
-						</button>
-					</form>
+						{#if loading[tech.id]}
+							<Spinner size="sm" class="mr-2" />
+						{:else if tech.isResearching}
+							Researching...
+						{:else}
+							Research Level {tech.level + 1}
+						{/if}
+					</button>
 				</div>
 			{/each}
 		</div>
@@ -508,39 +496,25 @@
 						{/if}
 					</div>
 
-					<form
-						method="POST"
-						action="?/research"
-						use:enhance={() => {
-							loading[tech.id] = true;
-							return async ({ update }) => {
-								loading[tech.id] = false;
-								await update();
-							};
-						}}
+					<button
+						onclick={() => handleResearch(tech.id, data.currentPlanet.id)}
+						disabled={!hasResearchLab ||
+							!tech.canResearch ||
+							resources.metal < tech.cost.metal ||
+							resources.crystal < tech.cost.crystal ||
+							resources.gas < tech.cost.gas ||
+							tech.isResearching ||
+							loading[tech.id]}
+						class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
 					>
-						<input type="hidden" name="research_type_id" value={tech.id} />
-						<input type="hidden" name="planet_id" value={data.currentPlanet.id} />
-						<button
-							type="submit"
-							disabled={!hasResearchLab ||
-								!tech.canResearch ||
-								resources.metal < tech.cost.metal ||
-								resources.crystal < tech.cost.crystal ||
-								resources.gas < tech.cost.gas ||
-								tech.isResearching ||
-								loading[tech.id]}
-							class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
-						>
-							{#if loading[tech.id]}
-								<Spinner size="sm" class="mr-2" />
-							{:else if tech.isResearching}
-								Researching...
-							{:else}
-								Research Level {tech.level + 1}
-							{/if}
-						</button>
-					</form>
+						{#if loading[tech.id]}
+							<Spinner size="sm" class="mr-2" />
+						{:else if tech.isResearching}
+							Researching...
+						{:else}
+							Research Level {tech.level + 1}
+						{/if}
+					</button>
 				</div>
 			{/each}
 		</div>

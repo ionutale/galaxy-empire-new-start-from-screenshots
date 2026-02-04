@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 	import type { PageData } from './$types';
 	import Spinner from '$lib/components/Spinner.svelte';
 
@@ -13,6 +13,28 @@
 
 	function formatDate(dateStr: string | Date) {
 		return new Date(dateStr).toLocaleDateString() + ' ' + new Date(dateStr).toLocaleTimeString();
+	}
+
+	async function handlePurchase(itemId: string) {
+		loading[itemId] = true;
+		try {
+			const response = await fetch('/api/shop', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ itemId })
+			});
+			const result = await response.json();
+			if (response.ok && result.success) {
+				await invalidateAll();
+			} else {
+				console.error('Purchase failed:', result.error);
+				alert(result.error);
+			}
+		} catch (error) {
+			console.error('Error purchasing item:', error);
+		} finally {
+			loading[itemId] = false;
+		}
 	}
 </script>
 
@@ -59,30 +81,16 @@
 						</div>
 					{/if}
 
-					<form
-						method="POST"
-						action="?/purchase"
-						use:enhance={() => {
-							loading[item.id] = true;
-							return async ({ update }) => {
-								loading[item.id] = false;
-								await update();
-							};
-						}}
+					<button
+						onclick={() => handlePurchase(item.id)}
+						class="mt-4 flex w-full transform items-center justify-center rounded bg-yellow-600 px-4 py-2 font-bold text-white transition-colors hover:bg-yellow-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+						disabled={darkMatter < item.cost || loading[item.id]}
 					>
-						<input type="hidden" name="itemId" value={item.id} />
-
-						<button
-							type="submit"
-							class="mt-4 flex w-full transform items-center justify-center rounded bg-yellow-600 px-4 py-2 font-bold text-white transition-colors hover:bg-yellow-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
-							disabled={darkMatter < item.cost || loading[item.id]}
-						>
-							{#if loading[item.id]}
-								<Spinner size="sm" class="mr-2" />
-							{/if}
-							{activeBoosters[item.id] ? 'Extend' : 'Purchase'}
-						</button>
-					</form>
+						{#if loading[item.id]}
+							<Spinner size="sm" class="mr-2" />
+						{/if}
+						{activeBoosters[item.id] ? 'Extend' : 'Purchase'}
+					</button>
 				</div>
 			</div>
 		{/each}
