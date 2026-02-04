@@ -153,5 +153,4 @@ BEGIN
     -- Delete the fleet
     DELETE FROM fleets WHERE id = fleet_id;
 END;
-$$ LANGUAGE plpgsql;</content>
-<parameter name="filePath">/Users/ionutale/developer-playground/galaxy-empire-new-start-from-screenshots/drizzle/0015_espionage_procedures.sql
+$$ LANGUAGE plpgsql;

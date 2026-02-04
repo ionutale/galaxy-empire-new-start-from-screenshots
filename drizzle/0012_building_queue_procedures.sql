@@ -172,5 +172,4 @@ BEGIN
 
     RETURN true;
 END;
-$$ LANGUAGE plpgsql;</content>
-<parameter name="filePath">/Users/ionutale/developer-playground/galaxy-empire-new-start-from-screenshots/drizzle/0012_building_queue_procedures.sql
+$$ LANGUAGE plpgsql;

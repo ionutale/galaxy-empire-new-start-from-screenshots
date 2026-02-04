@@ -350,5 +350,4 @@ BEGIN
         'total_capacity', total_capacity
     );
 END;
-$$ LANGUAGE plpgsql;</content>
-<parameter name="filePath">/Users/ionutale/developer-playground/galaxy-empire-new-start-from-screenshots/drizzle/0016_validation_procedures.sql
+$$ LANGUAGE plpgsql;
