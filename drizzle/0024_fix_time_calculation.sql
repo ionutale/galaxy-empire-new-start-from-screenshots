@@ -16,9 +16,9 @@ DECLARE
     build_seconds float;
 BEGIN
     -- Get build time formula or calculate based on cost (standard OGame formula)
-    SELECT base_cost INTO base_cost
+    SELECT building_types.base_cost INTO base_cost
     FROM building_types
-    WHERE id = p_building_type_id;
+    WHERE building_types.id = p_building_type_id;
 
     -- Standard formula: (Metal + Crystal) / (2500 * (1 + RoboticsLevel) * 2^NaniteLevel) * hours
     metal_cost := (base_cost->>'metal')::float * power(1.5, p_target_level - 1);
