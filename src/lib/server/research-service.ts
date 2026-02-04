@@ -145,11 +145,24 @@ export class ResearchService {
 	}
 
 	/**
-	 * Process completed research
+	 * Process completed research for all users
 	 */
-	static async processCompletedResearch(userId: number): Promise<void> {
-		// Call stored procedure to process completed research
-		await db.execute(sql`CALL process_completed_research(${userId})`);
+	static async processCompletedResearch(): Promise<void>;
+	/**
+	 * Process completed research for a specific user
+	 */
+	static async processCompletedResearch(userId: number): Promise<void>;
+	static async processCompletedResearch(userId?: number): Promise<void> {
+		if (userId !== undefined) {
+			// Process for specific user
+			await db.execute(sql`CALL process_completed_research(${userId})`);
+		} else {
+			// Process for all users
+			const usersResult = await db.select({ id: users.id }).from(users);
+			for (const user of usersResult) {
+				await db.execute(sql`CALL process_completed_research(${user.id})`);
+			}
+		}
 	}
 
 	/**
