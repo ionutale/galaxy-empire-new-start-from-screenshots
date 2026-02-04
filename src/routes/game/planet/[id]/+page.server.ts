@@ -32,14 +32,14 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 	const queue = await db
 		.select({
 			id: buildingQueue.id,
-			buildingTypeId: buildingQueue.building_type_id,
-			targetLevel: buildingQueue.target_level,
-			completionAt: buildingQueue.completion_at,
-			resourcesReserved: buildingQueue.resources_reserved
+			buildingTypeId: buildingQueue.buildingTypeId,
+			targetLevel: buildingQueue.targetLevel,
+			completionAt: buildingQueue.completionAt,
+			resourcesReserved: buildingQueue.resourcesReserved
 		})
 		.from(buildingQueue)
-		.where(eq(buildingQueue.planet_id, planetId))
-		.orderBy(buildingQueue.completion_at);
+		.where(eq(buildingQueue.planetId, planetId))
+		.orderBy(buildingQueue.completionAt);
 
 	// Get current resources
 	const resources = await db
