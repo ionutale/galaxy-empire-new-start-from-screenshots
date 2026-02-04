@@ -17,8 +17,8 @@ export async function dispatchFleet(
 	// Validate fleet dispatch using stored procedure
 	const validationResult = await db.execute(sql`
 		SELECT validate_fleet_dispatch(
-			${userId}, ${planetId}, ${JSON.stringify(ships)}::jsonb, ${mission},
-			${galaxy}, ${system}, ${planet}, ${JSON.stringify(resources)}::jsonb
+			${userId}::integer, ${planetId}::integer, ${JSON.stringify(ships)}::jsonb, ${mission}::text,
+			${galaxy}::integer, ${system}::integer, ${planet}::integer, ${JSON.stringify(resources)}::jsonb
 		) as validation
 	`);
 
