@@ -6,7 +6,7 @@ import { eq } from 'drizzle-orm';
 
 // Mock the database
 vi.mock('./db', async (importOriginal) => {
-	const actual = await importOriginal();
+	const actual: any = await importOriginal();
 	return {
 		...actual,
 		db: {

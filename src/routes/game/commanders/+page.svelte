@@ -25,8 +25,8 @@
 	$effect(() => {
 		if (data.autoExploreSettings) {
 			settingsEnabled = data.autoExploreSettings.enabled ?? false;
-			settingsTemplateId = data.autoExploreSettings.templateId || '';
-			settingsOriginPlanetId = data.autoExploreSettings.originPlanetId || '';
+			settingsTemplateId = data.autoExploreSettings.templateId?.toString() ?? '';
+			settingsOriginPlanetId = data.autoExploreSettings.originPlanetId?.toString() ?? '';
 		}
 	});
 

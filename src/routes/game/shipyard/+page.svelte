@@ -156,7 +156,7 @@
 			: ''}"
 	>
 		{#each shipyardInfo as ship}
-			{@const count = ships[ship.shipType.replace(/_([a-z])/g, (g) => g[1].toUpperCase())] || 0}
+			{@const count = ships[ship.shipType.replace(/_([a-z])/g, (g: any) => g[1].toUpperCase())] || 0}
 			{@const amount = amounts[ship.shipType] || 1}
 			{@const totalCost = {
 				metal: ship.cost.metal * amount,

@@ -132,7 +132,7 @@
 				{#each queue as item}
 					<div class="flex items-center justify-between rounded bg-gray-800 p-3">
 						<div class="flex items-center space-x-3">
-							<span class="text-2xl">{getResearchIcon(item.researchTypeId)}</span>
+							<span class="text-2xl">{getResearchIcon(item.researchTypeId || 0)}</span>
 							<div>
 								<span class="font-medium text-gray-200">Research Level {item.level}</span>
 								<div class="text-sm text-yellow-400">{formatTimeRemaining(new Date(item.completionAt))}</div>

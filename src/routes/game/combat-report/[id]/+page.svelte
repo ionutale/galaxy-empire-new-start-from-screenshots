@@ -15,6 +15,10 @@
 		defenderDefenses: CombatFleet;
 		loot: { metal?: number; crystal?: number; gas?: number };
 		debris: { metal?: number; crystal?: number };
+		winner?: string;
+		attackerName?: string;
+		defenderName?: string;
+		isAttacker?: boolean;
 	}
 
 	let { data } = $props();
