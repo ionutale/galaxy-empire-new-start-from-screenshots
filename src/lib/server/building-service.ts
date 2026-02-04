@@ -195,7 +195,7 @@ export class BuildingService {
 				bt.base_production,
 				bt.base_energy,
 				pb.level,
-				p.temperature
+				p.temperature_max as temperature
 			FROM planet_buildings pb
 			JOIN building_types bt ON bt.id = pb.building_type_id
 			JOIN planets p ON p.id = pb.planet_id

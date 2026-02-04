@@ -55,10 +55,10 @@ export class CacheService {
 	 */
 	static async getUserPlanets(userId: number) {
 		const cacheKey = `user_planets_${userId}`;
-		let planets = cache.get(cacheKey);
+		let result = cache.get(cacheKey);
 
-		if (!planets) {
-			planets = await db
+		if (!result) {
+			result = await db
 				.select({
 					id: planets.id,
 					name: planets.name,
@@ -78,10 +78,10 @@ export class CacheService {
 				.where(eq(planets.userId, userId))
 				.orderBy(planets.id);
 
-			cache.set(cacheKey, planets, 60000); // Cache for 1 minute
+			cache.set(cacheKey, result, 60000); // Cache for 1 minute
 		}
 
-		return planets;
+		return result;
 	}
 
 	/**
