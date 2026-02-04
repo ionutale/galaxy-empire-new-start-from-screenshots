@@ -278,98 +278,98 @@
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🪐</span>
-			<span class="text-[10px] tracking-wide uppercase">Base</span>
+			<span class="text-[10px] tracking-wide uppercase text-gray-300">Base</span>
 		</a>
 		<a
 			href="/game/planet"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🌍</span>
-			<span class="text-[10px] tracking-wide uppercase">Planets</span>
+			<span class="text-[10px] tracking-wide uppercase text-gray-300">Planets</span>
 		</a>
 		<a
 			href="/game/research"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🔬</span>
-			<span class="text-[10px] tracking-wide uppercase">Research</span>
+			<span class="text-[10px] tracking-wide uppercase text-gray-300">Research</span>
 		</a>
 		<a
 			href="/game/shipyard"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🛠️</span>
-			<span class="text-[10px] tracking-wide uppercase">Shipyard</span>
+			<span class="text-[10px] tracking-wide uppercase text-gray-300">Shipyard</span>
 		</a>
 		<a
 			href="/game/fleet"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🚀</span>
-			<span class="text-[10px] tracking-wide uppercase">Fleet</span>
+			<span class="text-[10px] tracking-wide uppercase text-gray-300">Fleet</span>
 		</a>
 		<a
 			href="/game/fleet/movements"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">📡</span>
-			<span class="text-[10px] tracking-wide uppercase">Movements</span>
+			<span class="text-[10px] tracking-wide uppercase text-gray-300">Movements</span>
 		</a>
 		<a
 			href="/game/galaxy"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🌌</span>
-			<span class="text-[10px] tracking-wide uppercase">Galaxy</span>
+			<span class="text-[10px] tracking-wide uppercase text-gray-300">Galaxy</span>
 		</a>
 		<a
 			href="/game/system"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">☀️</span>
-			<span class="text-[10px] tracking-wide uppercase">System</span>
+			<span class="text-[10px] tracking-wide uppercase text-gray-300">System</span>
 		</a>
 		<a
 			href="/game/alliance"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🤝</span>
-			<span class="text-[10px] tracking-wide uppercase">Alliance</span>
+			<span class="text-[10px] tracking-wide uppercase text-gray-300">Alliance</span>
 		</a>
 		<a
 			href="/game/commanders"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">👨‍✈️</span>
-			<span class="text-[10px] tracking-wide uppercase">Officers</span>
+			<span class="text-[10px] tracking-wide uppercase text-gray-300">Officers</span>
 		</a>
 		<a
 			href="/game/shop"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🛒</span>
-			<span class="text-[10px] tracking-wide uppercase">Shop</span>
+			<span class="text-[10px] tracking-wide uppercase text-gray-300">Shop</span>
 		</a>
 		<a
 			href="/game/transactions"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">💰</span>
-			<span class="text-[10px] tracking-wide uppercase">History</span>
+			<span class="text-[10px] tracking-wide uppercase text-gray-300">History</span>
 		</a>
 		<a
 			href="/game/highscore"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🏆</span>
-			<span class="text-[10px] tracking-wide uppercase">Rank</span>
+			<span class="text-[10px] tracking-wide uppercase text-gray-300">Rank</span>
 		</a>
 		<a
 			href="/game/achievements"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🎖️</span>
-			<span class="text-[10px] tracking-wide uppercase">Achievements</span>
+			<span class="text-[10px] tracking-wide uppercase text-gray-300">Achievements</span>
 		</a>
 	</nav>
 </div>
