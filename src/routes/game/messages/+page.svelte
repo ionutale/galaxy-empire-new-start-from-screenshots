@@ -46,6 +46,9 @@
 			case 'system': return '📢';
 			case 'private': return '💬';
 			case 'alliance': return '🤝';
+			case 'combat': return '⚔️';
+			case 'expedition': return '🚀';
+			case 'espionage': return '🕵️';
 			default: return '📧';
 		}
 	}
