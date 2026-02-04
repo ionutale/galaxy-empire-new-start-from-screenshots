@@ -1,11 +1,28 @@
 <script lang="ts">
 	import { SHIPS, DEFENSES } from '$lib/game-config';
 
+	interface CombatFleet extends Record<string, number> {}
+	interface CombatReport {
+		mission: string;
+		galaxy: number;
+		system: number;
+		planet: number;
+		createdAt: string | Date;
+		attackerFleet: CombatFleet;
+		attackerLosses: CombatFleet;
+		defenderFleet: CombatFleet;
+		defenderLosses: CombatFleet;
+		defenderDefenses: CombatFleet;
+		loot: { metal?: number; crystal?: number; gas?: number };
+		debris: { metal?: number; crystal?: number };
+	}
+
 	let { data } = $props();
 
-	let report = $derived(data.report);
+	let report = $derived(data.report as CombatReport);
 
 	function formatFleet(fleet: Record<string, number>) {
+		if (!fleet) return '';
 		return Object.entries(fleet)
 			.filter(([_, count]) => count > 0)
 			.map(([type, count]) => `${type}: ${count}`)
@@ -16,8 +33,8 @@
 		const config = isShips ? SHIPS : DEFENSES;
 		return Object.entries(fleet).reduce((total, [type, count]) => {
 			const unit = config[type as keyof typeof config];
-			if (unit) {
-				return total + (unit.metal + unit.crystal + unit.gas) * count;
+			if (unit && unit.cost) {
+				return total + (unit.cost.metal + unit.cost.crystal + (unit.cost.gas || 0)) * count;
 			}
 			return total;
 		}, 0);

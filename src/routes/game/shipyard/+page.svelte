@@ -25,12 +25,12 @@
 	});
 
 	// Track input amounts
-	let amounts = $state({});
+	let amounts: Record<string, number> = $state({});
 
 	// Update amounts when shipyardInfo changes
 	$effect(() => {
 		if (shipyardInfo.length > 0) {
-			amounts = Object.fromEntries(shipyardInfo.map((ship) => [ship.shipType, 1]));
+			amounts = Object.fromEntries(shipyardInfo.map((ship: any) => [ship.shipType, 1]));
 		}
 	});
 

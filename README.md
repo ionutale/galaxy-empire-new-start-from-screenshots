@@ -1,4 +1,12 @@
-# sv
+# Galaxy Empire
+
+A sci-fi strategy MMO game built with SvelteKit and PostgreSQL.
+
+## Documentation
+- [**Game Design Document**](docs/GAME_DESIGN_DOCUMENT.md): Features, mechanics, and formulas.
+- [**Development Guide**](docs/DEVELOPMENT_GUIDE.md): Technical stack, database schema, and roadmap.
+
+## SvelteKit Setup
 
 Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
 

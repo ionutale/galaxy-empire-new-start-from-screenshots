@@ -1,9 +1,22 @@
 <script lang="ts">
 	import { SHIPS, DEFENSES } from '$lib/game-config';
 
+	interface EspionageReport {
+		targetName: string;
+		galaxy: number;
+		system: number;
+		planet: number;
+		createdAt: string | Date;
+		resources: { metal: number; crystal: number; gas: number };
+		fleet: Record<string, number>;
+		defenses: Record<string, number>;
+		buildings?: Record<string, number>;
+		research?: Record<string, number>;
+	}
+
 	let { data } = $props();
 
-	let report = $derived(data.report);
+	let report = $derived(data.report as EspionageReport);
 
 	function formatFleet(fleet: Record<string, number>) {
 		if (!fleet) return 'No data';

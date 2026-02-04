@@ -24,7 +24,7 @@
 	// Initialize settings from data when available
 	$effect(() => {
 		if (data.autoExploreSettings) {
-			settingsEnabled = data.autoExploreSettings.enabled;
+			settingsEnabled = data.autoExploreSettings.enabled ?? false;
 			settingsTemplateId = data.autoExploreSettings.templateId || '';
 			settingsOriginPlanetId = data.autoExploreSettings.originPlanetId || '';
 		}

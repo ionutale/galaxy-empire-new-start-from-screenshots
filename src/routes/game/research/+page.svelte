@@ -201,7 +201,7 @@
 					</div>
 
 					<button
-						onclick={() => handleResearch(tech.id, data.currentPlanet.id)}
+						onclick={() => data.currentPlanet && handleResearch(tech.id, data.currentPlanet.id)}
 						disabled={!hasResearchLab ||
 							!tech.canResearch ||
 							resources.metal < tech.cost.metal ||
@@ -275,7 +275,7 @@
 					</div>
 
 					<button
-						onclick={() => handleResearch(tech.id, data.currentPlanet.id)}
+						onclick={() => data.currentPlanet && handleResearch(tech.id, data.currentPlanet.id)}
 						disabled={!hasResearchLab ||
 							!tech.canResearch ||
 							resources.metal < tech.cost.metal ||
@@ -349,7 +349,7 @@
 					</div>
 
 					<button
-						onclick={() => handleResearch(tech.id, data.currentPlanet.id)}
+						onclick={() => data.currentPlanet && handleResearch(tech.id, data.currentPlanet.id)}
 						disabled={!hasResearchLab ||
 							!tech.canResearch ||
 							resources.metal < tech.cost.metal ||
@@ -423,7 +423,7 @@
 					</div>
 
 					<button
-						onclick={() => handleResearch(tech.id, data.currentPlanet.id)}
+						onclick={() => data.currentPlanet && handleResearch(tech.id, data.currentPlanet.id)}
 						disabled={!hasResearchLab ||
 							!tech.canResearch ||
 							resources.metal < tech.cost.metal ||
@@ -497,7 +497,7 @@
 					</div>
 
 					<button
-						onclick={() => handleResearch(tech.id, data.currentPlanet.id)}
+						onclick={() => data.currentPlanet && handleResearch(tech.id, data.currentPlanet.id)}
 						disabled={!hasResearchLab ||
 							!tech.canResearch ||
 							resources.metal < tech.cost.metal ||

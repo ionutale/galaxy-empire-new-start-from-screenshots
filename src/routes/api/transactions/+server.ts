@@ -26,10 +26,7 @@ export async function GET({ locals }) {
 			.limit(50); // Limit to last 50 transactions
 
 		return json({
-			transactions: userTransactions.map(t => ({
-				...t,
-				metadata: t.metadata ? JSON.parse(t.metadata) : null
-			}))
+			transactions: userTransactions
 		});
 	} catch (error) {
 		console.error('Error fetching transactions:', error);

@@ -1,20 +1,32 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 
-	export let data: PageData;
+	interface UserAchievement {
+		isCompleted: boolean;
+		achievement?: {
+			category: string;
+			icon?: string;
+			name: string;
+			description: string;
+			rewardType?: string;
+			rewardAmount?: number;
+		};
+	}
 
-	$: achievements = data.achievements;
+	export let data: PageData;
+	// @ts-ignore
+	$: achievements = data.achievements as UserAchievement[];
 	$: newlyUnlocked = data.newlyUnlocked;
 
 	// Group achievements by category
-	$: achievementsByCategory = achievements.reduce((acc: Record<string, any[]>, userAchievement: any) => {
+	$: achievementsByCategory = achievements.reduce((acc: Record<string, UserAchievement[]>, userAchievement: UserAchievement) => {
 		const category = userAchievement.achievement?.category || 'other';
 		if (!acc[category]) {
 			acc[category] = [];
 		}
 		acc[category].push(userAchievement);
 		return acc;
-	}, {} as Record<string, any[]>);
+	}, {} as Record<string, UserAchievement[]>);
 
 	// Category display names and colors
 	const categoryInfo: Record<string, {name: string, color: string}> = {

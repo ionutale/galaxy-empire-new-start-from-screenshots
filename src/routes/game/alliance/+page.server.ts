@@ -52,8 +52,14 @@ export const load: PageServerLoad = async ({ locals }) => {
 		// Load alliance tags for diplomacy
 		const diplomacyWithTags = await Promise.all(
 			diplomacyRes.map(async (dip) => {
-				const [initiator] = await db.select({ tag: alliances.tag }).from(alliances).where(eq(alliances.id, dip.initiatorAllianceId));
-				const [target] = await db.select({ tag: alliances.tag }).from(alliances).where(eq(alliances.id, dip.targetAllianceId));
+				const [initiator] = await db
+					.select({ tag: alliances.tag })
+					.from(alliances)
+					.where(eq(alliances.id, dip.initiatorAllianceId as number));
+				const [target] = await db
+					.select({ tag: alliances.tag })
+					.from(alliances)
+					.where(eq(alliances.id, dip.targetAllianceId as number));
 				return {
 					...dip,
 					initiatorTag: initiator?.tag || 'Unknown',
