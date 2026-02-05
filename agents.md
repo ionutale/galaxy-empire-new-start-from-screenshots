@@ -8,6 +8,7 @@ To ensure code quality and consistency, always run the following checks before c
 Example commands:
 
 ```bash
+pnpm run prettier
 pnpm run lint
 pnpm run check
 pnpm run format
