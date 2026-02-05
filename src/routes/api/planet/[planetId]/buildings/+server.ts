@@ -3,7 +3,7 @@ import type { RequestHandler } from './$types';
 import { BuildingService } from '$lib/server/building-service';
 
 // Get all buildings for a planet
-export const GET: RequestHandler = async ({ params, locals }) => {
+export const GET: RequestHandler = async ({ params }) => {
 	try {
 		const planetId = parseInt(params.planetId || '0');
 		if (!planetId) {
@@ -21,7 +21,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 };
 
 // Start building construction
-export const POST: RequestHandler = async ({ params, request, locals }) => {
+export const POST: RequestHandler = async ({ params, request }) => {
 	try {
 		const planetId = parseInt(params.planetId || '0');
 		if (!planetId) {

@@ -4,10 +4,9 @@ import {
 	planetShips,
 	planetBuildings,
 	buildingTypes,
-	planetResources,
-	users
+	planetResources
 } from './db/schema';
-import { eq, sql, and, desc } from 'drizzle-orm';
+import { eq, sql, and } from 'drizzle-orm';
 import { SHIPS } from '$lib/game-config';
 
 export interface ShipyardInfo {

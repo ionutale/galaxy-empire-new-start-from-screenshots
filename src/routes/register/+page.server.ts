@@ -59,7 +59,6 @@ export const actions = {
 				let galaxyId = 1;
 				let systemId = 1;
 				let planetNum = 1;
-				let found = false;
 
 				// Try to find a random empty slot
 				for (let i = 0; i < 100; i++) {
@@ -78,7 +77,6 @@ export const actions = {
 						galaxyId = g;
 						systemId = s;
 						planetNum = p;
-						found = true;
 						break;
 					}
 				}

@@ -1,5 +1,4 @@
 import { redirect } from '@sveltejs/kit';
-import { AchievementService } from '$lib/server/achievement-service';
 
 export async function load({ fetch, parent }) {
 	const { user } = await parent();

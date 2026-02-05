@@ -1,8 +1,6 @@
 import { db } from './db';
-import { planetShips, fleets, planetResources, userResearch, planets } from './db/schema';
-import { eq, sql, and, inArray } from 'drizzle-orm';
-import { SHIPS } from '$lib/game-config';
-import { getFleetMovementInfo, calculateFuelConsumption } from './fleet-movement';
+import { planetShips, fleets, planetResources } from './db/schema';
+import { eq, sql } from 'drizzle-orm';
 
 export async function dispatchFleet(
 	userId: number,

@@ -1,4 +1,3 @@
-import { ShipyardService } from '$lib/server/shipyard-service';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ parent, fetch }) => {

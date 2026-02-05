@@ -109,7 +109,9 @@ export class BuildingService {
 			// Validate construction using stored procedure
 			const validationResult = (await db.execute(sql`
 				SELECT validate_building_construction(${userId}, ${planetId}, ${buildingTypeId}, ${targetLevel}) as validation
-			`)) as unknown as { rows: { validation: { valid: boolean; error?: string; cost?: BuildingCost } }[] };
+			`)) as unknown as {
+				rows: { validation: { valid: boolean; error?: string; cost?: BuildingCost } }[];
+			};
 
 			const validation = validationResult.rows[0].validation;
 			if (!validation.valid) {

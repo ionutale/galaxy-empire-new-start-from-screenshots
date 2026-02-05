@@ -1,6 +1,6 @@
 import { db } from './db';
 import { users, userCommanders, transactions } from './db/schema';
-import { eq, and, gt, sql } from 'drizzle-orm';
+import { eq, and, gt } from 'drizzle-orm';
 
 export interface Commander {
 	id: string;

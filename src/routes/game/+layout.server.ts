@@ -7,7 +7,6 @@ import {
 	galaxies,
 	solarSystems,
 	planetResources,
-	planetBuildings,
 	planetDefenses,
 	planetShips,
 	userResearch

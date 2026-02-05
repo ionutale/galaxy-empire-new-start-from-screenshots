@@ -197,7 +197,7 @@
 			</div>
 
 			<div class="flex flex-1 flex-col-reverse space-y-1 overflow-y-auto p-2">
-				{#each chatMessages as msg}
+				{#each chatMessages as msg (msg.id || msg.createdAt)}
 					<div class="text-sm">
 						<span class="text-xs text-gray-500"
 							>[{new Date(msg.createdAt).toLocaleTimeString()}]</span

@@ -1,14 +1,6 @@
 import { json } from '@sveltejs/kit';
-import {
-	db,
-	chatMessages,
-	users,
-	alliances,
-	userMutes,
-	bannedWords,
-	chatModeration
-} from '$lib/server/db';
-import { desc, eq, and, gte, lte } from 'drizzle-orm';
+import { db, chatMessages, users, alliances, userMutes, bannedWords } from '$lib/server/db';
+import { desc, eq, and, gte } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ locals, url }) => {

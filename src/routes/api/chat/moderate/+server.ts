@@ -1,10 +1,10 @@
 import { json } from '@sveltejs/kit';
-import { db, chatMessages, users, chatModeration, userMutes, bannedWords } from '$lib/server/db';
-import { eq, and } from 'drizzle-orm';
+import { db, chatMessages, chatModeration, userMutes, bannedWords } from '$lib/server/db';
+import { eq } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
 
 // DELETE /api/chat/moderate - Delete a message (moderator only)
-export const DELETE: RequestHandler = async ({ request, locals, url }) => {
+export const DELETE: RequestHandler = async ({ locals, url }) => {
 	if (!locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
 
 	// Check if user is moderator or admin

@@ -1,10 +1,4 @@
 import type { RequestHandler } from './$types';
-import { db } from '$lib/server/db';
-import { eq } from 'drizzle-orm';
-import { users } from '$lib/server/db/schema';
-
-// Store connected clients
-const clients = new Map<number, WebSocket>();
 
 export const GET: RequestHandler = async ({ request, locals }) => {
 	if (!locals.user) {

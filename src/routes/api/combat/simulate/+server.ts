@@ -17,7 +17,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		// Validate input data
 		const validateFleet = (fleet: any) => {
 			if (typeof fleet !== 'object') return false;
-			for (const [key, value] of Object.entries(fleet)) {
+			for (const [, value] of Object.entries(fleet)) {
 				if (typeof value !== 'number' || value < 0) return false;
 			}
 			return true;
