@@ -32,3 +32,5 @@ pnpm run format
 - **Playwright** for end-to-end testing
 - **Redis** for caching and session management
 - **Socket.io** for real-time communication
+
+
