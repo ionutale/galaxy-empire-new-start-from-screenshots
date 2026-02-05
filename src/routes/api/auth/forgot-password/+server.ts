@@ -4,10 +4,26 @@ import { users, passwordResets } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { env } from '$env/dynamic/private';
+import { checkRateLimit } from '$lib/server/auth';
 import type { RequestHandler } from './$types';
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	try {
+		const clientIP = getClientAddress();
+
+		// Check rate limit
+		const rateLimitResult = checkRateLimit(clientIP);
+		if (!rateLimitResult.allowed) {
+			const resetInSeconds = Math.ceil((rateLimitResult.resetTime! - Date.now()) / 1000);
+			return json(
+				{
+					success: false,
+					error: `Too many password reset requests. Try again in ${resetInSeconds} seconds.`
+				},
+				{ status: 429 }
+			);
+		}
+
 		const { email } = await request.json();
 
 		if (!email) {

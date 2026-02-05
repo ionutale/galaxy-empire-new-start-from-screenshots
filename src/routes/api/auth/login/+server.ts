@@ -2,11 +2,26 @@ import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { users } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
-import { comparePassword, createSession } from '$lib/server/auth';
+import { comparePassword, createSession, checkRateLimit, resetRateLimit } from '$lib/server/auth';
 import type { RequestHandler } from './$types';
 
-export const POST: RequestHandler = async ({ request, cookies }) => {
+export const POST: RequestHandler = async ({ request, cookies, getClientAddress }) => {
 	try {
+		const clientIP = getClientAddress();
+
+		// Check rate limit
+		const rateLimitResult = checkRateLimit(clientIP);
+		if (!rateLimitResult.allowed) {
+			const resetInSeconds = Math.ceil((rateLimitResult.resetTime! - Date.now()) / 1000);
+			return json(
+				{
+					success: false,
+					error: `Too many login attempts. Try again in ${resetInSeconds} seconds.`
+				},
+				{ status: 429 }
+			);
+		}
+
 		const { username, password } = await request.json();
 
 		if (!username || !password) {
@@ -26,6 +41,9 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		if (!user || !(await comparePassword(password, user.passwordHash))) {
 			return json({ success: false, invalid: true }, { status: 400 });
 		}
+
+		// Successful login - reset rate limit for this IP
+		resetRateLimit(clientIP);
 
 		const sessionId = await createSession(user.id);
 		cookies.set('session_id', sessionId, {

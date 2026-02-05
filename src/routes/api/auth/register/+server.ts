@@ -12,11 +12,26 @@ import {
 	planetShips
 } from '$lib/server/db/schema';
 import { eq, or, and } from 'drizzle-orm';
-import { hashPassword, createSession } from '$lib/server/auth';
+import { hashPassword, createSession, checkRateLimit, resetRateLimit } from '$lib/server/auth';
 import type { RequestHandler } from './$types';
 
-export const POST: RequestHandler = async ({ request, cookies }) => {
+export const POST: RequestHandler = async ({ request, cookies, getClientAddress }) => {
 	try {
+		const clientIP = getClientAddress();
+
+		// Check rate limit
+		const rateLimitResult = checkRateLimit(clientIP);
+		if (!rateLimitResult.allowed) {
+			const resetInSeconds = Math.ceil((rateLimitResult.resetTime! - Date.now()) / 1000);
+			return json(
+				{
+					success: false,
+					error: `Too many registration attempts. Try again in ${resetInSeconds} seconds.`
+				},
+				{ status: 429 }
+			);
+		}
+
 		const { username, email, password } = await request.json();
 
 		if (!username || !email || !password) {
@@ -133,6 +148,9 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			secure: process.env.NODE_ENV === 'production',
 			maxAge: 60 * 60 * 24 * 30 // 30 days
 		});
+
+		// Successful registration - reset rate limit for this IP
+		resetRateLimit(clientIP);
 
 		return json({ success: true });
 	} catch (err) {
