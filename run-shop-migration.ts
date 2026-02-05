@@ -8,7 +8,7 @@ const pool = new Pool({
 	user: 'galaxy_user',
 	password: 'galaxy_password',
 	host: 'localhost',
-	port: 5433,
+	port: 5432,
 	database: 'galaxy_empire'
 });
 

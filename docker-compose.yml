@@ -1,12 +1,14 @@
 services:
   db:
-    image: postgres:18-alpine
+    build:
+      context: .
+      dockerfile: Dockerfile.db
     environment:
       POSTGRES_DB: galaxy_empire
       POSTGRES_USER: galaxy_user
       POSTGRES_PASSWORD: galaxy_password
     ports:
-      - '5433:5432'
+      - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
 

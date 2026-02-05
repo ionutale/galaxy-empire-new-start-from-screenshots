@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 const pool = new Pool({
 	connectionString:
 		process.env.DATABASE_URL ||
-		'postgres://galaxy_user:galaxy_password@localhost:5433/galaxy_empire'
+		'postgres://galaxy_user:galaxy_password@localhost:5432/galaxy_empire'
 });
 
 async function runMigration() {
