@@ -67,7 +67,7 @@ export class ResearchService {
 			ORDER BY rt.category, rt.name
 		`);
 
-		return result.rows.map((row) => this.formatResearchInfo(row));
+		return result.rows.map((row) => this.formatResearchInfo(row as unknown as ResearchRow));
 	}
 
 	/**
@@ -96,7 +96,7 @@ export class ResearchService {
 		`);
 
 		if (result.rows.length === 0) return null;
-		return this.formatResearchInfo(result.rows[0]);
+		return this.formatResearchInfo(result.rows[0] as unknown as ResearchRow);
 	}
 
 	/**
@@ -115,6 +115,14 @@ export class ResearchService {
 		const validation = validationResult.rows[0].validation as ResearchValidationResult;
 		if (!validation.valid) {
 			return { success: false, error: validation.error };
+		}
+
+		if (!validation.cost) {
+			return { success: false, error: 'Validation failed: no cost provided' };
+		}
+
+		if (!validation.target_level) {
+			return { success: false, error: 'Validation failed: no target level provided' };
 		}
 
 		// Get research lab level for time calculation
@@ -137,32 +145,32 @@ export class ResearchService {
 		await db.transaction(async (tx) => {
 			// Deduct resources from planet
 			await tx.execute(sql`
-				UPDATE planets
-				SET resources = jsonb_set(
-					jsonb_set(
-						jsonb_set(resources, '{metal}', (COALESCE(resources->>'metal', '0')::int - ${validation.cost.metal})::text::jsonb),
-						'{crystal}', (COALESCE(resources->>'crystal', '0')::int - ${validation.cost.crystal})::text::jsonb
-					),
-					'{gas}', (COALESCE(resources->>'gas', '0')::int - ${validation.cost.gas})::text::jsonb
-				)
-				WHERE id = ${planetId}
-			`);
+			UPDATE planets
+			SET resources = jsonb_set(
+				jsonb_set(
+					jsonb_set(resources, '{metal}', (COALESCE(resources->>'metal', '0')::int - ${validation.cost!.metal})::text::jsonb),
+					'{crystal}', (COALESCE(resources->>'crystal', '0')::int - ${validation.cost!.crystal})::text::jsonb
+				),
+				'{gas}', (COALESCE(resources->>'gas', '0')::int - ${validation.cost!.gas})::text::jsonb
+			)
+			WHERE id = ${planetId}
+		`);
 
 			// Update or insert user research level
 			await tx.execute(sql`
-				INSERT INTO user_research_levels (user_id, research_type_id, level, is_researching, research_completion_at)
-				VALUES (${userId}, ${researchTypeId}, ${validation.target_level - 1}, true, ${completionTime})
-				ON CONFLICT (user_id, research_type_id)
-				DO UPDATE SET
-					is_researching = true,
-					research_completion_at = ${completionTime}
-			`);
+			INSERT INTO user_research_levels (user_id, research_type_id, level, is_researching, research_completion_at)
+			VALUES (${userId}, ${researchTypeId}, ${validation.target_level! - 1}, true, ${completionTime})
+			ON CONFLICT (user_id, research_type_id)
+			DO UPDATE SET
+				is_researching = true,
+				research_completion_at = ${completionTime}
+		`);
 
 			// Add to research queue
 			await tx.execute(sql`
-				INSERT INTO research_queue (user_id, research_type_id, level, completion_at, planet_id, resources_reserved)
-				VALUES (${userId}, ${researchTypeId}, ${validation.target_level}, ${completionTime}, ${planetId}, ${JSON.stringify(validation.cost)})
-			`);
+			INSERT INTO research_queue (user_id, research_type_id, level, completion_at, planet_id, resources_reserved)
+			VALUES (${userId}, ${researchTypeId}, ${validation.target_level!}, ${completionTime}, ${planetId}, ${JSON.stringify(validation.cost!)})
+		`);
 		});
 
 		return { success: true, completionTime };
@@ -289,7 +297,7 @@ export class ResearchService {
 			canResearch: level < 100, // Max level check
 			isResearching: row.is_researching || false,
 			researchCompletion: row.research_completion ? new Date(row.research_completion) : undefined,
-			prerequisites: row.prerequisites || {},
+			prerequisites: (row.prerequisites as Record<string, number>) || {},
 			icon: row.icon || '🔬'
 		};
 	}

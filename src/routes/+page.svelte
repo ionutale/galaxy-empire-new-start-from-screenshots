@@ -7,11 +7,12 @@
 	<p class="mb-8 text-xl text-gray-400">Conquer the universe, one planet at a time.</p>
 
 	<div class="space-x-4">
-		<a href="{resolve('/login')}" class="rounded-md bg-blue-600 px-6 py-3 font-bold transition hover:bg-blue-700"
-			>Login</a
+		<a
+			href={resolve('/login')}
+			class="rounded-md bg-blue-600 px-6 py-3 font-bold transition hover:bg-blue-700">Login</a
 		>
 		<a
-			href="{resolve('/register')}"
+			href={resolve('/register')}
 			class="rounded-md bg-gray-700 px-6 py-3 font-bold transition hover:bg-gray-600">Register</a
 		>
 	</div>

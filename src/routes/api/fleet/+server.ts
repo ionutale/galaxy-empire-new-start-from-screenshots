@@ -26,15 +26,16 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			} catch (e: unknown) {
 				console.error('Dispatch error:', e);
 				// Pass specific error messages back to the client
+				const errorMessage = e instanceof Error ? e.message : String(e);
 				if (
-					(e as Error).message.startsWith('Not enough') ||
-					e.message.startsWith('No ships') ||
-					e.message.includes('Max expedition limit') ||
-					e.message.includes('Max fleet limit') ||
-					e.message.includes('Target') ||
-					e.message.includes('Invalid')
+					errorMessage.startsWith('Not enough') ||
+					errorMessage.startsWith('No ships') ||
+					errorMessage.includes('Max expedition limit') ||
+					errorMessage.includes('Max fleet limit') ||
+					errorMessage.includes('Target') ||
+					errorMessage.includes('Invalid')
 				) {
-					return json({ success: false, error: e.message }, { status: 400 });
+					return json({ success: false, error: errorMessage }, { status: 400 });
 				}
 				throw error(500, 'Internal server error');
 			}

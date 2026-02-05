@@ -53,9 +53,7 @@ describe('Shipyard Service', () => {
 				shipyardLevel: 3
 			});
 
-			expect(result.shipyardInfo).toHaveLength(
-				Object.keys(SHIPS).length
-			);
+			expect(result.shipyardInfo).toHaveLength(Object.keys(SHIPS).length);
 		});
 
 		it('should return default values when no data found', async () => {

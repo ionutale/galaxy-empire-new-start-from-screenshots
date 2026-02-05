@@ -18,7 +18,9 @@
 				{form.message}
 			</div>
 			<div class="text-center">
-				<a href="{resolve('/login')}" class="text-blue-400 underline hover:text-blue-300">Return to Login</a>
+				<a href={resolve('/login')} class="text-blue-400 underline hover:text-blue-300"
+					>Return to Login</a
+				>
 			</div>
 		{:else}
 			<p class="mb-6 text-center text-gray-400">
@@ -62,7 +64,7 @@
 			</form>
 
 			<div class="mt-6 text-center">
-				<a href="{resolve('/login')}" class="text-sm text-gray-400 hover:text-white">Back to Login</a>
+				<a href={resolve('/login')} class="text-sm text-gray-400 hover:text-white">Back to Login</a>
 			</div>
 		{/if}
 	</div>

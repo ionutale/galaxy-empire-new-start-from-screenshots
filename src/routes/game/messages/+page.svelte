@@ -5,7 +5,19 @@
 
 	let { data } = $props();
 
-	let extraMessages = $state<unknown[]>([]);
+	interface Message {
+		id: number;
+		type?: string;
+		title: string;
+		content: string;
+		isRead: boolean;
+		createdAt: Date | string;
+		messageType?: string;
+		fromUsername?: string;
+		isSent?: boolean;
+	}
+
+	let extraMessages = $state<Message[]>([]);
 	let loading = $state(false);
 	let hasMore = $state(true);
 	let showSendForm = $state(false);
@@ -13,7 +25,7 @@
 	let messageType = $state('private');
 	let selectedAllianceMember = $state('');
 
-	let allMessages = $derived([...data.messages, ...extraMessages]);
+	let allMessages = $derived([...(data.messages as Message[]), ...extraMessages]);
 
 	onMount(() => {
 		invalidate('app:unread-messages');
@@ -198,7 +210,7 @@
 				>
 					<div class="mb-2 flex items-start justify-between">
 						<div class="flex items-center space-x-2">
-							<span class="text-lg">{getMessageIcon(msg.messageType || msg.type)}</span>
+							<span class="text-lg">{getMessageIcon(msg.messageType || msg.type || 'system')}</span>
 							<h3 class="font-bold text-gray-900 dark:text-gray-200">{msg.title}</h3>
 							{#if msg.messageType === 'private' || msg.messageType === 'alliance'}
 								{#if msg.isSent}

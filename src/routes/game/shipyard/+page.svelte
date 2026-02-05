@@ -30,13 +30,19 @@
 	// Update amounts when shipyardInfo changes
 	$effect(() => {
 		if (shipyardInfo.length > 0) {
-			amounts = Object.fromEntries(shipyardInfo.map((ship: { shipType: string }) => [ship.shipType, 1]));
+			amounts = Object.fromEntries(
+				shipyardInfo.map((ship: { shipType: string }) => [ship.shipType, 1])
+			);
 		}
 	});
 
 	let loading = $state<Record<string, boolean>>({});
 
-	function canBuild(ship: { shipType: string; cost: { metal: number; crystal: number; gas: number } }) {
+	function canBuild(ship: {
+		shipType: string;
+		cost: { metal: number; crystal: number; gas: number };
+		canBuild: boolean;
+	}) {
 		const amount = amounts[ship.shipType] || 1;
 		const cost = {
 			metal: ship.cost.metal * amount,

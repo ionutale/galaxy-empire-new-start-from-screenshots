@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
-	import { goto, invalidate, resolve } from '$app/navigation';
+	import { goto, invalidate } from '$app/navigation';
 	import { page } from '$app/stores';
 
 	let { children, data } = $props();
@@ -121,7 +121,7 @@
 					const newId = e.currentTarget.value;
 					const url = new URL($page.url);
 					url.searchParams.set('planet', newId);
-					goto(resolve(url.toString()));
+					goto(url.toString());
 				}}
 			>
 				{#each data.planets as planet (planet.id)}
@@ -139,14 +139,14 @@
 		<div class="flex items-center space-x-4">
 			<div class="flex space-x-2">
 				<a
-					href="{resolve('/game/commanders')}"
+					href="/game/commanders"
 					class="flex h-8 w-8 items-center justify-center rounded-full border border-gray-600 bg-gray-700 transition-colors hover:bg-gray-600"
 					title="Officers"
 				>
 					<span class="text-sm">👨‍✈️</span>
 				</a>
 				<a
-					href="{resolve('/game/shop')}"
+					href="/game/shop"
 					class="flex h-8 w-8 items-center justify-center rounded-full border border-gray-600 bg-gray-700 transition-colors hover:bg-gray-600"
 					title="Shop"
 				>
@@ -160,7 +160,7 @@
 			>
 				{isDarkMode ? '☀️' : '🌙'}
 			</button>
-			<a href="{resolve('/game/messages')}" class="relative transition-transform active:scale-95">
+			<a href="/game/messages" class="relative transition-transform active:scale-95">
 				<span class="text-2xl">✉️</span>
 				{#if data.unreadMessages > 0}
 					<span
@@ -171,7 +171,7 @@
 				{/if}
 			</a>
 			<a
-				href="{resolve('/game/settings')}"
+				href="/game/settings"
 				class="text-2xl transition transition-transform hover:text-gray-300 active:scale-95"
 			>
 				⚙️
@@ -316,98 +316,98 @@
 		class="no-scrollbar z-20 flex min-h-[4rem] shrink-0 items-center overflow-x-auto border-t border-gray-700 bg-gray-800 px-2 pb-8 md:pb-safe"
 	>
 		<a
-			href="{resolve('/game')}"
+			href="/game"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🪐</span>
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Base</span>
 		</a>
 		<a
-			href="{resolve('/game/planet')}"
+			href="/game/planet"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🌍</span>
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Planets</span>
 		</a>
 		<a
-			href="{resolve('/game/research')}"
+			href="/game/research"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🔬</span>
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Research</span>
 		</a>
 		<a
-			href="{resolve('/game/shipyard')}"
+			href="/game/shipyard"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🛠️</span>
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Shipyard</span>
 		</a>
 		<a
-			href="{resolve('/game/fleet')}"
+			href="/game/fleet"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🚀</span>
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Fleet</span>
 		</a>
 		<a
-			href="{resolve('/game/fleet/movements')}"
+			href="/game/fleet/movements"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">📡</span>
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Movements</span>
 		</a>
 		<a
-			href="{resolve('/game/galaxy')}"
+			href="/game/galaxy"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🌌</span>
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Galaxy</span>
 		</a>
 		<a
-			href="{resolve('/game/system')}"
+			href="/game/system"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">☀️</span>
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">System</span>
 		</a>
 		<a
-			href="{resolve('/game/alliance')}"
+			href={resolve('/game/alliance')}
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🤝</span>
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Alliance</span>
 		</a>
 		<a
-			href="{resolve('/game/commanders')}"
+			href={resolve('/game/commanders')}
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">👨‍✈️</span>
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Officers</span>
 		</a>
 		<a
-			href="{resolve('/game/shop')}"
+			href={resolve('/game/shop')}
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🛒</span>
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Shop</span>
 		</a>
 		<a
-			href="{resolve('/game/transactions')}"
+			href={resolve('/game/transactions')}
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">💰</span>
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">History</span>
 		</a>
 		<a
-			href="{resolve('/game/highscore')}"
+			href={resolve('/game/highscore')}
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🏆</span>
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Rank</span>
 		</a>
 		<a
-			href="{resolve('/game/achievements')}"
+			href={resolve('/game/achievements')}
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🎖️</span>

@@ -81,6 +81,7 @@
 		calculatingMovement = true;
 
 		try {
+			// eslint-disable-next-line svelte/prefer-svelte-reactivity
 			const params = new URLSearchParams({
 				fromGalaxy: data.currentPlanet.galaxyId.toString(),
 				fromSystem: data.currentPlanet.systemId.toString(),

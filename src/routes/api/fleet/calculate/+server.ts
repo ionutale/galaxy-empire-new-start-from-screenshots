@@ -7,6 +7,11 @@ import { formatDuration } from '$lib/server/fleet-movement';
 interface MovementInfo {
 	distance: number;
 	duration: number;
+	fleet_speed: number;
+	slowest_ship: string;
+	fuel_consumption: number;
+	can_reach: boolean;
+	reason: string;
 }
 
 export const GET: RequestHandler = async ({ locals, url }) => {

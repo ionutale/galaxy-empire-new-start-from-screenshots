@@ -54,7 +54,7 @@
 					class="mt-1 block w-full rounded-md border border-gray-600 bg-gray-700 px-3 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
 				/>
 				<div class="flex items-center justify-between">
-					<a href="{resolve('/forgot-password')}" class="text-xs text-blue-400 hover:text-blue-300"
+					<a href={resolve('/forgot-password')} class="text-xs text-blue-400 hover:text-blue-300"
 						>Forgot Password?</a
 					>
 				</div>
@@ -86,7 +86,7 @@
 
 		<p class="mt-4 text-center text-sm text-gray-400">
 			New commander? <a
-				href="{resolve('/register')}"
+				href={resolve('/register')}
 				class="inline-block text-blue-400 transition-transform hover:underline active:scale-95"
 				>Register</a
 			>

@@ -6,10 +6,21 @@
 
 	interface Fleet {
 		id: number;
-		departureTime: string;
-		arrivalTime: string;
-		status: string;
-		// Add other properties as needed
+		userId: number | null;
+		originPlanetId: number | null;
+		targetGalaxy: number | null;
+		targetSystem: number | null;
+		targetPlanet: number | null;
+		mission: string | null;
+		ships: unknown;
+		resources: unknown;
+		departureTime: Date | null;
+		arrivalTime: Date | null;
+		returnTime: Date | null;
+		status: string | null;
+		originGalaxy: number;
+		originSystem: number;
+		originPlanet: number;
 	}
 
 	let now = $state(Date.now());
@@ -28,7 +39,9 @@
 			now = Date.now();
 
 			if (!reloading) {
-				const shouldReload = allFleets.some((f: Fleet) => new Date(f.arrivalTime).getTime() <= now);
+				const shouldReload = allFleets.some(
+					(f: Fleet) => f.arrivalTime && new Date(f.arrivalTime).getTime() <= now
+				);
 				if (shouldReload) {
 					reloading = true;
 					await invalidateAll();
@@ -68,6 +81,7 @@
 	}
 
 	function getProgress(fleet: Fleet) {
+		if (!fleet.departureTime || !fleet.arrivalTime) return 0;
 		const start = new Date(fleet.departureTime).getTime();
 		const end = new Date(fleet.arrivalTime).getTime();
 		const total = end - start;
@@ -83,6 +97,7 @@
 	}
 
 	function getRemainingTime(fleet: Fleet) {
+		if (!fleet.arrivalTime) return '00:00:00';
 		const end = new Date(fleet.arrivalTime).getTime();
 		const diff = Math.max(0, end - now);
 		const seconds = Math.floor((diff / 1000) % 60);

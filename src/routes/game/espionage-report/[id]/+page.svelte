@@ -1,5 +1,4 @@
 <script lang="ts">
-
 	interface EspionageReport {
 		targetName: string;
 		galaxy: number;
@@ -27,7 +26,7 @@
 		);
 	}
 
-	function formatBuildings(buildings: Record<string, number>) {
+	function formatBuildings(buildings: Record<string, number> | undefined) {
 		if (!buildings) return 'No data';
 		const buildingList = [];
 		for (const [key, value] of Object.entries(buildings)) {
@@ -38,7 +37,7 @@
 		return buildingList.join(', ') || 'None';
 	}
 
-	function formatResearch(research: Record<string, number>) {
+	function formatResearch(research: Record<string, number> | undefined) {
 		if (!research) return 'No data';
 		const researchList = [];
 		for (const [key, value] of Object.entries(research)) {

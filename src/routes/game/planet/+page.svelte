@@ -3,16 +3,15 @@
 
 	let { data } = $props();
 
-	function calculateProduction(planet: { metalMine?: number; crystalMine?: number; gasExtractor?: number }) {
-		// Simplified production calculation
-		const metalProd = (planet.metalMine || 0) * 30; // 30 metal per level per hour
-		const crystalProd = (planet.crystalMine || 0) * 20; // 20 crystal per level per hour
-		const gasProd = (planet.gasExtractor || 0) * 10; // 10 gas per level per hour
+	function calculateProduction() {
+		// Simplified production calculation - buildings not included in planet data
+		// Using basic production rates for display
+		const metalProd = 30; // Base metal production
+		const crystalProd = 20; // Base crystal production
+		const gasProd = 10; // Base gas production
 
-		// Energy production
-		const solarEnergy = (planet.solarPlant || 0) * 20;
-		const fusionEnergy = (planet.fusionReactor || 0) * 30;
-		const totalEnergy = solarEnergy + fusionEnergy;
+		// Energy production (simplified - no buildings data)
+		const totalEnergy = 50; // Base energy
 
 		// Energy consumption (simplified)
 		const consumption = metalProd + crystalProd + gasProd;

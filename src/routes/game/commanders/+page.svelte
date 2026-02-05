@@ -222,8 +222,7 @@
 						<button
 							onclick={() => handlePurchase(commander.id)}
 							class="flex w-full transform items-center justify-center rounded bg-purple-600 px-4 py-2 font-bold text-white transition-colors hover:bg-purple-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
-							disabled={darkMatter < durationCosts[selectedDuration] ||
-								loading[commander.id]}
+							disabled={darkMatter < durationCosts[selectedDuration] || loading[commander.id]}
 						>
 							{#if loading[commander.id]}
 								<Spinner size="sm" class="mr-2" />

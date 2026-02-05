@@ -82,7 +82,7 @@
 
 		<p class="mt-4 text-center text-sm text-gray-400">
 			Already have an account? <a
-				href="{resolve('/login')}"
+				href={resolve('/login')}
 				class="inline-block text-blue-400 transition-transform hover:underline active:scale-95"
 				>Login</a
 			>
