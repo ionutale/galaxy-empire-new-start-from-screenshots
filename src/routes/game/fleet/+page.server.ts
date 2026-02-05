@@ -4,7 +4,9 @@ import { eq, and, or, sql } from 'drizzle-orm';
 import { getFleetTemplates } from '$lib/server/fleet-templates';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ parent }) => {
+export const load: PageServerLoad = async ({ parent, depends }) => {
+	depends('app:game-data');
+	
 	const { currentPlanet, user } = await parent();
 
 	if (!currentPlanet) {

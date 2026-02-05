@@ -4,7 +4,9 @@ import { researchQueue } from '$lib/server/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ locals, parent }) => {
+export const load: PageServerLoad = async ({ locals, parent, depends }) => {
+	depends('app:game-data');
+	
 	if (!locals.user) return {};
 
 	const { currentPlanet } = await parent();

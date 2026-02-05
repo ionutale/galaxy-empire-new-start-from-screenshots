@@ -3,7 +3,9 @@ import { fleets, planets } from '$lib/server/db/schema';
 import { eq, and, notInArray, asc } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ parent }) => {
+export const load: PageServerLoad = async ({ parent, depends }) => {
+	depends('app:game-data');
+	
 	const { currentPlanet, user } = await parent();
 
 	if (!currentPlanet) {

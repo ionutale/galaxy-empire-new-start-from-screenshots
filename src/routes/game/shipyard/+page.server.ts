@@ -1,6 +1,8 @@
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ parent, fetch }) => {
+export const load: PageServerLoad = async ({ parent, fetch, depends }) => {
+	depends('app:game-data');
+	
 	const { currentPlanet } = await parent();
 
 	if (!currentPlanet) {
