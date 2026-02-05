@@ -143,7 +143,7 @@ describe('Fleet Service', () => {
 			const shipUpdates = updateCalls.slice(0, 2);
 			expect(
 				shipUpdates.some(
-					(call) =>
+					(call: any) =>
 						call[0] === planetShips &&
 						call[1].set.smallCargo === sql`${planetShips.smallCargo} - ${2}`
 				)
@@ -151,7 +151,7 @@ describe('Fleet Service', () => {
 
 			expect(
 				shipUpdates.some(
-					(call) =>
+					(call: any) =>
 						call[0] === planetShips &&
 						call[1].set.destroyer === sql`${planetShips.destroyer} - ${1}`
 				)
@@ -194,9 +194,9 @@ describe('Fleet Service', () => {
 			await dispatchFleet(1, 1, 1, 2, 3, 'transport', ships, resources);
 
 			// Find the resource update call
-			const resourceUpdate = updateCalls.find((call) => call[0] === planetResources);
+			const resourceUpdate = updateCalls.find((call: any) => call[0] === planetResources);
 			expect(resourceUpdate).toBeDefined();
-			expect(resourceUpdate[1].set).toEqual({
+			expect((resourceUpdate as any)[1].set).toEqual({
 				metal: sql`${planetResources.metal} - ${100}`,
 				crystal: sql`${planetResources.crystal} - ${50}`,
 				gas: sql`${planetResources.gas} - ${25 + 75}` // resources.gas + fuel
@@ -221,7 +221,7 @@ describe('Fleet Service', () => {
 
 			mockDb.execute.mockResolvedValue(mockValidationResult);
 
-			let insertCall: unknown;
+			let insertCall: any;
 			const mockTransaction = vi.fn().mockImplementation(async (callback) => {
 				return callback({
 					update: vi.fn().mockResolvedValue({}),
@@ -271,7 +271,7 @@ describe('Fleet Service', () => {
 
 			mockDb.execute.mockResolvedValue(mockValidationResult);
 
-			let insertCall: unknown;
+			let insertCall: any;
 			const mockTransaction = vi.fn().mockImplementation(async (callback) => {
 				return callback({
 					update: vi.fn().mockResolvedValue({}),

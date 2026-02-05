@@ -6,6 +6,7 @@ import {
 	calculateResearchPoints
 } from './points-calculator';
 import { db } from './db';
+import { users } from './db/schema';
 import { SHIPS } from '$lib/game-config';
 
 // Mock the database
@@ -19,7 +20,7 @@ interface MockDb {
 }
 
 vi.mock('./db', async (importOriginal) => {
-	const actual: unknown = await importOriginal();
+	const actual: any = await importOriginal();
 	return {
 		...actual,
 		db: {

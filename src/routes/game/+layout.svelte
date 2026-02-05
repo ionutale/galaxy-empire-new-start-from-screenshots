@@ -372,42 +372,42 @@
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">System</span>
 		</a>
 		<a
-			href={resolve('/game/alliance')}
+			href="/game/alliance"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🤝</span>
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Alliance</span>
 		</a>
 		<a
-			href={resolve('/game/commanders')}
+			href="/game/commanders"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">👨‍✈️</span>
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Officers</span>
 		</a>
 		<a
-			href={resolve('/game/shop')}
+			href="/game/shop"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🛒</span>
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Shop</span>
 		</a>
 		<a
-			href={resolve('/game/transactions')}
+			href="/game/transactions"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">💰</span>
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">History</span>
 		</a>
 		<a
-			href={resolve('/game/highscore')}
+			href="/game/highscore"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🏆</span>
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Rank</span>
 		</a>
 		<a
-			href={resolve('/game/achievements')}
+			href="/game/achievements"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🎖️</span>

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { ShipyardService } from './shipyard-service';
 import { db } from './db';
+import { sql } from 'drizzle-orm';
 import { SHIPS } from '$lib/game-config';
 
 // Mock the database

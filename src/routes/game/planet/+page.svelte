@@ -41,7 +41,7 @@
 	{:else}
 		<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
 			{#each data.planets as planet (planet.id)}
-				{@const production = calculateProduction(planet)}
+				{@const production = calculateProduction()}
 				<div
 					class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
 				>
