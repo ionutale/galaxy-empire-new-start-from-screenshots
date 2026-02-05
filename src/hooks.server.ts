@@ -4,6 +4,7 @@ import { processFleets } from '$lib/server/fleet-processor';
 import { processAutoExplore } from '$lib/server/auto-explorer';
 import { ShipyardService } from '$lib/server/shipyard-service';
 import { ResearchService } from '$lib/server/research-service';
+import { processBroodRaids } from '$lib/server/brood';
 import { db } from '$lib/server/db';
 import { sql } from 'drizzle-orm';
 import { building } from '$app/environment';
@@ -25,6 +26,7 @@ function startTickLoop() {
 			await processAutoExplore();
 			await ShipyardService.processCompletedShipConstruction();
 			await ResearchService.processCompletedResearch();
+			await processBroodRaids();
 			await db.execute(sql`CALL process_completed_buildings()`);
 		} catch (e) {
 			console.error('Tick error:', e);

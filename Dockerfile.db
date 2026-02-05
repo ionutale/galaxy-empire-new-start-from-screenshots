@@ -1,0 +1,13 @@
+FROM postgres:15-alpine
+
+# Install pg_cron
+RUN apk add --no-cache postgresql-contrib
+
+# Enable pg_cron extension
+RUN echo "shared_preload_libraries = 'pg_cron'" >> /usr/local/share/postgresql/postgresql.conf.sample
+RUN echo "cron.database_name = 'galaxy_empire'" >> /usr/local/share/postgresql/postgresql.conf.sample
+
+# Copy init script
+COPY init-db.sh /docker-entrypoint-initdb.d/
+
+USER postgres

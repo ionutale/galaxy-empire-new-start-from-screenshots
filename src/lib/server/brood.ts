@@ -1,6 +1,6 @@
 import { db } from './db';
-import { broodTargets, galactoniteItems, fusionRecipes, activeBoosts, fleets } from './db/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { broodTargets, galactoniteItems, fusionRecipes, activeBoosts, fleets, planetResources } from './db/schema';
+import { eq, and, sql, lte } from 'drizzle-orm';
 import { simulateCombat } from './combat-engine';
 import { users } from './db/schema';
 
@@ -97,3 +97,67 @@ export class BroodService {
 }
 
 export const broodService = new BroodService();
+
+export async function processBroodRaids() {
+	// Find arrived brood raid fleets
+	const arrivedFleets = await db
+		.select()
+		.from(fleets)
+		.where(and(eq(fleets.mission, 'brood_raid'), eq(fleets.status, 'active'), lte(fleets.arrivalTime, new Date())));
+
+	for (const fleet of arrivedFleets) {
+		try {
+			// Find the brood target
+			const targetId = await getBroodTargetId(fleet.targetGalaxy, fleet.targetSystem, fleet.targetPlanet);
+			if (!targetId) {
+				// No target, perhaps return fleet
+				await returnFleet(fleet.id);
+				continue;
+			}
+
+			// Perform raid
+			const result = await broodService.raidBroodTarget(fleet.id, targetId, fleet.userId);
+
+			if (result.success && result.loot) {
+				// Add loot to origin planet
+				await db
+					.update(planetResources)
+					.set({
+						metal: sql`${planetResources.metal} + ${result.loot.metal || 0}`,
+						crystal: sql`${planetResources.crystal} + ${result.loot.crystal || 0}`,
+						gas: sql`${planetResources.gas} + ${result.loot.gas || 0}`
+					})
+					.where(eq(planetResources.planetId, fleet.originPlanetId));
+			}
+
+			// Return fleet
+			await returnFleet(fleet.id);
+
+		} catch (e) {
+			console.error('Brood raid error:', e);
+			// Return fleet on error
+			await returnFleet(fleet.id);
+		}
+	}
+}
+
+async function getBroodTargetId(galaxy: number, system: number, planetSlot: number) {
+	const result = await db
+		.select({ id: broodTargets.id })
+		.from(broodTargets)
+		.where(and(eq(broodTargets.galaxy, galaxy), eq(broodTargets.system, system), eq(broodTargets.planetSlot, planetSlot)))
+		.limit(1);
+
+	return result.length ? result[0].id : null;
+}
+
+async function returnFleet(fleetId: number) {
+	// Set return time (assume instant for now)
+	await db
+		.update(fleets)
+		.set({
+			status: 'returning',
+			returnTime: new Date()
+		})
+		.where(eq(fleets.id, fleetId));
+}
