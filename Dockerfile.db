@@ -1,5 +1,10 @@
-FROM postgres:17-alpine
+FROM postgres:17
 
-# Note: pg_cron installation is complex for PostgreSQL 17
-# The migration will check if pg_cron is available and use it if possible
-# If not available, game ticks will need to be run manually or via external scheduler
+# Install pg_cron extension
+RUN apt-get update && \
+    apt-get install -y postgresql-17-cron && \
+    rm -rf /var/lib/apt/lists/*
+
+# Enable pg_cron extension
+RUN echo "shared_preload_libraries = 'pg_cron'" >> /usr/share/postgresql/postgresql.conf.sample && \
+    echo "cron.database_name = 'galaxy_empire'" >> /usr/share/postgresql/postgresql.conf.sample

@@ -42,6 +42,7 @@ Use the provided `docker-compose.yml` to set up the PostgreSQL database. The dat
 ## Project Overview
 
 **Galaxy Empire** is a sci-fi strategy MMO game featuring:
+
 - **Base Building**: Construct and upgrade buildings (mines, solar plants, shipyards, research labs)
 - **Resource Management**: Metal, Crystal, Gas (Deuterium), Energy, Dark Matter
 - **Fleet Construction**: Build various ship types for exploration, combat, and colonization
@@ -53,6 +54,7 @@ Use the provided `docker-compose.yml` to set up the PostgreSQL database. The dat
 ## Database Schema Overview
 
 ### Core Tables
+
 - **`users`**: Player accounts, authentication, premium currency
 - **`planets`**: Player colonies with coordinates, type, temperature, fields
 - **`planet_resources`**: Resource storage (metal, crystal, gas, energy) with last_update timestamps
@@ -63,11 +65,13 @@ Use the provided `docker-compose.yml` to set up the PostgreSQL database. The dat
 - **`planet_ships`**: Ship counts stationed on planets
 
 ### Queue Tables
+
 - **`building_queue`**: Construction jobs with start/completion times
 - **`research_queue`**: Research jobs in progress
 - **`shipyard_queue`**: Ship construction orders
 
 ### Social Features
+
 - **`alliances`**: Player groups
 - **`messages`**: Private messaging system
 - **`combat_reports`**: Battle results
@@ -76,6 +80,7 @@ Use the provided `docker-compose.yml` to set up the PostgreSQL database. The dat
 ## Game Mechanics
 
 ### Resource Production
+
 - **Automated**: Runs every second via `process_resource_production()` procedure
 - **Building-based**: Mines produce resources based on level (1.1x multiplier per level)
 - **Temperature Effects**: Gas production varies with planet temperature
@@ -83,18 +88,21 @@ Use the provided `docker-compose.yml` to set up the PostgreSQL database. The dat
 - **Storage Limits**: Resources capped at building-dependent maximums
 
 ### Building System
+
 - **Queue-based**: Construction takes real time, processed by `process_completed_buildings()`
 - **Prerequisites**: Buildings require specific tech levels or other buildings
 - **Cost Scaling**: Exponential cost increase with level (configurable factors)
 - **Production Scaling**: 1.1x production multiplier per level
 
 ### Fleet System
+
 - **Real-time Movement**: Fleets travel between coordinates based on distance/engine speed
 - **Multiple Missions**: Attack, Transport, Colonize, Espionage, Recycle
 - **Combat Engine**: Deterministic battle calculations with ship stats
 - **Resource Transport**: Fleets can carry resources between planets
 
 ### Research System
+
 - **Global per User**: Research benefits all planets
 - **Queue-based**: One research at a time
 - **Prerequisites**: Tech tree dependencies
@@ -103,6 +111,7 @@ Use the provided `docker-compose.yml` to set up the PostgreSQL database. The dat
 ## Development Workflow
 
 ### Database Migrations
+
 ```bash
 # Generate migration from schema changes
 pnpm run db:generate
@@ -113,12 +122,15 @@ pnpm run migrate
 ```
 
 ### Game Tick Automation
+
 The game runs automated ticks every second via cron job:
+
 - **Script**: `run-game-tick.sh` (calls `game_tick()` procedure 60 times/minute)
 - **Cron**: `* * * * * cd /path/to/project && ./run-game-tick.sh >> /tmp/game-tick.log 2>&1`
 - **Procedures**: `process_completed_buildings()`, `process_completed_ship_construction()`, `process_all_completed_research()`, `process_resource_production()`
 
 ### Testing
+
 ```bash
 # Unit tests
 pnpm run test:unit
@@ -133,12 +145,14 @@ pnpm run test
 ## Key Files and Architecture
 
 ### Frontend (`src/`)
+
 - **`routes/`**: SvelteKit pages and API endpoints
 - **`lib/components/`**: Reusable UI components
 - **`lib/game-config.ts`**: Building costs, production rates, formulas
 - **`lib/server/`**: Backend services and business logic
 
 ### Backend Services (`src/lib/server/`)
+
 - **`db.ts`**: Database connection and query helpers
 - **`building-service.ts`**: Building construction logic
 - **`fleet-service.ts`**: Fleet management and movement
@@ -148,11 +162,13 @@ pnpm run test
 - **`game.ts`**: Core game mechanics
 
 ### Database (`drizzle/`)
+
 - **`schema.ts`**: Complete database schema with relations
 - **`relations.ts`**: Drizzle ORM relationships
 - **Migration files**: SQL files for schema changes and procedures
 
 ### Configuration
+
 - **`docker-compose.yml`**: Database container setup
 - **`Dockerfile.db`**: PostgreSQL container with extensions
 - **`tsconfig.json`**: TypeScript configuration
@@ -162,6 +178,7 @@ pnpm run test
 ## Current Project Status
 
 ### ✅ Completed Features
+
 - Core gameplay (building, research, fleets, combat)
 - Database procedures for automated game ticks
 - Resource production system
@@ -171,12 +188,14 @@ pnpm run test
 - Docker containerization
 
 ### 🔄 Known Issues
+
 - Some TypeScript compilation errors (166 total)
 - Failing unit tests (66 tests)
 - Missing rate limiting for auth
 - Performance monitoring needed
 
 ### 📋 Development Priorities
+
 1. Fix TypeScript errors
 2. Repair failing tests
 3. Implement auth rate limiting
@@ -186,16 +205,19 @@ pnpm run test
 ## Game Balance and Formulas
 
 ### Resource Production
-- **Metal Mine**: 30 * (1.1^level) base production
-- **Crystal Mine**: 20 * (1.1^level) base production
-- **Gas Extractor**: 10 * (1.1^level) * temperature_modifier
-- **Temperature Modifier**: 1.44 - 0.004 * planet_temperature
+
+- **Metal Mine**: 30 \* (1.1^level) base production
+- **Crystal Mine**: 20 \* (1.1^level) base production
+- **Gas Extractor**: 10 _ (1.1^level) _ temperature_modifier
+- **Temperature Modifier**: 1.44 - 0.004 \* planet_temperature
 
 ### Building Costs
+
 - **Cost Factor**: 1.5x per level for most buildings
-- **Time Formula**: Base time * cost_factor^level
+- **Time Formula**: Base time \* cost_factor^level
 
 ### Fleet Movement
+
 - **Speed**: Based on slowest ship in fleet
 - **Distance**: Calculated from coordinate differences
 - **Travel Time**: distance / speed (in seconds)
@@ -203,6 +225,7 @@ pnpm run test
 ## API Endpoints
 
 ### Game Routes (`/game/`)
+
 - **`/planet/[id]`**: Planet management and building
 - **`/fleet`**: Fleet creation and management
 - **`/research`**: Technology research
@@ -213,6 +236,7 @@ pnpm run test
 - **`/messages`**: Private messaging
 
 ### API Routes (`/api/`)
+
 - Authentication endpoints
 - Game state queries
 - Action processing (build, research, fleet orders)
