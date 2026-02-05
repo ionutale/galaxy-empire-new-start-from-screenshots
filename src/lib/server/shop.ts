@@ -270,7 +270,10 @@ export async function purchaseGalactoniteItem(
 }
 
 export async function getPlayerGalactoniteItems(userId: number): Promise<GalactoniteItem[]> {
-	const items = await db.select().from(galactoniteItems).where(eq(galactoniteItems.playerId, userId));
+	const items = await db
+		.select()
+		.from(galactoniteItems)
+		.where(eq(galactoniteItems.playerId, userId));
 	return items as unknown as GalactoniteItem[];
 }
 

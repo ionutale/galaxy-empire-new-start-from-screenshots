@@ -413,7 +413,9 @@ export class BuildingService {
 			buildTime,
 			canUpgrade: level < 100, // Max level check
 			isUpgrading: Boolean(row.is_upgrading),
-			upgradeCompletion: row.upgrade_completion ? new Date(String(row.upgrade_completion)) : undefined,
+			upgradeCompletion: row.upgrade_completion
+				? new Date(String(row.upgrade_completion))
+				: undefined,
 			prerequisites: (row.prerequisites as Record<string, number>) || {},
 			icon: this.getBuildingIcon(String(row.name)) // Add icon based on building name
 		};
