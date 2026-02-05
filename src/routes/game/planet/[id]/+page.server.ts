@@ -1,5 +1,5 @@
 import { db } from '$lib/server/db';
-import { planetResources, planets, buildingQueue } from '$lib/server/db/schema';
+import { planetResources, planets, buildingQueue, buildingTypes } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 import { BuildingService } from '$lib/server/building-service';
@@ -7,7 +7,7 @@ import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, parent, depends }) => {
 	depends('app:game-data');
-	
+
 	const { user } = await parent();
 
 	if (!user) {
@@ -32,10 +32,13 @@ export const load: PageServerLoad = async ({ params, parent, depends }) => {
 			id: buildingQueue.id,
 			buildingTypeId: buildingQueue.buildingTypeId,
 			targetLevel: buildingQueue.targetLevel,
+			startedAt: buildingQueue.startedAt,
 			completionAt: buildingQueue.completionAt,
-			resourcesReserved: buildingQueue.resourcesReserved
+			resourcesReserved: buildingQueue.resourcesReserved,
+			buildingName: buildingTypes.name
 		})
 		.from(buildingQueue)
+		.innerJoin(buildingTypes, eq(buildingQueue.buildingTypeId, buildingTypes.id))
 		.where(eq(buildingQueue.planetId, planetId))
 		.orderBy(buildingQueue.completionAt);
 

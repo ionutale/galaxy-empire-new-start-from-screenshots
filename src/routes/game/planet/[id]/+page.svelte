@@ -119,6 +119,21 @@
 		}
 	}
 
+	function calculateProgress(startedAt: Date | null, completionAt: Date) {
+		if (!startedAt) return 0;
+
+		const now = currentTime.getTime();
+		const start = startedAt.getTime();
+		const end = completionAt.getTime();
+
+		if (now >= end) return 100;
+		if (now <= start) return 0;
+
+		const total = end - start;
+		const elapsed = now - start;
+		return Math.round((elapsed / total) * 100);
+	}
+
 	function getBuildingIcon(name: string) {
 		if (name.includes('Metal')) return '⛏️';
 		if (name.includes('Crystal')) return '💎';
@@ -191,10 +206,21 @@
 					<div class="flex items-center justify-between rounded bg-gray-800 p-3">
 						<div class="flex items-center space-x-3">
 							<span class="text-2xl">{getBuildingIcon(item.buildingTypeId.toString())}</span>
-							<div>
-								<span class="font-medium text-gray-200">Building Level {item.targetLevel}</span>
+							<div class="flex-1">
+								<span class="font-medium text-gray-200"
+									>{item.buildingName} Level {item.targetLevel}</span
+								>
 								<div class="text-sm text-yellow-400">
 									{formatTimeRemaining(new Date(item.completionAt))}
+								</div>
+								<div class="mt-2 h-2 w-full rounded-full bg-gray-700">
+									<div
+										class="h-2 rounded-full bg-blue-500 transition-all duration-1000"
+										style="width: {calculateProgress(
+											item.startedAt ? new Date(item.startedAt) : null,
+											new Date(item.completionAt)
+										)}%"
+									></div>
 								</div>
 							</div>
 						</div>

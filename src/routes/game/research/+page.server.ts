@@ -6,7 +6,7 @@ import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, parent, depends }) => {
 	depends('app:game-data');
-	
+
 	if (!locals.user) return {};
 
 	const { currentPlanet } = await parent();
