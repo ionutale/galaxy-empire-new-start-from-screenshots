@@ -46,7 +46,7 @@ export class BroodService {
 	}
 
 	// Raid a brood target
-	async raidBroodTarget(fleetId: number, targetId: number, userId: number): Promise<RaidResult> {
+	async raidBroodTarget(fleetId: number, targetId: number, _userId: number): Promise<RaidResult> {
 		// Get target
 		const targetRows = await db
 			.select()

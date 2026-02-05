@@ -114,7 +114,7 @@ describe('Advanced Game Features', () => {
 			expect(ships.length).toBeGreaterThan(10);
 
 			const lightFighter = ships.find(
-				(s: any) => s.ship_type === 'light_fighter'
+				(s: Record<string, unknown>) => s.ship_type === 'light_fighter'
 			) as unknown as ShipStats;
 			expect(lightFighter).toBeDefined();
 			expect(lightFighter.attack).toBe(50);
@@ -132,7 +132,7 @@ describe('Advanced Game Features', () => {
 			expect(defenses.length).toBeGreaterThan(5);
 
 			const rocketLauncher = defenses.find(
-				(d: any) => d.ship_type === 'rocket_launcher'
+				(d: Record<string, unknown>) => d.ship_type === 'rocket_launcher'
 			) as unknown as ShipStats;
 			expect(rocketLauncher).toBeDefined();
 			expect(rocketLauncher.attack).toBe(80);

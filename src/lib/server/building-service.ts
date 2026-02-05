@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { db } from './db';
+import { db } from '$lib/server/db';
 import { ErrorHandler } from './error-handler';
 
 export interface BuildingCost {
@@ -58,7 +58,9 @@ export class BuildingService {
 			ORDER BY bt.category, bt.name
 		`);
 
-		return result.rows.map((row) => this.formatBuildingInfo(row as any));
+		return result.rows.map((row) =>
+			this.formatBuildingInfo(row as Parameters<typeof BuildingService.formatBuildingInfo>[0])
+		);
 	}
 
 	/**
@@ -87,7 +89,9 @@ export class BuildingService {
 		`);
 
 		if (result.rows.length === 0) return null;
-		return this.formatBuildingInfo(result.rows[0] as any);
+		return this.formatBuildingInfo(
+			result.rows[0] as Parameters<typeof BuildingService.formatBuildingInfo>[0]
+		);
 	}
 
 	/**
@@ -358,7 +362,19 @@ export class BuildingService {
 	/**
 	 * Format building info from database row
 	 */
-	private static formatBuildingInfo(row: any): BuildingInfo {
+	private static formatBuildingInfo(row: {
+		id: number | string;
+		name: string;
+		description: string | null;
+		category: string;
+		level: number | string | null;
+		base_cost: unknown;
+		base_production: unknown;
+		base_energy: unknown;
+		is_upgrading: boolean | number | null;
+		upgrade_completion: string | Date | null;
+		prerequisites: unknown;
+	}): BuildingInfo {
 		const level = Number(row.level) || 0;
 		const baseCost = (row.base_cost as BuildingCost) || { metal: 0, crystal: 0, gas: 0 };
 		const baseProduction = row.base_production as BuildingProduction | null;

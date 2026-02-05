@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
-import { AchievementService } from './achievement-service';
+import { AchievementService, type AchievementDefinition } from './achievement-service';
 import { db } from './db';
 import { achievements, users } from './db/schema';
 import { eq, sql } from 'drizzle-orm';
@@ -50,48 +50,42 @@ describe('AchievementService', () => {
 	describe('checkAchievementRequirement', () => {
 		it('should return true for stat_value requirement when value meets threshold', () => {
 			const achievement = {
+				id: 1,
 				requirementType: 'stat_value',
 				requirementTarget: 'battles_won',
 				requirementValue: 5
-			};
+			} as AchievementDefinition;
 			const userStats = { battles_won: 10 };
 
-			const result = (AchievementService as any).checkAchievementRequirement(
-				achievement,
-				userStats
-			);
+			const result = AchievementService.checkAchievementRequirement(achievement, userStats);
 
 			expect(result).toBe(true);
 		});
 
 		it('should return false for stat_value requirement when value is below threshold', () => {
 			const achievement = {
+				id: 1,
 				requirementType: 'stat_value',
 				requirementTarget: 'battles_won',
 				requirementValue: 5
-			};
+			} as AchievementDefinition;
 			const userStats = { battles_won: 3 };
 
-			const result = (AchievementService as any).checkAchievementRequirement(
-				achievement,
-				userStats
-			);
+			const result = AchievementService.checkAchievementRequirement(achievement, userStats);
 
 			expect(result).toBe(false);
 		});
 
 		it('should return true for boolean_flag requirement when condition is met', () => {
 			const achievement = {
+				id: 1,
 				requirementType: 'boolean_flag',
 				requirementTarget: 'in_alliance',
 				requirementValue: 1
-			};
+			} as AchievementDefinition;
 			const userStats = { in_alliance: 1 };
 
-			const result = (AchievementService as any).checkAchievementRequirement(
-				achievement,
-				userStats
-			);
+			const result = AchievementService.checkAchievementRequirement(achievement, userStats);
 
 			expect(result).toBe(true);
 		});

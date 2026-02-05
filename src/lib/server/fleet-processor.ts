@@ -205,7 +205,7 @@ async function processArrivingFleet(tx: TransactionClient, fleet: Fleet) {
 					planetType: 'terrestrial',
 					fieldsMax: 163,
 					imageVariant: 2
-				} as any)
+				})
 				.returning({ id: planets.id });
 
 			const newPlanetId = newPlanetRes[0].id;
@@ -366,8 +366,6 @@ async function processArrivingFleet(tx: TransactionClient, fleet: Fleet) {
 					.update(fleets)
 					.set({ resources: { metal: stolenMetal, crystal: stolenCrystal, gas: stolenGas } })
 					.where(eq(fleets.id, fleet.id));
-
-				let lootMsg = `Stolen: Metal ${stolenMetal}, Crystal ${stolenCrystal}, Gas ${stolenGas}.`;
 			}
 
 			// Send Reports
@@ -398,8 +396,8 @@ async function processArrivingFleet(tx: TransactionClient, fleet: Fleet) {
 					winner: result.winner,
 					rounds: result.rounds,
 					loot: loot,
-					debris: null as any // TODO: Implement debris field generation
-				} as any)
+					debris: null
+				})
 				.returning({ id: combatReports.id });
 
 			// Send message notifications with link to detailed report

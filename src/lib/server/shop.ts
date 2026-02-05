@@ -218,7 +218,7 @@ export interface GalactoniteItem {
 	playerId: number;
 	type: string;
 	rarity: string;
-	stats: any;
+	stats: Record<string, unknown>;
 }
 
 export async function purchaseGalactoniteItem(

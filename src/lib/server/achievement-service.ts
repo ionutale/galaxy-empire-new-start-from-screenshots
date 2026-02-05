@@ -313,11 +313,11 @@ export class AchievementService {
 	/**
 	 * Check if a user meets the requirement for an achievement
 	 */
-	private static checkAchievementRequirement(
+	public static checkAchievementRequirement(
 		achievement: AchievementDefinition,
-		userStats: Record<string, any>
+		userStats: Record<string, number | string | boolean>
 	): boolean {
-		const targetValue = userStats[achievement.requirementTarget] || 0;
+		const targetValue = (userStats[achievement.requirementTarget] as number) || 0;
 
 		switch (achievement.requirementType) {
 			case 'stat_value':
