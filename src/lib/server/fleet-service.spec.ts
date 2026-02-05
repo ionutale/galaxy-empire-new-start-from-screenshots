@@ -143,7 +143,9 @@ describe('Fleet Service', () => {
 			const shipUpdates = updateCalls.slice(0, 2);
 			expect(
 				shipUpdates.some(
-					(call: any) => // eslint-disable-line @typescript-eslint/no-explicit-any
+					(
+						call: any // eslint-disable-line @typescript-eslint/no-explicit-any
+					) =>
 						call[0] === planetShips &&
 						call[1].set.smallCargo === sql`${planetShips.smallCargo} - ${2}`
 				)
@@ -151,7 +153,9 @@ describe('Fleet Service', () => {
 
 			expect(
 				shipUpdates.some(
-					(call: any) => // eslint-disable-line @typescript-eslint/no-explicit-any
+					(
+						call: any // eslint-disable-line @typescript-eslint/no-explicit-any
+					) =>
 						call[0] === planetShips &&
 						call[1].set.destroyer === sql`${planetShips.destroyer} - ${1}`
 				)
@@ -196,7 +200,8 @@ describe('Fleet Service', () => {
 			// Find the resource update call
 			const resourceUpdate = updateCalls.find((call: any) => call[0] === planetResources); // eslint-disable-line @typescript-eslint/no-explicit-any
 			expect(resourceUpdate).toBeDefined();
-			expect((resourceUpdate as any)[1].set).toEqual({ // eslint-disable-line @typescript-eslint/no-explicit-any
+			expect((resourceUpdate as any)[1].set).toEqual({
+				// eslint-disable-line @typescript-eslint/no-explicit-any
 				metal: sql`${planetResources.metal} - ${100}`,
 				crystal: sql`${planetResources.crystal} - ${50}`,
 				gas: sql`${planetResources.gas} - ${25 + 75}` // resources.gas + fuel

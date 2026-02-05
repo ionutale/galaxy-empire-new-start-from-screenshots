@@ -1,12 +1,5 @@
-FROM postgres:18
+FROM postgres:17-alpine
 
-# Install pg_cron
-# The apt-get update is necessary to fetch the latest package lists from the PGDG repo
-RUN apt-get update && \
-    apt-get install -y postgresql-17-cron && \
-    rm -rf /var/lib/apt/lists/*
-
-# Configure PostgreSQL to load pg_cron at startup
-# We invoke postgres with the config overrides.
-# cron.database_name is set to 'galaxy_empire' so pg_cron tables are created there
-CMD ["postgres", "-c", "shared_preload_libraries=pg_cron", "-c", "cron.database_name=galaxy_empire"]
+# Note: pg_cron installation is complex for PostgreSQL 17
+# The migration will check if pg_cron is available and use it if possible
+# If not available, game ticks will need to be run manually or via external scheduler

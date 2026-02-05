@@ -27,6 +27,9 @@ BEGIN
     -- Process Research
     CALL process_all_completed_research();
     
+    -- Process Resource Production (Mining)
+    CALL process_resource_production();
+    
     -- Note: Fleet movements and other logic currently handled in Node.js
     -- would need to be ported to PL/pgSQL to be included here.
 END;
