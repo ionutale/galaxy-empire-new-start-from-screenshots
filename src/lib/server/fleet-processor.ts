@@ -480,7 +480,7 @@ async function processArrivingFleet(tx: TransactionClient, fleet: Fleet) {
 					light_fighter: Math.floor(Math.random() * 5) + 1,
 					small_cargo: Math.floor(Math.random() * 2) + 1
 				};
-				const currentShips = fleet.ships as any;
+				const currentShips = (fleet.ships as Record<string, number>) || {};
 
 				for (const [type, count] of Object.entries(foundShips)) {
 					currentShips[type] = (currentShips[type] || 0) + count;
