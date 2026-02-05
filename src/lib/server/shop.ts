@@ -1,6 +1,6 @@
 import { db } from './db';
-import { users, userBoosters, transactions } from './db/schema';
-import { eq, and, gt } from 'drizzle-orm';
+import { users, userBoosters, transactions, galactoniteItems, fusionRecipes, activeBoosts } from './db/schema';
+import { eq, and, gt, inArray } from 'drizzle-orm';
 
 export interface ShopItem {
 	id: string;
@@ -190,4 +190,135 @@ export async function getBoosterMultipliers(userId: number) {
 	}
 
 	return multipliers;
+}
+
+// Galactonite Fusion Functions
+export interface GalactoniteItem {
+	id: number;
+	playerId: number;
+	type: string;
+	rarity: string;
+	stats: any;
+}
+
+export async function purchaseGalactoniteItem(userId: number, type: string, rarity: string, cost: number) {
+	return await db.transaction(async (tx) => {
+		// Check DM
+		const userRes = await tx
+			.select({ darkMatter: users.darkMatter })
+			.from(users)
+			.where(eq(users.id, userId));
+
+		if (userRes.length === 0) throw new Error('User not found');
+
+		const currentDM = userRes[0].darkMatter || 0;
+		if (currentDM < cost) throw new Error('Not enough Dark Matter');
+
+		// Deduct DM
+		await tx
+			.update(users)
+			.set({ darkMatter: currentDM - cost })
+			.where(eq(users.id, userId));
+
+		// Add item
+		const [newItem] = await tx
+			.insert(galactoniteItems)
+			.values({
+				playerId: userId,
+				type,
+				rarity,
+				stats: {} // TODO: generate stats based on type/rarity
+			})
+			.returning();
+
+		// Record transaction
+		await tx.insert(transactions).values({
+			userId,
+			type: 'galactonite_purchase',
+			amount: cost,
+			description: `Purchased ${rarity} ${type}`,
+			metadata: JSON.stringify({ itemId: newItem.id, type, rarity })
+		});
+
+		return { success: true, item: newItem, remainingDM: currentDM - cost };
+	});
+}
+
+export async function getPlayerGalactoniteItems(userId: number): Promise<GalactoniteItem[]> {
+	return await db
+		.select()
+		.from(galactoniteItems)
+		.where(eq(galactoniteItems.playerId, userId));
+}
+
+export async function fuseItems(userId: number, itemIds: number[], recipeId: number) {
+	return await db.transaction(async (tx) => {
+		// Get recipe
+		const recipeRes = await tx
+			.select()
+			.from(fusionRecipes)
+			.where(eq(fusionRecipes.id, recipeId));
+
+		if (!recipeRes.length) throw new Error('Recipe not found');
+
+		const recipe = recipeRes[0];
+
+		// Check DM cost
+		const userRes = await tx
+			.select({ darkMatter: users.darkMatter })
+			.from(users)
+			.where(eq(users.id, userId));
+
+		if (userRes[0].darkMatter < recipe.cost) throw new Error('Not enough Dark Matter');
+
+		// Check items ownership and count
+		const items = await tx
+			.select()
+			.from(galactoniteItems)
+			.where(and(eq(galactoniteItems.playerId, userId), inArray(galactoniteItems.id, itemIds)));
+
+		if (items.length !== itemIds.length) throw new Error('Some items not found or not owned');
+
+		// TODO: Validate items match recipe input
+
+		// Deduct DM
+		await tx
+			.update(users)
+			.set({ darkMatter: userRes[0].darkMatter - recipe.cost })
+			.where(eq(users.id, userId));
+
+		// Delete used items
+		await tx
+			.delete(galactoniteItems)
+			.where(inArray(galactoniteItems.id, itemIds));
+
+		// Apply boost
+		const boost = recipe.outputBoost;
+		const expiresAt = new Date(Date.now() + boost.duration * 1000);
+
+		await tx.insert(activeBoosts).values({
+			userId,
+			boostType: boost.type,
+			value: boost.value,
+			expiresAt
+		});
+
+		// Record transaction
+		await tx.insert(transactions).values({
+			userId,
+			type: 'fusion',
+			amount: recipe.cost,
+			description: `Fused items for ${boost.type} boost`,
+			metadata: JSON.stringify({ recipeId, boost })
+		});
+
+		return { success: true, boost, expiresAt };
+	});
+}
+
+export async function getActiveFusionBoosts(userId: number) {
+	return await db
+		.select()
+		.from(activeBoosts)
+		.where(and(eq(activeBoosts.userId, userId), gt(activeBoosts.expiresAt, new Date())));
 }

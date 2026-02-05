@@ -36,6 +36,27 @@
 			loading[itemId] = false;
 		}
 	}
+
+	async function purchaseGalactonite(type: string, rarity: string, cost: number) {
+		loading['galactonite'] = true;
+		try {
+			const response = await fetch('/api/galactonite', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ type, rarity, cost })
+			});
+			const result = await response.json();
+			if (response.ok && result.success) {
+				await invalidateAll();
+			} else {
+				alert(result.error);
+			}
+		} catch (error) {
+			console.error('Error purchasing galactonite:', error);
+		} finally {
+			loading['galactonite'] = false;
+		}
+	}
 </script>
 
 <div class="mx-auto w-full max-w-6xl p-4 pb-20">
@@ -94,5 +115,50 @@
 				</div>
 			</div>
 		{/each}
+	</div>
+
+	<!-- Galactonite Items -->
+	<div class="mt-8">
+		<h2 class="text-2xl font-bold text-blue-400 mb-4">Galactonite Items</h2>
+		<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+			<div class="overflow-hidden rounded-lg border border-gray-700 bg-gray-900/80 shadow-lg">
+				<div class="p-4">
+					<h3 class="text-xl font-bold text-white">Gem (Common)</h3>
+					<p class="text-sm text-gray-300">A basic gem for fusion</p>
+					<div class="mt-4 flex items-center justify-between">
+						<span class="font-bold text-purple-400">100 DM</span>
+						<button
+							onclick={() => purchaseGalactonite('gem', 'common', 100)}
+							class="rounded bg-blue-600 px-4 py-2 font-bold text-white hover:bg-blue-500 disabled:opacity-50"
+							disabled={darkMatter < 100 || loading['galactonite']}
+						>
+							{#if loading['galactonite']}
+								<Spinner size="sm" class="mr-2" />
+							{/if}
+							Purchase
+						</button>
+					</div>
+				</div>
+			</div>
+			<div class="overflow-hidden rounded-lg border border-gray-700 bg-gray-900/80 shadow-lg">
+				<div class="p-4">
+					<h3 class="text-xl font-bold text-white">Equipment (Common)</h3>
+					<p class="text-sm text-gray-300">Basic equipment for fusion</p>
+					<div class="mt-4 flex items-center justify-between">
+						<span class="font-bold text-purple-400">150 DM</span>
+						<button
+							onclick={() => purchaseGalactonite('equipment', 'common', 150)}
+							class="rounded bg-blue-600 px-4 py-2 font-bold text-white hover:bg-blue-500 disabled:opacity-50"
+							disabled={darkMatter < 150 || loading['galactonite']}
+						>
+							{#if loading['galactonite']}
+								<Spinner size="sm" class="mr-2" />
+							{/if}
+							Purchase
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
 	</div>
 </div>

@@ -1,5 +1,5 @@
 import { db } from '$lib/server/db';
-import { planets, users } from '$lib/server/db/schema';
+import { planets, users, broodTargets } from '$lib/server/db/schema';
 import { eq, and, asc } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
 
@@ -33,6 +33,12 @@ export const load: PageServerLoad = async ({ url, parent }) => {
 		.where(and(eq(planets.galaxyId, galaxy), eq(planets.systemId, system)))
 		.orderBy(asc(planets.planetNumber));
 
+	// Fetch brood targets in this system
+	const broodTargetsList = await db
+		.select()
+		.from(broodTargets)
+		.where(and(eq(broodTargets.galaxy, galaxy), eq(broodTargets.system, system)));
+
 	// Create array of 16 slots (1-15 planets, 16 nebula)
 	const slots = Array.from({ length: 16 }, (_, i) => {
 		const num = i + 1;
@@ -41,15 +47,18 @@ export const load: PageServerLoad = async ({ url, parent }) => {
 			return {
 				number: num,
 				planet: null,
-				isNebula: true
+				isNebula: true,
+				broodTarget: null
 			};
 		}
 
 		const planet = occupiedPlanets.find((p) => p.planetNumber === num);
+		const broodTarget = broodTargetsList.find((b) => b.planetSlot === num);
 		return {
 			number: num,
 			planet: planet || null,
-			isNebula: false
+			isNebula: false,
+			broodTarget: broodTarget || null
 		};
 	});
 

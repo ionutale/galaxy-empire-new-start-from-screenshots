@@ -489,3 +489,45 @@ export const userAchievements = pgTable('user_achievements', {
 	progress: integer('progress').default(0), // for progress-tracking achievements
 	isCompleted: boolean('is_completed').default(false)
 });
+
+// 12. PvE & Fusion Features
+export const broodTargets = pgTable('brood_targets', {
+	id: serial('id').primaryKey(),
+	galaxy: integer('galaxy').notNull(),
+	system: integer('system').notNull(),
+	planetSlot: integer('planet_slot').notNull(),
+	level: integer('level').default(1),
+	rewards: jsonb('rewards'),
+	lastRaidedAt: timestamp('last_raided_at'),
+	createdAt: timestamp('created_at').defaultNow()
+}, (t) => ({
+	uniqueTarget: unique().on(t.galaxy, t.system, t.planetSlot)
+}));
+
+export const galactoniteItems = pgTable('galactonite_items', {
+	id: serial('id').primaryKey(),
+	playerId: integer('player_id').references(() => users.id),
+	type: varchar('type', { length: 50 }).notNull(), // 'gem', 'equipment'
+	rarity: varchar('rarity', { length: 20 }).default('common'), // 'common', 'rare', 'epic', 'legendary'
+	stats: jsonb('stats'), // e.g., { production_bonus: 0.1 }
+	createdAt: timestamp('created_at').defaultNow()
+});
+
+export const fusionRecipes = pgTable('fusion_recipes', {
+	id: serial('id').primaryKey(),
+	name: varchar('name', { length: 100 }).notNull(),
+	inputItems: jsonb('input_items').notNull(), // array of item types/rarities
+	outputBoost: jsonb('output_boost').notNull(), // { type: 'production', value: 0.1, duration: 3600 }
+	cost: integer('cost').default(0), // dark matter cost
+	requiredResearch: varchar('required_research', { length: 100 }) // research name
+});
+
+export const activeBoosts = pgTable('active_boosts', {
+	id: serial('id').primaryKey(),
+	userId: integer('user_id').references(() => users.id),
+	planetId: integer('planet_id').references(() => planets.id),
+	boostType: varchar('boost_type', { length: 50 }).notNull(), // 'production', 'combat'
+	value: doublePrecision('value').notNull(),
+	expiresAt: timestamp('expires_at').notNull(),
+	createdAt: timestamp('created_at').defaultNow()
+});

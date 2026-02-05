@@ -1,0 +1,13 @@
+[
+  {
+    "id": "9383e7a7-2771-40a4-9b7f-ae5eede1803d",
+    "name": "test",
+    "host": "localhost",
+    "port": 5433,
+    "user": "galaxy_user",
+    "password": "galaxy_password",
+    "database": "galaxy_empire",
+    "ssl": false,
+    "autoCommit": true
+  }
+]

@@ -423,6 +423,7 @@
 					<option value="espionage">Espionage</option>
 					<option value="colonize">Colonize</option>
 					<option value="expedition">Expedition</option>
+					<option value="brood_raid">Brood Raid</option>
 				</select>
 			</div>
 

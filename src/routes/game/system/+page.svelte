@@ -64,6 +64,11 @@
 						<div
 							class="h-8 w-8 animate-pulse rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 shadow-lg"
 						></div>
+					{:else if slot.broodTarget}
+						<div
+							class="h-8 w-8 animate-pulse rounded-full bg-gradient-to-br from-red-500 via-orange-500 to-yellow-500 shadow-lg"
+							title="Brood Target Level {slot.broodTarget.level}"
+						></div>
 					{:else}
 						<div
 							class="h-8 w-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-600 shadow-lg {slot.planet
@@ -76,6 +81,8 @@
 				<div class="col-span-4 flex flex-col justify-center">
 					{#if slot.isNebula}
 						<span class="font-bold text-purple-300">Mysterious Nebula</span>
+					{:else if slot.broodTarget}
+						<span class="font-bold text-red-300">Alien Brood L{slot.broodTarget.level}</span>
 					{:else if slot.planet}
 						<span class="font-bold text-blue-200">{slot.planet.name}</span>
 					{:else}
@@ -86,6 +93,8 @@
 				<div class="col-span-3 flex items-center">
 					{#if slot.isNebula}
 						<span class="text-purple-400 italic">Unknown</span>
+					{:else if slot.broodTarget}
+						<span class="text-red-400 italic">Hostile</span>
 					{:else if slot.planet && slot.planet.username}
 						<span class="text-yellow-400">{slot.planet.username}</span>
 					{:else}
@@ -99,6 +108,12 @@
 							href="/game/fleet?galaxy={data.galaxy}&system={data.system}&planet=16&mission=expedition"
 							class="flex items-center justify-center rounded bg-purple-900/50 p-1 text-purple-400 transition-transform hover:bg-purple-800 active:scale-95"
 							title="Expedition">🔭</a
+						>
+					{:else if slot.broodTarget}
+						<a
+							href="/game/fleet?galaxy={data.galaxy}&system={data.system}&planet={slot.number}&mission=brood_raid"
+							class="flex items-center justify-center rounded bg-red-900/50 p-1 text-red-400 transition-transform hover:bg-red-800 active:scale-95"
+							title="Raid Brood">👾</a
 						>
 					{:else if slot.planet}
 						{#if slot.planet.userId !== $page.data.user.id}
