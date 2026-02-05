@@ -55,15 +55,15 @@ CREATE OR REPLACE FUNCTION calculate_building_cost(
     target_level int
 ) RETURNS jsonb AS $$
 DECLARE
-    base_cost jsonb;
+    base_cost_data jsonb;
     cost_multiplier float;
 BEGIN
     -- Get base cost
-    SELECT base_cost INTO base_cost
+    SELECT base_cost INTO base_cost_data
     FROM building_types
     WHERE id = building_type_id;
 
-    IF base_cost IS NULL THEN
+    IF base_cost_data IS NULL THEN
         RETURN NULL;
     END IF;
 
@@ -72,9 +72,9 @@ BEGIN
 
     -- Apply multiplier to each resource
     RETURN jsonb_build_object(
-        'metal', (base_cost->>'metal')::float * cost_multiplier,
-        'crystal', (base_cost->>'crystal')::float * cost_multiplier,
-        'gas', (base_cost->>'gas')::float * cost_multiplier
+        'metal', (base_cost_data->>'metal')::float * cost_multiplier,
+        'crystal', (base_cost_data->>'crystal')::float * cost_multiplier,
+        'gas', (base_cost_data->>'gas')::float * cost_multiplier
     );
 END;
 $$ LANGUAGE plpgsql;

@@ -21,10 +21,6 @@ export async function GET() {
 		// Process completed ship construction
 		await ShipyardService.processCompletedShipConstruction();
 
-		// Call stored procedures for fleet processing and auto-exploration
-		await db.execute(sql`CALL process_fleets()`);
-		await db.execute(sql`CALL process_auto_explore()`);
-
 		// Process brood raids
 		await processBroodRaids();
 
