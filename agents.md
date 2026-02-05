@@ -7,6 +7,8 @@ To ensure code quality and consistency, always run the following checks before c
 - **Type Checking**: Use TypeScript to verify type correctness.
 - **Formatting**: Use Prettier to maintain consistent code formatting.
 
+**ALways focus on the code quality and readability, not just on making it work.**
+
 Example commands:
 
 ```bash
