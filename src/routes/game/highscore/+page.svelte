@@ -16,7 +16,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				{#each data.highscores as player, i (player.userId || player.username)}
+				{#each data.highscores as player, i (player.id || player.username)}
 					<tr class="border-b border-gray-700 transition hover:bg-gray-700/50">
 						<td class="w-16 p-3 font-mono text-gray-500">#{i + 1}</td>
 						<td class="p-3 font-bold text-gray-200">{player.username}</td>

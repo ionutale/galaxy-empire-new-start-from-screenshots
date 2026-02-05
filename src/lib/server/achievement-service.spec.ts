@@ -37,8 +37,8 @@ describe('AchievementService', () => {
 
 	describe('initializeAchievements', () => {
 		it('should create achievement definitions', async () => {
-			const mockDb = db as MockDb;
-			mockDb.insert.mockResolvedValue({});
+			const mockDb = db as unknown as MockDb;
+			mockDb.insert.mockResolvedValue({} as any);
 
 			await AchievementService.initializeAchievements();
 

@@ -134,9 +134,9 @@ async function processArrivingFleet(tx: TransactionClient, fleet: Fleet) {
 		.from(planets)
 		.where(
 			and(
-				eq(planets.galaxyId, fleet.targetGalaxy),
-				eq(planets.systemId, fleet.targetSystem),
-				eq(planets.planetNumber, fleet.targetPlanet)
+				eq(planets.galaxyId, fleet.targetGalaxy as number),
+				eq(planets.systemId, fleet.targetSystem as number),
+				eq(planets.planetNumber, fleet.targetPlanet as number)
 			)
 		);
 
@@ -197,15 +197,15 @@ async function processArrivingFleet(tx: TransactionClient, fleet: Fleet) {
 			const newPlanetRes = await tx
 				.insert(planets)
 				.values({
-					userId: fleet.userId,
-					galaxyId: fleet.targetGalaxy,
-					systemId: fleet.targetSystem,
-					planetNumber: fleet.targetPlanet,
+					userId: fleet.userId!,
+					galaxyId: fleet.targetGalaxy!,
+					systemId: fleet.targetSystem!,
+					planetNumber: fleet.targetPlanet!,
 					name: 'Colony',
 					planetType: 'terrestrial',
 					fieldsMax: 163,
 					imageVariant: 2
-				})
+				} as any)
 				.returning({ id: planets.id });
 
 			const newPlanetId = newPlanetRes[0].id;
@@ -384,13 +384,13 @@ async function processArrivingFleet(tx: TransactionClient, fleet: Fleet) {
 			const reportId = await tx
 				.insert(combatReports)
 				.values({
-					attackerId: fleet.userId,
-					defenderId: targetPlanet.userId,
-					galaxy: fleet.targetGalaxy,
-					system: fleet.targetSystem,
-					planet: fleet.targetPlanet,
-					mission: fleet.mission,
-					attackerFleet: fleet.ships,
+					attackerId: fleet.userId!,
+					defenderId: targetPlanet.userId!,
+					galaxy: fleet.targetGalaxy!,
+					system: fleet.targetSystem!,
+					planet: fleet.targetPlanet!,
+					mission: fleet.mission || 'attack',
+					attackerFleet: fleet.ships || {},
 					defenderFleet: defenderShips,
 					defenderDefenses: defenderDefenses,
 					attackerLosses: result.attackerLosses,
@@ -398,8 +398,8 @@ async function processArrivingFleet(tx: TransactionClient, fleet: Fleet) {
 					winner: result.winner,
 					rounds: result.rounds,
 					loot: loot,
-					debris: null // TODO: Implement debris field generation
-				})
+					debris: null as any // TODO: Implement debris field generation
+				} as any)
 				.returning({ id: combatReports.id });
 
 			// Send message notifications with link to detailed report
@@ -494,7 +494,7 @@ async function processArrivingFleet(tx: TransactionClient, fleet: Fleet) {
 				await tx
 					.update(users)
 					.set({ darkMatter: sql`${users.darkMatter} + ${darkMatter}` })
-					.where(eq(users.id, fleet.userId));
+					.where(eq(users.id, fleet.userId as number));
 				message = `Your expedition discovered a pocket of Dark Matter! \nDark Matter: ${darkMatter}`;
 			} else {
 				// 25% - Nothing

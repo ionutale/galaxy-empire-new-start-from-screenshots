@@ -8,8 +8,8 @@
 	let error = $state<string | null>(null);
 
 	// Form states
-	let email = $state(data.profile.email);
-	let avatarId = $state(data.profile.avatarId);
+	let email = $state.raw(data.profile.email);
+	let avatarId = $state.raw(data.profile.avatarId);
 	let currentPassword = $state('');
 	let newPassword = $state('');
 	let confirmPassword = $state('');

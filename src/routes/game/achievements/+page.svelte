@@ -2,33 +2,37 @@
 	import type { PageData } from './$types';
 
 	interface UserAchievement {
+		id: number;
 		isCompleted: boolean;
-		achievement?: {
+		progress: number;
+		achievement: {
 			category: string;
 			icon?: string;
 			name: string;
 			description: string;
 			rewardType?: string;
 			rewardAmount?: number;
+			requirementValue: number;
 		};
 	}
 
-	export let data: PageData;
-	// @ts-expect-error
-	$: achievements = data.achievements as UserAchievement[];
-	$: newlyUnlocked = data.newlyUnlocked;
+	let { data } = $props();
+	let achievements = $derived(data.achievements as UserAchievement[]);
+	let newlyUnlocked = $derived(data.newlyUnlocked);
 
 	// Group achievements by category
-	$: achievementsByCategory = achievements.reduce(
-		(acc: Record<string, UserAchievement[]>, userAchievement: UserAchievement) => {
-			const category = userAchievement.achievement?.category || 'other';
-			if (!acc[category]) {
-				acc[category] = [];
-			}
-			acc[category].push(userAchievement);
-			return acc;
-		},
-		{} as Record<string, UserAchievement[]>
+	let achievementsByCategory = $derived(
+		achievements.reduce(
+			(acc: Record<string, UserAchievement[]>, userAchievement: UserAchievement) => {
+				const category = userAchievement.achievement?.category || 'other';
+				if (!acc[category]) {
+					acc[category] = [];
+				}
+				acc[category].push(userAchievement);
+				return acc;
+			},
+			{} as Record<string, UserAchievement[]>
+		)
 	);
 
 	// Category display names and colors
