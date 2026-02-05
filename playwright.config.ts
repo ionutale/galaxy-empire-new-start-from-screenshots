@@ -4,7 +4,7 @@ export default defineConfig({
 	webServer: { command: 'pnpm run build && pnpm run preview', port: 4173 },
 	testDir: 'e2e',
 	use: {
-		baseURL: 'http://localhost:4173',
+		baseURL: 'http://localhost:4173'
 	},
-	testMatch: '**/*.test.ts',
+	testMatch: '**/*.test.ts'
 });

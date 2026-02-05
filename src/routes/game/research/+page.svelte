@@ -100,6 +100,21 @@
 		}
 	}
 
+	function calculateProgress(startedAt: Date | null, completionAt: Date) {
+		if (!startedAt) return 0;
+
+		const now = currentTime.getTime();
+		const start = startedAt.getTime();
+		const end = completionAt.getTime();
+
+		if (now >= end) return 100;
+		if (now <= start) return 0;
+
+		const total = end - start;
+		const elapsed = now - start;
+		return Math.round((elapsed / total) * 100);
+	}
+
 	function getResearchIcon(researchTypeId: number) {
 		// Simple mapping - you might want to enhance this based on research types
 		switch (researchTypeId) {
@@ -154,12 +169,30 @@
 								</div>
 							</div>
 						</div>
-						<button
-							onclick={() => handleCancel(item.id)}
-							class="rounded bg-red-600 px-3 py-1 text-sm font-bold text-white hover:bg-red-500"
-						>
-							Cancel
-						</button>
+						<div class="flex items-center space-x-3">
+							<!-- Scientific-themed progress bar -->
+							<div
+								class="relative h-3 w-24 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700"
+							>
+								<div
+									class="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-500 transition-all duration-1000 ease-out"
+									style="width: {calculateProgress(item.startedAt, new Date(item.completionAt))}%"
+								>
+									<div
+										class="absolute inset-0 animate-pulse bg-gradient-to-r from-transparent via-white/20 to-transparent"
+									></div>
+								</div>
+								<div
+									class="absolute inset-0 animate-pulse bg-gradient-to-r from-transparent via-emerald-200/30 to-transparent delay-300"
+								></div>
+							</div>
+							<button
+								onclick={() => handleCancel(item.id)}
+								class="rounded bg-red-600 px-3 py-1 text-sm font-bold text-white hover:bg-red-500"
+							>
+								Cancel
+							</button>
+						</div>
 					</div>
 				{/each}
 			</div>

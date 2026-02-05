@@ -154,7 +154,9 @@ test.describe('User Authentication Flow', () => {
 
 			// Check that all buildings are in the queue by looking for "Level X" text
 			for (const buildingName of buildingsToUpgrade) {
-				await expect(page.locator('.space-y-2 .rounded.bg-gray-800.p-3').filter({ hasText: buildingName })).toBeVisible();
+				await expect(
+					page.locator('.space-y-2 .rounded.bg-gray-800.p-3').filter({ hasText: buildingName })
+				).toBeVisible();
 			}
 		});
 	});
@@ -183,6 +185,8 @@ async function upgradeBuilding(page: any, buildingName: string) {
 	await page.waitForTimeout(2000);
 
 	// Verify the building is now upgrading - look for the "Upgrading..." text in the header
-	const upgradingText = buildingCard.locator('span.text-yellow-400').filter({ hasText: 'Upgrading...' });
+	const upgradingText = buildingCard
+		.locator('span.text-yellow-400')
+		.filter({ hasText: 'Upgrading...' });
 	await expect(upgradingText).toBeVisible();
 }

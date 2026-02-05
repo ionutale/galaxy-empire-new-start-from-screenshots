@@ -20,6 +20,7 @@ export const load: PageServerLoad = async ({ locals, parent, depends }) => {
 				id: researchQueue.id,
 				researchTypeId: researchQueue.researchTypeId,
 				level: researchQueue.level,
+				startedAt: researchQueue.startedAt,
 				completionAt: researchQueue.completionAt,
 				planetId: researchQueue.planetId
 			})
