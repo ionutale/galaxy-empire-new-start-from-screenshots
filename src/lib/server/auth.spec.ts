@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { hashPassword, comparePassword, createSession, getSession, deleteSession } from './auth';
 import { db } from './db';
 import { sessions, users } from './db/schema';
-import { eq, and, gt } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 // Mock bcrypt
 vi.mock('bcryptjs', () => ({

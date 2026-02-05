@@ -1,14 +1,12 @@
 import { db } from './db';
 import {
-	users,
 	userCommanders,
 	autoExploreSettings,
 	fleetTemplates,
-	fleets,
 	userResearch,
 	planets
 } from './db/schema';
-import { eq, and, gt, sql, or } from 'drizzle-orm';
+import { eq, and, gt } from 'drizzle-orm';
 import { dispatchFleet } from './fleet-service';
 
 export async function processAutoExplore() {

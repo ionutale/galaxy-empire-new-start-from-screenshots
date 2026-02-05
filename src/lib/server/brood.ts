@@ -1,15 +1,7 @@
 import { db } from './db';
-import {
-	broodTargets,
-	galactoniteItems,
-	fusionRecipes,
-	activeBoosts,
-	fleets,
-	planetResources
-} from './db/schema';
+import { broodTargets, fleets, planetResources } from './db/schema';
 import { eq, and, sql, lte } from 'drizzle-orm';
 import { simulateCombat } from './combat-engine';
-import { users } from './db/schema';
 
 export interface BroodTarget {
 	id: number;

@@ -42,7 +42,8 @@ export default defineConfig(
 		files: ['**/*.spec.ts', '**/*.test.ts'],
 
 		rules: {
-			'@typescript-eslint/no-explicit-any': 'off'
+			'@typescript-eslint/no-explicit-any': 'off',
+			'@typescript-eslint/no-require-imports': 'off'
 		}
 	}
 );
