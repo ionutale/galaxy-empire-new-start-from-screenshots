@@ -23,7 +23,7 @@
 
 	// Reactive state for ship inputs
 	let shipCounts = $state(Object.fromEntries(shipTypes.map((s) => [s.id, 0])));
-	let ships = $derived(data.ships || {}) as any;
+	let ships = $derived(data.ships || {}) as Record<string, number>;
 
 	// Resources
 	let resourceMetal = $state(0);
@@ -116,7 +116,7 @@
 		return s.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
 	}
 
-	function loadTemplate(template: any) {
+	function loadTemplate(template: { id: number; name: string; ships: Record<string, number> }) {
 		// Reset all counts first
 		for (const key in shipCounts) {
 			shipCounts[key] = 0;

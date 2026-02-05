@@ -28,7 +28,7 @@
 	function formatFleet(fleet: Record<string, number>) {
 		if (!fleet) return '';
 		return Object.entries(fleet)
-			.filter(([_, count]) => count > 0)
+			.filter(([, count]) => count > 0)
 			.map(([type, count]) => `${type}: ${count}`)
 			.join(', ');
 	}

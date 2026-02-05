@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
-import { planets, users } from '$lib/server/db/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { planets } from '$lib/server/db/schema';
+import { eq, sql } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url, parent }) => {

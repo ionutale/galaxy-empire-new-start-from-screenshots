@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import type { PageData } from './$types';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import { invalidateAll } from '$app/navigation';
@@ -7,7 +6,7 @@
 	let { data }: { data: PageData } = $props();
 
 	let commanders = $derived(data.commanders);
-	let durationCosts = $derived(data.durationCosts) as any;
+	let durationCosts = $derived(data.durationCosts) as Record<number, number>;
 	let activeCommanders = $derived(data.activeCommanders);
 	let commanderExperience = $derived(data.commanderExperience);
 	let darkMatter = $derived(data.darkMatter);
@@ -96,7 +95,7 @@
 	</div>
 
 	<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-		{#each Object.values(commanders) as commander}
+		{#each Object.values(commanders) as commander (commander.id)}
 			<div
 				class="overflow-hidden rounded-lg border border-gray-700 bg-gray-900/80 transition-colors hover:border-purple-500/50"
 			>
@@ -177,7 +176,7 @@
 									class="w-full rounded border border-gray-600 bg-gray-800 px-2 py-1 text-xs text-white"
 								>
 									<option value="">Select Template</option>
-									{#each data.templates as template}
+									{#each data.templates as template (template.id)}
 										<option value={template.id}>{template.name}</option>
 									{/each}
 								</select>
@@ -188,7 +187,7 @@
 									class="w-full rounded border border-gray-600 bg-gray-800 px-2 py-1 text-xs text-white"
 								>
 									<option value="">Select Origin Planet</option>
-									{#each data.userPlanets as planet}
+									{#each data.userPlanets as planet (planet.id)}
 										<option value={planet.id}
 											>{planet.name} [{planet.galaxyId}:{planet.systemId}:{planet.planetNumber}]</option
 										>
@@ -215,7 +214,7 @@
 							class="w-full rounded border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-white outline-none focus:border-purple-500"
 							bind:value={selectedDuration}
 						>
-							{#each Object.entries(durationCosts) as [days, cost]}
+							{#each Object.entries(durationCosts) as [days, cost] (days)}
 								<option value={days}>{days} Days - {cost} DM</option>
 							{/each}
 						</select>
@@ -223,7 +222,7 @@
 						<button
 							onclick={() => handlePurchase(commander.id)}
 							class="flex w-full transform items-center justify-center rounded bg-purple-600 px-4 py-2 font-bold text-white transition-colors hover:bg-purple-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
-							disabled={darkMatter < durationCosts[selectedDuration as any] ||
+							disabled={darkMatter < durationCosts[selectedDuration] ||
 								loading[commander.id]}
 						>
 							{#if loading[commander.id]}

@@ -18,7 +18,7 @@ interface ResearchRow {
 	base_research_time: number;
 	is_researching: boolean;
 	research_completion: Date | null;
-	prerequisites: any; // JSON field
+	prerequisites: unknown; // JSON field
 	icon: string;
 }
 

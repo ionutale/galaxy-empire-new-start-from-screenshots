@@ -52,7 +52,7 @@
 			} else {
 				error = result.error;
 			}
-		} catch (e: any) {
+		} catch {
 			error = 'An error occurred';
 		} finally {
 			loading['profile'] = false;
@@ -86,7 +86,7 @@
 			} else {
 				error = result.error;
 			}
-		} catch (e: any) {
+		} catch {
 			error = 'An error occurred';
 		} finally {
 			loading['password'] = false;

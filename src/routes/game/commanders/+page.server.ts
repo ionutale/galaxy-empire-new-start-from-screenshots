@@ -3,7 +3,6 @@ import type { PageServerLoad } from './$types';
 import {
 	COMMANDERS,
 	DURATION_COSTS,
-	purchaseCommander,
 	getActiveCommanders,
 	getCommanderExperience
 } from '$lib/server/commanders';
@@ -40,7 +39,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const settings = settingsRes[0] || null;
 
 	// Get commander experience data
-	const commanderExperience: Record<string, any> = {};
+	const commanderExperience: Record<string, { level: number; experience: number; totalExperience: number; experienceToNext: number; maxLevel: number } | null> = {};
 	for (const commander of activeCommanders) {
 		const exp = await getCommanderExperience(locals.user.id, commander.commanderId);
 		if (exp) {

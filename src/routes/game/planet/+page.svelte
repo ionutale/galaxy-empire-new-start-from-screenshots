@@ -3,7 +3,7 @@
 
 	let { data } = $props();
 
-	function calculateProduction(planet: any) {
+	function calculateProduction(planet: { metalMine?: number; crystalMine?: number; gasExtractor?: number }) {
 		// Simplified production calculation
 		const metalProd = (planet.metalMine || 0) * 30; // 30 metal per level per hour
 		const crystalProd = (planet.crystalMine || 0) * 20; // 20 crystal per level per hour

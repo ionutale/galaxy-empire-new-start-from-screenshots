@@ -51,7 +51,7 @@
 			<div class="col-span-2">Actions</div>
 		</div>
 
-		{#each data.slots as slot}
+		{#each data.slots as slot (slot.number)}
 			<div
 				class="flex grid grid-cols-12 items-center gap-2 rounded border border-gray-700 bg-gray-800/60 p-2 transition hover:bg-gray-700/50"
 			>

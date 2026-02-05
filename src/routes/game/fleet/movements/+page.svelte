@@ -4,11 +4,19 @@
 
 	let { data } = $props();
 
+	interface Fleet {
+		id: number;
+		departureTime: string;
+		arrivalTime: string;
+		status: string;
+		// Add other properties as needed
+	}
+
 	let now = $state(Date.now());
-	let interval: any;
+	let interval: ReturnType<typeof setInterval> | undefined;
 	let reloading = false;
 
-	let extraFleets = $state<any[]>([]);
+	let extraFleets = $state<Fleet[]>([]);
 	let loadingMore = $state(false);
 	let hasMore = $state(true);
 
@@ -20,7 +28,7 @@
 			now = Date.now();
 
 			if (!reloading) {
-				const shouldReload = allFleets.some((f: any) => new Date(f.arrivalTime).getTime() <= now);
+				const shouldReload = allFleets.some((f: Fleet) => new Date(f.arrivalTime).getTime() <= now);
 				if (shouldReload) {
 					reloading = true;
 					await invalidateAll();
@@ -59,7 +67,7 @@
 		}
 	}
 
-	function getProgress(fleet: any) {
+	function getProgress(fleet: Fleet) {
 		const start = new Date(fleet.departureTime).getTime();
 		const end = new Date(fleet.arrivalTime).getTime();
 		const total = end - start;
@@ -74,7 +82,7 @@
 		return pct;
 	}
 
-	function getRemainingTime(fleet: any) {
+	function getRemainingTime(fleet: Fleet) {
 		const end = new Date(fleet.arrivalTime).getTime();
 		const diff = Math.max(0, end - now);
 		const seconds = Math.floor((diff / 1000) % 60);

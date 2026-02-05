@@ -11,7 +11,7 @@
 		return '#';
 	}
 
-	function getSystemColor(system: any) {
+	function getSystemColor(system: { hasActivity: boolean; playerCount: number }) {
 		if (system.hasActivity) {
 			if (system.playerCount > 5) return 'bg-red-600'; // High activity
 			if (system.playerCount > 2) return 'bg-yellow-600'; // Medium activity

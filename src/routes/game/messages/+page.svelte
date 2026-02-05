@@ -5,7 +5,7 @@
 
 	let { data } = $props();
 
-	let extraMessages = $state<any[]>([]);
+	let extraMessages = $state<unknown[]>([]);
 	let loading = $state(false);
 	let hasMore = $state(true);
 	let showSendForm = $state(false);

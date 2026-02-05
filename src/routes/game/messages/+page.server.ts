@@ -1,4 +1,4 @@
-import { db, messages, users, alliances } from '$lib/server/db';
+import { db, messages, users } from '$lib/server/db';
 import { desc, eq } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
 

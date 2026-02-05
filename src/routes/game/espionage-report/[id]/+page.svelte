@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { SHIPS, DEFENSES } from '$lib/game-config';
 
 	interface EspionageReport {
 		targetName: string;
@@ -22,13 +21,13 @@
 		if (!fleet) return 'No data';
 		return (
 			Object.entries(fleet)
-				.filter(([_, count]) => count > 0)
+				.filter(([, count]) => count > 0)
 				.map(([type, count]) => `${type}: ${count}`)
 				.join(', ') || 'None'
 		);
 	}
 
-	function formatBuildings(buildings: any) {
+	function formatBuildings(buildings: Record<string, number>) {
 		if (!buildings) return 'No data';
 		const buildingList = [];
 		for (const [key, value] of Object.entries(buildings)) {
@@ -39,7 +38,7 @@
 		return buildingList.join(', ') || 'None';
 	}
 
-	function formatResearch(research: any) {
+	function formatResearch(research: Record<string, number>) {
 		if (!research) return 'No data';
 		const researchList = [];
 		for (const [key, value] of Object.entries(research)) {

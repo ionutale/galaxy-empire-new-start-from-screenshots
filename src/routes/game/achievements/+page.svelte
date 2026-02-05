@@ -1,6 +1,4 @@
 <script lang="ts">
-	import type { PageData } from './$types';
-
 	interface UserAchievement {
 		id: number;
 		isCompleted: boolean;
@@ -46,14 +44,14 @@
 		other: { name: '📋 Other', color: 'bg-gray-600' }
 	};
 
-	function getProgressPercentage(userAchievement: any) {
+	function getProgressPercentage(userAchievement: UserAchievement) {
 		if (userAchievement.isCompleted) return 100;
 		const requirement = userAchievement.achievement?.requirementValue || 1;
 		const progress = userAchievement.progress || 0;
 		return Math.min((progress / requirement) * 100, 100);
 	}
 
-	function formatProgress(userAchievement: any) {
+	function formatProgress(userAchievement: UserAchievement) {
 		if (userAchievement.isCompleted) return 'Completed';
 		const progress = userAchievement.progress || 0;
 		const requirement = userAchievement.achievement?.requirementValue || 1;
