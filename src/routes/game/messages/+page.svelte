@@ -89,19 +89,37 @@
 			class="mb-6 rounded border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
 		>
 			<h3 class="mb-4 text-lg font-bold text-gray-900 dark:text-gray-200">Send Message</h3>
-			<form
-				method="POST"
-				action="/api/messages/send"
-				use:enhance={() => {
-					sending = true;
-					return async ({ update }) => {
-						sending = false;
+			<form onsubmit={async (e) => {
+				e.preventDefault();
+				sending = true;
+				const formData = new FormData(e.currentTarget as HTMLFormElement);
+				const data = Object.fromEntries(formData.entries());
+				data.messageType = messageType;
+
+				try {
+					const res = await fetch('/api/messages/send', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify(data)
+					});
+					if (res.ok) {
 						showSendForm = false;
 						await invalidate('app:unread-messages');
-						await update();
-					};
-				}}
-			>
+						// Re-fetch messages or add to list? 
+						// For now just invalidate and reload if needed, 
+						// but in svelte 5 we can just re-fetch for simplicity or use invalidate
+						window.location.reload(); 
+					} else {
+						const err = await res.json();
+						alert(err.error || 'Failed to send message');
+					}
+				} catch (err) {
+					console.error(err);
+					alert('An unexpected error occurred');
+				} finally {
+					sending = false;
+				}
+			}}>
 				<div class="mb-4">
 					<label
 						for="messageType"

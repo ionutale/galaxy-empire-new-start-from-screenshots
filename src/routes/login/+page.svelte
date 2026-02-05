@@ -1,12 +1,47 @@
 <script lang="ts">
-	import type { ActionData } from './$types';
 	import { page } from '$app/stores';
-	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
+	import { goto } from '$app/navigation';
 	import Spinner from '$lib/components/Spinner.svelte';
 
-	let { form }: { form: ActionData } = $props();
 	let loading = $state(false);
+	let error = $state<string | null>(null);
+	let missing = $state(false);
+	let invalid = $state(false);
+
+	async function handleSubmit(event: SubmitEvent) {
+		event.preventDefault();
+		loading = true;
+		error = null;
+		missing = false;
+		invalid = false;
+
+		const formData = new FormData(event.currentTarget as HTMLFormElement);
+		const data = Object.fromEntries(formData.entries());
+
+		try {
+			const response = await fetch('/api/auth/login', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(data)
+			});
+
+			const result = await response.json();
+
+			if (response.ok) {
+				goto('/game');
+			} else {
+				if (result.missing) missing = true;
+				if (result.invalid) invalid = true;
+				if (result.error) error = result.error;
+			}
+		} catch (err) {
+			error = 'An unexpected error occurred.';
+			console.error(err);
+		} finally {
+			loading = false;
+		}
+	}
 </script>
 
 <div class="flex min-h-screen items-center justify-center bg-gray-900 text-white">
@@ -21,17 +56,7 @@
 			</div>
 		{/if}
 
-		<form
-			method="POST"
-			class="space-y-4"
-			use:enhance={() => {
-				loading = true;
-				return async ({ update }) => {
-					loading = false;
-					await update();
-				};
-			}}
-		>
+		<form onsubmit={handleSubmit} class="space-y-4">
 			<div>
 				<label for="username" class="block text-sm font-medium text-gray-300">Username</label>
 				<input
@@ -60,16 +85,16 @@
 				</div>
 			</div>
 
-			{#if form?.missing}
+			{#if missing}
 				<p class="text-sm text-red-500">Please enter username and password.</p>
 			{/if}
 
-			{#if form?.invalid}
+			{#if invalid}
 				<p class="text-sm text-red-500">Invalid username or password.</p>
 			{/if}
 
-			{#if form?.error}
-				<p class="text-sm text-red-500">{form.error}</p>
+			{#if error}
+				<p class="text-sm text-red-500">{error}</p>
 			{/if}
 
 			<button

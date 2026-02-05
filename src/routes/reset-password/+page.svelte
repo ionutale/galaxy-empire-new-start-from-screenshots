@@ -1,32 +1,53 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
 	import Spinner from '$lib/components/Spinner.svelte';
 
-	let { data, form } = $props();
+	let { data } = $props();
 	let loading = $state(false);
+	let error = $state<string | null>(null);
+
+	async function handleSubmit(event: SubmitEvent) {
+		event.preventDefault();
+		loading = true;
+		error = null;
+
+		const formData = new FormData(event.currentTarget as HTMLFormElement);
+		const formDataObj = Object.fromEntries(formData.entries());
+
+		try {
+			const response = await fetch('/api/auth/reset-password', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(formDataObj)
+			});
+
+			const result = await response.json();
+
+			if (response.ok) {
+				goto('/login?reset=success');
+			} else {
+				error = result.error || 'An error occurred. Please try again.';
+			}
+		} catch (err) {
+			error = 'An unexpected error occurred.';
+			console.error(err);
+		} finally {
+			loading = false;
+		}
+	}
 </script>
 
 <div class="flex min-h-screen items-center justify-center bg-gray-900 p-4 text-white">
 	<div class="w-full max-w-md rounded-lg border border-gray-700 bg-gray-800 p-8 shadow-xl">
 		<h1 class="mb-6 text-center text-3xl font-bold text-blue-400">Reset Password</h1>
 
-		{#if form?.error}
+		{#if error}
 			<div class="mb-6 rounded border border-red-500 bg-red-900/50 p-4 text-center text-red-200">
-				{form.error}
+				{error}
 			</div>
 		{/if}
 
-		<form
-			method="POST"
-			class="space-y-6"
-			use:enhance={() => {
-				loading = true;
-				return async ({ update }) => {
-					loading = false;
-					await update();
-				};
-			}}
-		>
+		<form onsubmit={handleSubmit} class="space-y-6">
 			<input type="hidden" name="token" value={data.token} />
 
 			<div>

@@ -300,6 +300,7 @@ export const alliances = pgTable('alliances', {
 	id: serial('id').primaryKey(),
 	name: varchar('name', { length: 255 }).unique().notNull(),
 	tag: varchar('tag', { length: 10 }).unique().notNull(),
+	description: text('description'),
 	ownerId: integer('owner_id').references(() => users.id),
 	createdAt: timestamp('created_at').defaultNow()
 });
@@ -548,3 +549,4 @@ export const activeBoosts = pgTable('active_boosts', {
 	expiresAt: timestamp('expires_at').notNull(),
 	createdAt: timestamp('created_at').defaultNow()
 });
+
