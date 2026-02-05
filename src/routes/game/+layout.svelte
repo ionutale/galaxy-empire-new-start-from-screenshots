@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
-	import { goto, invalidate } from '$app/navigation';
+	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 
 	let { children, data } = $props();
@@ -61,7 +61,7 @@
 					goto(url.toString());
 				}}
 			>
-				{#each data.planets as planet}
+				{#each data.planets as planet (planet.id)}
 					<option value={planet.id}>
 						{planet.name} [{planet.galaxyId}:{planet.systemId}:{planet.planetNumber}]
 					</option>

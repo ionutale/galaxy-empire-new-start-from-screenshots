@@ -514,7 +514,7 @@ async function processArrivingFleet(tx: TransactionClient, fleet: Fleet) {
 	} else if (fleet.mission === 'deploy') {
 		if (targetPlanet && targetPlanet.userId === fleet.userId) {
 			// 1. Add ships to target planet
-			const ships = fleet.ships as any;
+			const ships = (fleet.ships as Record<string, number>) || {};
 			for (const [type, count] of Object.entries(ships)) {
 				if (VALID_SHIP_TYPES.includes(type)) {
 					await tx
@@ -525,7 +525,11 @@ async function processArrivingFleet(tx: TransactionClient, fleet: Fleet) {
 			}
 
 			// 2. Add resources to target planet (if any)
-			const resources = (fleet.resources || { metal: 0, crystal: 0, gas: 0 }) as any;
+			const resources = (fleet.resources || {
+				metal: 0,
+				crystal: 0,
+				gas: 0
+			}) as Record<string, number>;
 			await tx
 				.update(planetResources)
 				.set({
@@ -563,9 +567,11 @@ async function processArrivingFleet(tx: TransactionClient, fleet: Fleet) {
 	return affectedUserId;
 }
 
-async function returnFleet(tx: any, fleet: any) {
+async function returnFleet(tx: TransactionClient, fleet: Fleet) {
 	// Calculate duration based on original flight time
-	const duration = new Date(fleet.arrivalTime).getTime() - new Date(fleet.departureTime).getTime();
+	const arrivalTime = fleet.arrivalTime ? new Date(fleet.arrivalTime).getTime() : Date.now();
+	const departureTime = fleet.departureTime ? new Date(fleet.departureTime).getTime() : Date.now();
+	const duration = arrivalTime - departureTime;
 	const safeDuration = duration > 0 ? duration : 30000; // Fallback to 30s
 
 	const now = new Date();
