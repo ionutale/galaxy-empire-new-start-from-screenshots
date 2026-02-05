@@ -8,15 +8,16 @@
 	let error = $state<string | null>(null);
 
 	// Form states
-	let email = $state.raw(data.profile.email);
-	let avatarId = $state.raw(data.profile.avatarId);
+	let email = $state('');
+	let avatarId = $state(1);
 	let currentPassword = $state('');
 	let newPassword = $state('');
 	let confirmPassword = $state('');
 
+	// Initialize form with data
 	$effect(() => {
-		email = data.profile.email;
-		avatarId = data.profile.avatarId;
+		email = data.profile.email || '';
+		avatarId = data.profile.avatarId || 1;
 	});
 
 	const avatars = [
