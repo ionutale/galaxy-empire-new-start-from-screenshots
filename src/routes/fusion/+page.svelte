@@ -44,13 +44,14 @@
 			<h2 class="text-xl font-bold mb-4">Your Items</h2>
 			<div class="grid grid-cols-3 gap-2">
 				{#each data.items as item}
-					<div
-						class="p-2 border rounded cursor-pointer {selectedItems.includes(item.id) ? 'border-blue-500 bg-blue-900' : 'border-gray-600'}"
+					<button
+						class="p-2 border rounded {selectedItems.includes(item.id) ? 'border-blue-500 bg-blue-900' : 'border-gray-600'}"
 						onclick={() => toggleItem(item.id)}
+						aria-label="Select {item.type} ({item.rarity}) item"
 					>
 						<div class="text-sm font-bold">{item.type} ({item.rarity})</div>
 						<div class="text-xs text-gray-400">ID: {item.id}</div>
-					</div>
+					</button>
 				{/each}
 			</div>
 		</div>

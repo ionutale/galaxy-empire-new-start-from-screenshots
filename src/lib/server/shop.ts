@@ -164,6 +164,7 @@ export async function getActiveBoosters(userId: number) {
 
 export async function getBoosterMultipliers(userId: number) {
 	const active = await getActiveBoosters(userId);
+	const fusionBoosts = await getActiveFusionBoosts(userId);
 
 	const multipliers = {
 		metal: 1.0,
@@ -172,6 +173,7 @@ export async function getBoosterMultipliers(userId: number) {
 		energy: 1.0
 	};
 
+	// Apply shop boosters
 	for (const b of active) {
 		const item = SHOP_ITEMS[b.boosterId];
 		if (!item) continue;
@@ -187,6 +189,17 @@ export async function getBoosterMultipliers(userId: number) {
 			multipliers.crystal *= factor;
 			multipliers.gas *= factor;
 		}
+	}
+
+	// Apply fusion boosts
+	for (const b of fusionBoosts) {
+		if (b.boostType === 'production') {
+			const factor = 1 + b.value / 100;
+			multipliers.metal *= factor;
+			multipliers.crystal *= factor;
+			multipliers.gas *= factor;
+		}
+		// Add other boost types as needed
 	}
 
 	return multipliers;
