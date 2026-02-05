@@ -53,7 +53,42 @@ BEGIN
     IF p_target_level <= current_level THEN
         RETURN jsonb_build_object('valid', false, 'error', 'Target level must be higher than current level');
     END IF;
-    
-    RETURN jsonb_build_object('valid', true);
+
+    -- Check prerequisites
+    SELECT check_building_prerequisites(p_planet_id, p_building_type_id, p_target_level) INTO prereqs_met;
+    IF NOT prereqs_met THEN
+        RETURN jsonb_build_object('valid', false, 'error', 'Prerequisites not met');
+    END IF;
+
+    -- Calculate required resources
+    SELECT calculate_building_cost(p_building_type_id, p_target_level) INTO building_cost;
+    IF building_cost IS NULL THEN
+        RETURN jsonb_build_object('valid', false, 'error', 'Invalid building type');
+    END IF;
+
+    -- Get available resources
+    SELECT jsonb_build_object('metal', metal, 'crystal', crystal, 'gas', gas) INTO available_resources
+    FROM planet_resources
+    WHERE planet_id = p_planet_id;
+
+    IF available_resources IS NULL THEN
+        RETURN jsonb_build_object('valid', false, 'error', 'Planet resources not found');
+    END IF;
+
+    -- Check resource availability
+    IF (available_resources->>'metal')::float < (building_cost->>'metal')::float THEN
+        RETURN jsonb_build_object('valid', false, 'error', 'Insufficient metal');
+    END IF;
+
+    IF (available_resources->>'crystal')::float < (building_cost->>'crystal')::float THEN
+        RETURN jsonb_build_object('valid', false, 'error', 'Insufficient crystal');
+    END IF;
+
+    IF (available_resources->>'gas')::float < (building_cost->>'gas')::float THEN
+        RETURN jsonb_build_object('valid', false, 'error', 'Insufficient gas');
+    END IF;
+
+    -- All validations passed
+    RETURN jsonb_build_object('valid', true, 'cost', building_cost);
 END;
 $$ LANGUAGE plpgsql;

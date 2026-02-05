@@ -92,7 +92,10 @@
 			const response = await fetch('/api/alliance', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ action: 'declarePeace', targetAllianceId: Number(selectedPeaceTarget) })
+				body: JSON.stringify({
+					action: 'declarePeace',
+					targetAllianceId: Number(selectedPeaceTarget)
+				})
 			});
 			if (response.ok) {
 				await invalidateAll();
@@ -116,16 +119,16 @@
 					<h1 class="text-3xl font-bold text-white">[{data.alliance.tag}] {data.alliance.name}</h1>
 					<p class="text-gray-400">Founder ID: {data.alliance.ownerId}</p>
 				</div>
-					<button
-						onclick={handleLeave}
-						disabled={loading['leave']}
-						class="flex items-center justify-center rounded bg-red-600 px-4 py-2 text-white transition-transform hover:bg-red-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
-					>
-						{#if loading['leave']}
-							<Spinner size="sm" class="mr-2" />
-						{/if}
-						Leave Alliance
-					</button>
+				<button
+					onclick={handleLeave}
+					disabled={loading['leave']}
+					class="flex items-center justify-center rounded bg-red-600 px-4 py-2 text-white transition-transform hover:bg-red-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+				>
+					{#if loading['leave']}
+						<Spinner size="sm" class="mr-2" />
+					{/if}
+					Leave Alliance
+				</button>
 			</div>
 
 			<h3 class="mb-4 text-xl font-bold text-gray-300">Members ({data.members?.length || 0})</h3>
@@ -154,12 +157,15 @@
 			{#if data.alliance.ownerId === data.user.id}
 				<div class="mt-6 rounded border border-gray-700 bg-gray-800 p-6">
 					<h3 class="mb-4 text-xl font-bold text-red-400">Diplomacy</h3>
-					
+
 					<!-- Declare War/Peace -->
 					<div class="mb-4">
 						<h4 class="mb-2 text-lg font-semibold text-gray-300">Declare Relations</h4>
 						<div class="mb-2 flex gap-2">
-							<select bind:value={selectedWarTarget} class="rounded border border-gray-600 bg-gray-900 px-3 py-2 text-white">
+							<select
+								bind:value={selectedWarTarget}
+								class="rounded border border-gray-600 bg-gray-900 px-3 py-2 text-white"
+							>
 								<option value="">Select Alliance</option>
 								{#each data.allAlliances || [] as alliance}
 									{#if alliance.id !== data.alliance.id}
@@ -167,12 +173,18 @@
 									{/if}
 								{/each}
 							</select>
-							<button onclick={handleDeclareWar} class="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-500">
+							<button
+								onclick={handleDeclareWar}
+								class="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-500"
+							>
 								Declare War
 							</button>
 						</div>
 						<div class="flex gap-2">
-							<select bind:value={selectedPeaceTarget} class="rounded border border-gray-600 bg-gray-900 px-3 py-2 text-white">
+							<select
+								bind:value={selectedPeaceTarget}
+								class="rounded border border-gray-600 bg-gray-900 px-3 py-2 text-white"
+							>
 								<option value="">Select Alliance</option>
 								{#each data.allAlliances || [] as alliance}
 									{#if alliance.id !== data.alliance.id}
@@ -180,7 +192,10 @@
 									{/if}
 								{/each}
 							</select>
-							<button onclick={handleDeclarePeace} class="rounded bg-green-600 px-4 py-2 text-white hover:bg-green-500">
+							<button
+								onclick={handleDeclarePeace}
+								class="rounded bg-green-600 px-4 py-2 text-white hover:bg-green-500"
+							>
 								Declare Peace
 							</button>
 						</div>
@@ -202,7 +217,10 @@
 											</span>
 											<div>
 												<span class="font-medium text-gray-200">
-													{relation.type.toUpperCase()} with [{relation.initiatorAllianceId === data.alliance.id ? relation.targetTag : relation.initiatorTag}]
+													{relation.type.toUpperCase()} with [{relation.initiatorAllianceId ===
+													data.alliance.id
+														? relation.targetTag
+														: relation.initiatorTag}]
 												</span>
 												<div class="text-sm text-gray-500">
 													Status: {relation.status}

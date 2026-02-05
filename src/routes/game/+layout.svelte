@@ -8,67 +8,23 @@
 	// Dark mode
 	let isDarkMode = $state(false);
 
-	// Chat Logic
-	let isChatOpen = $state(false);
-	let chatMessages = $state<any[]>([]);
-	let newMessage = $state('');
-	let chatChannel = $state('global');
-	let chatInterval: any;
-	let gameTickInterval: any;
-
-	async function fetchChat() {
-		try {
-			const res = await fetch(`/api/chat?channel=${chatChannel}`);
-			if (res.ok) {
-				chatMessages = await res.json();
-			}
-		} catch (e) {
-			console.error('Failed to fetch chat', e);
-		}
-	}
-
-	async function runGameTick() {
-		try {
-			const res = await fetch('/api/game-tick');
-			if (res.ok) {
-				// Invalidate game data to refresh UI (resources, fleets, etc.)
-				invalidate('app:game-data');
-			}
-		} catch (e) {
-			console.error('Game tick failed', e);
-		}
-	}
-
-	async function sendChat() {
-		if (!newMessage.trim()) return;
-
-		try {
-			const res = await fetch('/api/chat', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ content: newMessage, channel: chatChannel })
-			});
-
-			if (res.ok) {
-				newMessage = '';
-				await fetchChat();
-			}
-		} catch (e) {
-			console.error('Failed to send message', e);
-		}
-	}
-
-	function switchChannel(channel: string) {
-		chatChannel = channel;
-		fetchChat();
-	}
-
+	// Initialize dark mode from localStorage
 	onMount(() => {
+		const saved = localStorage.getItem('darkMode');
+		isDarkMode = saved === 'true';
+		document.documentElement.classList.toggle('dark', isDarkMode);
+
 		fetchChat();
 		chatInterval = setInterval(fetchChat, 5000); // Poll every 5s
 
 		// Poll game tick every 10 seconds to process fleets and auto-explore
 		gameTickInterval = setInterval(runGameTick, 10000);
+	});
+
+	// Watch for dark mode changes and save to localStorage
+	$effect(() => {
+		localStorage.setItem('darkMode', isDarkMode.toString());
+		document.documentElement.classList.toggle('dark', isDarkMode);
 	});
 
 	onDestroy(() => {
@@ -77,10 +33,16 @@
 	});
 </script>
 
-<div class="flex h-[100dvh] h-screen flex-col overflow-hidden font-sans {isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'} {isDarkMode ? 'dark' : ''}">
+<div
+	class="flex h-[100dvh] h-screen flex-col overflow-hidden font-sans {isDarkMode
+		? 'bg-gray-900 text-white'
+		: 'bg-gray-100 text-gray-900'} {isDarkMode ? 'dark' : ''}"
+>
 	<!-- Top Bar (HUD) -->
 	<header
-		class="z-20 flex h-12 shrink-0 items-center justify-between border-b px-4 {isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-300 bg-white'}"
+		class="z-20 flex h-12 shrink-0 items-center justify-between border-b px-4 {isDarkMode
+			? 'border-gray-700 bg-gray-800'
+			: 'border-gray-300 bg-white'}"
 	>
 		<div class="flex items-center space-x-4">
 			<div class="hidden items-center space-x-2 sm:flex">
@@ -115,14 +77,14 @@
 			<div class="flex space-x-2">
 				<a
 					href="/game/commanders"
-					class="flex h-8 w-8 items-center justify-center rounded-full border border-gray-600 bg-gray-700 hover:bg-gray-600 transition-colors"
+					class="flex h-8 w-8 items-center justify-center rounded-full border border-gray-600 bg-gray-700 transition-colors hover:bg-gray-600"
 					title="Officers"
 				>
 					<span class="text-sm">👨‍✈️</span>
 				</a>
 				<a
 					href="/game/shop"
-					class="flex h-8 w-8 items-center justify-center rounded-full border border-gray-600 bg-gray-700 hover:bg-gray-600 transition-colors"
+					class="flex h-8 w-8 items-center justify-center rounded-full border border-gray-600 bg-gray-700 transition-colors hover:bg-gray-600"
 					title="Shop"
 				>
 					<span class="text-sm">🛒</span>
@@ -211,14 +173,18 @@
 				<div class="flex space-x-2">
 					<button
 						onclick={() => switchChannel('global')}
-						class="rounded px-2 py-1 text-sm transition {chatChannel === 'global' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}"
+						class="rounded px-2 py-1 text-sm transition {chatChannel === 'global'
+							? 'bg-blue-600 text-white'
+							: 'text-gray-400 hover:text-white'}"
 					>
 						Global
 					</button>
 					{#if data.user.allianceId}
 						<button
 							onclick={() => switchChannel('alliance')}
-							class="rounded px-2 py-1 text-sm transition {chatChannel === 'alliance' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}"
+							class="rounded px-2 py-1 text-sm transition {chatChannel === 'alliance'
+								? 'bg-blue-600 text-white'
+								: 'text-gray-400 hover:text-white'}"
 						>
 							Alliance
 						</button>
@@ -271,7 +237,9 @@
 		>
 			{#if chatMessages.length > 0}
 				{@const lastMsg = chatMessages[0]}
-				<span class="font-bold text-blue-400">[{chatChannel === 'alliance' ? 'Alliance' : 'Global'}]</span>
+				<span class="font-bold text-blue-400"
+					>[{chatChannel === 'alliance' ? 'Alliance' : 'Global'}]</span
+				>
 				<span class="text-yellow-500">{lastMsg.username}:</span>
 				{lastMsg.content}
 			{:else}
@@ -289,98 +257,98 @@
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🪐</span>
-			<span class="text-[10px] tracking-wide uppercase text-gray-300">Base</span>
+			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Base</span>
 		</a>
 		<a
 			href="/game/planet"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🌍</span>
-			<span class="text-[10px] tracking-wide uppercase text-gray-300">Planets</span>
+			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Planets</span>
 		</a>
 		<a
 			href="/game/research"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🔬</span>
-			<span class="text-[10px] tracking-wide uppercase text-gray-300">Research</span>
+			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Research</span>
 		</a>
 		<a
 			href="/game/shipyard"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🛠️</span>
-			<span class="text-[10px] tracking-wide uppercase text-gray-300">Shipyard</span>
+			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Shipyard</span>
 		</a>
 		<a
 			href="/game/fleet"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🚀</span>
-			<span class="text-[10px] tracking-wide uppercase text-gray-300">Fleet</span>
+			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Fleet</span>
 		</a>
 		<a
 			href="/game/fleet/movements"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">📡</span>
-			<span class="text-[10px] tracking-wide uppercase text-gray-300">Movements</span>
+			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Movements</span>
 		</a>
 		<a
 			href="/game/galaxy"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🌌</span>
-			<span class="text-[10px] tracking-wide uppercase text-gray-300">Galaxy</span>
+			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Galaxy</span>
 		</a>
 		<a
 			href="/game/system"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">☀️</span>
-			<span class="text-[10px] tracking-wide uppercase text-gray-300">System</span>
+			<span class="text-[10px] tracking-wide text-gray-300 uppercase">System</span>
 		</a>
 		<a
 			href="/game/alliance"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🤝</span>
-			<span class="text-[10px] tracking-wide uppercase text-gray-300">Alliance</span>
+			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Alliance</span>
 		</a>
 		<a
 			href="/game/commanders"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">👨‍✈️</span>
-			<span class="text-[10px] tracking-wide uppercase text-gray-300">Officers</span>
+			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Officers</span>
 		</a>
 		<a
 			href="/game/shop"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🛒</span>
-			<span class="text-[10px] tracking-wide uppercase text-gray-300">Shop</span>
+			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Shop</span>
 		</a>
 		<a
 			href="/game/transactions"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">💰</span>
-			<span class="text-[10px] tracking-wide uppercase text-gray-300">History</span>
+			<span class="text-[10px] tracking-wide text-gray-300 uppercase">History</span>
 		</a>
 		<a
 			href="/game/highscore"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🏆</span>
-			<span class="text-[10px] tracking-wide uppercase text-gray-300">Rank</span>
+			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Rank</span>
 		</a>
 		<a
 			href="/game/achievements"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🎖️</span>
-			<span class="text-[10px] tracking-wide uppercase text-gray-300">Achievements</span>
+			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Achievements</span>
 		</a>
 	</nav>
 </div>

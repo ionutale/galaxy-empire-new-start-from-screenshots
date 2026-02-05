@@ -8,13 +8,17 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	}
 
 	try {
-        const { planetId, buildingTypeId } = await request.json();
-		
-		if (!buildingTypeId || !planetId) {
-            return json({ error: 'Missing parameters' }, { status: 400 });
-        }
+		const { planetId, buildingTypeId } = await request.json();
 
-		const result = await BuildingService.startBuildingConstruction(Number(planetId), Number(buildingTypeId), locals.user.id);
+		if (!buildingTypeId || !planetId) {
+			return json({ error: 'Missing parameters' }, { status: 400 });
+		}
+
+		const result = await BuildingService.startBuildingConstruction(
+			Number(planetId),
+			Number(buildingTypeId),
+			locals.user.id
+		);
 
 		if (!result.success) {
 			return json({ error: result.error }, { status: 400 });

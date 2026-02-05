@@ -43,10 +43,14 @@
 		<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
 			{#each data.planets as planet}
 				{@const production = calculateProduction(planet)}
-				<div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+				<div
+					class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+				>
 					<div class="mb-3 flex items-center justify-between">
 						<h3 class="text-lg font-bold text-blue-700 dark:text-blue-200">{planet.name}</h3>
-						<span class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+						<span
+							class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+						>
 							[{planet.galaxyId}:{planet.systemId}:{planet.planetNumber}]
 						</span>
 					</div>
@@ -59,19 +63,29 @@
 					<div class="mb-4 space-y-1">
 						<div class="flex justify-between text-sm">
 							<span class="text-gray-600 dark:text-gray-400">Metal:</span>
-							<span class="text-yellow-600 dark:text-yellow-400">{Math.floor(planet.metal || 0).toLocaleString()}</span>
+							<span class="text-yellow-600 dark:text-yellow-400"
+								>{Math.floor(planet.metal || 0).toLocaleString()}</span
+							>
 						</div>
 						<div class="flex justify-between text-sm">
 							<span class="text-gray-600 dark:text-gray-400">Crystal:</span>
-							<span class="text-blue-600 dark:text-blue-400">{Math.floor(planet.crystal || 0).toLocaleString()}</span>
+							<span class="text-blue-600 dark:text-blue-400"
+								>{Math.floor(planet.crystal || 0).toLocaleString()}</span
+							>
 						</div>
 						<div class="flex justify-between text-sm">
 							<span class="text-gray-600 dark:text-gray-400">Gas:</span>
-							<span class="text-purple-600 dark:text-purple-400">{Math.floor(planet.gas || 0).toLocaleString()}</span>
+							<span class="text-purple-600 dark:text-purple-400"
+								>{Math.floor(planet.gas || 0).toLocaleString()}</span
+							>
 						</div>
 						<div class="flex justify-between text-sm">
 							<span class="text-gray-600 dark:text-gray-400">Energy:</span>
-							<span class="{production.netEnergy >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">
+							<span
+								class={production.netEnergy >= 0
+									? 'text-green-600 dark:text-green-400'
+									: 'text-red-600 dark:text-red-400'}
+							>
 								{production.netEnergy >= 0 ? '+' : ''}{production.netEnergy}
 							</span>
 						</div>
@@ -79,7 +93,9 @@
 
 					<!-- Production -->
 					<div class="mb-4 space-y-1">
-						<div class="text-xs font-bold uppercase text-gray-500 dark:text-gray-300">Production /h</div>
+						<div class="text-xs font-bold text-gray-500 uppercase dark:text-gray-300">
+							Production /h
+						</div>
 						<div class="flex justify-between text-sm">
 							<span class="text-gray-600 dark:text-gray-400">Metal:</span>
 							<span class="text-yellow-600 dark:text-yellow-400">+{production.metal}</span>

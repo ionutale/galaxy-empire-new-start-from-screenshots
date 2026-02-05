@@ -186,14 +186,22 @@ export function getLevelFromExperience(experience: number): number {
 	return Math.floor(Math.sqrt(experience / 100)) + 1;
 }
 
-export async function addCommanderExperience(userId: number, commanderId: string, experienceGained: number) {
+export async function addCommanderExperience(
+	userId: number,
+	commanderId: string,
+	experienceGained: number
+) {
 	const commander = COMMANDERS[commanderId];
 	if (!commander) return;
 
 	return await db.transaction(async (tx) => {
 		// Get current commander data
 		const existingRes = await tx
-			.select({ level: userCommanders.level, experience: userCommanders.experience, totalExperience: userCommanders.totalExperience })
+			.select({
+				level: userCommanders.level,
+				experience: userCommanders.experience,
+				totalExperience: userCommanders.totalExperience
+			})
 			.from(userCommanders)
 			.where(and(eq(userCommanders.userId, userId), eq(userCommanders.commanderId, commanderId)))
 			.limit(1);

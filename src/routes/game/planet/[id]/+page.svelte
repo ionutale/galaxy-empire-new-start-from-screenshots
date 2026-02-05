@@ -21,7 +21,7 @@
 
 		return () => clearInterval(interval);
 	});
-	
+
 	async function handleUpgrade(buildingTypeId: number, planetId: number) {
 		loading[buildingTypeId] = true;
 		try {
@@ -30,13 +30,13 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ buildingTypeId, planetId })
 			});
-			
+
 			if (!res.ok) {
 				const err = await res.json();
 				alert(err.error || 'Upgrade failed');
 				return;
 			}
-			
+
 			await invalidateAll();
 		} catch (e) {
 			console.error(e);
@@ -49,7 +49,7 @@
 	async function handleCancel(queueId: number, planetId: number) {
 		// Use a temporary loading state key for cancellation if needed, or just block UI
 		if (!confirm('Cancel this construction?')) return;
-		
+
 		try {
 			// Optimistic UI update or global loading could be added here
 			const res = await fetch('/api/buildings/cancel', {
@@ -72,7 +72,8 @@
 	}
 
 	async function handleAbandon(planetId: number) {
-		if (!confirm('Are you sure you want to abandon this planet? This action cannot be undone.')) return;
+		if (!confirm('Are you sure you want to abandon this planet? This action cannot be undone.'))
+			return;
 
 		try {
 			const res = await fetch('/api/planets/abandon', {
@@ -86,8 +87,8 @@
 				alert(err.error || 'Abandon failed');
 				return;
 			}
-			
-			// Redirect or reload is handled by invalidateAll -> load function reruns -> 
+
+			// Redirect or reload is handled by invalidateAll -> load function reruns ->
 			// if planet is gone, load function might 404. We should probably redirect to game home.
 			window.location.href = '/game';
 		} catch (e) {
@@ -97,9 +98,9 @@
 	}
 
 	// Group buildings by category
-	let resourceBuildings = $derived(buildings.filter(b => b.category === 'resource'));
-	let facilityBuildings = $derived(buildings.filter(b => b.category === 'facility'));
-	let storageBuildings = $derived(buildings.filter(b => b.category === 'storage'));
+	let resourceBuildings = $derived(buildings.filter((b) => b.category === 'resource'));
+	let facilityBuildings = $derived(buildings.filter((b) => b.category === 'facility'));
+	let storageBuildings = $derived(buildings.filter((b) => b.category === 'storage'));
 
 	function formatTimeRemaining(completionAt: Date) {
 		const diff = completionAt.getTime() - currentTime.getTime();
@@ -192,7 +193,9 @@
 							<span class="text-2xl">{getBuildingIcon(item.buildingTypeId.toString())}</span>
 							<div>
 								<span class="font-medium text-gray-200">Building Level {item.targetLevel}</span>
-								<div class="text-sm text-yellow-400">{formatTimeRemaining(new Date(item.completionAt))}</div>
+								<div class="text-sm text-yellow-400">
+									{formatTimeRemaining(new Date(item.completionAt))}
+								</div>
 							</div>
 						</div>
 						<button
@@ -209,10 +212,14 @@
 
 	<!-- Resource Buildings -->
 	{#if resourceBuildings.length > 0}
-		<h3 class="mb-4 border-b border-gray-700 pb-2 text-xl font-bold text-gray-300">Resource Production</h3>
+		<h3 class="mb-4 border-b border-gray-700 pb-2 text-xl font-bold text-gray-300">
+			Resource Production
+		</h3>
 		<div class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
 			{#each resourceBuildings as building}
-				<div class="flex flex-col justify-between rounded border border-gray-700 bg-gray-800 p-4 transition-all duration-200 hover:border-blue-500 hover:shadow-lg hover:scale-105">
+				<div
+					class="flex flex-col justify-between rounded border border-gray-700 bg-gray-800 p-4 transition-all duration-200 hover:scale-105 hover:border-blue-500 hover:shadow-lg"
+				>
 					<div>
 						<div class="mb-2 flex items-center justify-between">
 							<div class="flex items-center space-x-3">
@@ -233,17 +240,29 @@
 
 						<div class="mb-2 flex flex-wrap gap-2 text-xs text-gray-400">
 							{#if building.cost.metal > 0}
-								<span class={(resources.metal ?? 0) < building.cost.metal ? 'text-red-400' : 'text-gray-300'}>
+								<span
+									class={(resources.metal ?? 0) < building.cost.metal
+										? 'text-red-400'
+										: 'text-gray-300'}
+								>
 									Metal: {building.cost.metal.toLocaleString()}
 								</span>
 							{/if}
 							{#if building.cost.crystal > 0}
-								<span class={(resources.crystal ?? 0) < building.cost.crystal ? 'text-red-400' : 'text-gray-300'}>
+								<span
+									class={(resources.crystal ?? 0) < building.cost.crystal
+										? 'text-red-400'
+										: 'text-gray-300'}
+								>
 									Crystal: {building.cost.crystal.toLocaleString()}
 								</span>
 							{/if}
 							{#if building.cost.gas > 0}
-								<span class={(resources.gas ?? 0) < building.cost.gas ? 'text-red-400' : 'text-gray-300'}>
+								<span
+									class={(resources.gas ?? 0) < building.cost.gas
+										? 'text-red-400'
+										: 'text-gray-300'}
+								>
 									Gas: {building.cost.gas.toLocaleString()}
 								</span>
 							{/if}
@@ -251,7 +270,9 @@
 
 						{#if Object.keys(building.prerequisites).length > 0}
 							<div class="mb-2 text-xs text-gray-500">
-								Prerequisites: {Object.entries(building.prerequisites).map(([k, v]) => `${k} ${v}`).join(', ')}
+								Prerequisites: {Object.entries(building.prerequisites)
+									.map(([k, v]) => `${k} ${v}`)
+									.join(', ')}
 							</div>
 						{/if}
 					</div>
@@ -305,17 +326,29 @@
 
 						<div class="mb-2 flex flex-wrap gap-2 text-xs text-gray-400">
 							{#if building.cost.metal > 0}
-								<span class={(resources.metal ?? 0) < building.cost.metal ? 'text-red-400' : 'text-gray-300'}>
+								<span
+									class={(resources.metal ?? 0) < building.cost.metal
+										? 'text-red-400'
+										: 'text-gray-300'}
+								>
 									Metal: {building.cost.metal.toLocaleString()}
 								</span>
 							{/if}
 							{#if building.cost.crystal > 0}
-								<span class={(resources.crystal ?? 0) < building.cost.crystal ? 'text-red-400' : 'text-gray-300'}>
+								<span
+									class={(resources.crystal ?? 0) < building.cost.crystal
+										? 'text-red-400'
+										: 'text-gray-300'}
+								>
 									Crystal: {building.cost.crystal.toLocaleString()}
 								</span>
 							{/if}
 							{#if building.cost.gas > 0}
-								<span class={(resources.gas ?? 0) < building.cost.gas ? 'text-red-400' : 'text-gray-300'}>
+								<span
+									class={(resources.gas ?? 0) < building.cost.gas
+										? 'text-red-400'
+										: 'text-gray-300'}
+								>
 									Gas: {building.cost.gas.toLocaleString()}
 								</span>
 							{/if}
@@ -323,7 +356,9 @@
 
 						{#if Object.keys(building.prerequisites).length > 0}
 							<div class="mb-2 text-xs text-gray-500">
-								Prerequisites: {Object.entries(building.prerequisites).map(([k, v]) => `${k} ${v}`).join(', ')}
+								Prerequisites: {Object.entries(building.prerequisites)
+									.map(([k, v]) => `${k} ${v}`)
+									.join(', ')}
 							</div>
 						{/if}
 					</div>
@@ -377,17 +412,29 @@
 
 						<div class="mb-2 flex flex-wrap gap-2 text-xs text-gray-400">
 							{#if building.cost.metal > 0}
-								<span class={(resources.metal ?? 0) < building.cost.metal ? 'text-red-400' : 'text-gray-300'}>
+								<span
+									class={(resources.metal ?? 0) < building.cost.metal
+										? 'text-red-400'
+										: 'text-gray-300'}
+								>
 									Metal: {building.cost.metal.toLocaleString()}
 								</span>
 							{/if}
 							{#if building.cost.crystal > 0}
-								<span class={(resources.crystal ?? 0) < building.cost.crystal ? 'text-red-400' : 'text-gray-300'}>
+								<span
+									class={(resources.crystal ?? 0) < building.cost.crystal
+										? 'text-red-400'
+										: 'text-gray-300'}
+								>
 									Crystal: {building.cost.crystal.toLocaleString()}
 								</span>
 							{/if}
 							{#if building.cost.gas > 0}
-								<span class={(resources.gas ?? 0) < building.cost.gas ? 'text-red-400' : 'text-gray-300'}>
+								<span
+									class={(resources.gas ?? 0) < building.cost.gas
+										? 'text-red-400'
+										: 'text-gray-300'}
+								>
 									Gas: {building.cost.gas.toLocaleString()}
 								</span>
 							{/if}
@@ -395,7 +442,9 @@
 
 						{#if Object.keys(building.prerequisites).length > 0}
 							<div class="mb-2 text-xs text-gray-500">
-								Prerequisites: {Object.entries(building.prerequisites).map(([k, v]) => `${k} ${v}`).join(', ')}
+								Prerequisites: {Object.entries(building.prerequisites)
+									.map(([k, v]) => `${k} ${v}`)
+									.join(', ')}
 							</div>
 						{/if}
 					</div>

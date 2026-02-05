@@ -1,4 +1,4 @@
-import { redirect, type Handle } from '@sveltejs/kit';
+import { type Handle } from '@sveltejs/kit';
 import { getSession } from '$lib/server/auth';
 import { processFleets } from '$lib/server/fleet-processor';
 import { processAutoExplore } from '$lib/server/auto-explorer';

@@ -39,13 +39,18 @@ export function calculateDistance(
 	const planetDiff = Math.abs(fromPlanet - toPlanet);
 
 	// More complex formula for inter-galaxy travel
-	return Math.sqrt(galaxyDiff * galaxyDiff * 10000 + systemDiff * systemDiff * 400 + planetDiff * planetDiff * 400);
+	return Math.sqrt(
+		galaxyDiff * galaxyDiff * 10000 + systemDiff * systemDiff * 400 + planetDiff * planetDiff * 400
+	);
 }
 
 /**
  * Calculate fleet speed based on slowest ship in the fleet
  */
-export function calculateFleetSpeed(ships: Record<string, number>): { speed: number; slowestShip: string } {
+export function calculateFleetSpeed(ships: Record<string, number>): {
+	speed: number;
+	slowestShip: string;
+} {
 	let slowestSpeed = Infinity;
 	let slowestShip = '';
 
@@ -77,7 +82,7 @@ export function calculateTravelDuration(distance: number, fleetSpeed: number): n
 	const baseTime = Math.max(distance / fleetSpeed, 30); // Minimum 30 seconds
 
 	// Apply some realism - longer distances take disproportionately longer
-	const timeMultiplier = 1 + (distance / 100000); // Small penalty for very long distances
+	const timeMultiplier = 1 + distance / 100000; // Small penalty for very long distances
 
 	return Math.ceil(baseTime * timeMultiplier);
 }
@@ -95,7 +100,14 @@ export function getFleetMovementInfo(
 	ships: Record<string, number>,
 	mission: string
 ): FleetMovementInfo {
-	const distance = calculateDistance(fromGalaxy, fromSystem, fromPlanet, toGalaxy, toSystem, toPlanet);
+	const distance = calculateDistance(
+		fromGalaxy,
+		fromSystem,
+		fromPlanet,
+		toGalaxy,
+		toSystem,
+		toPlanet
+	);
 	const { speed: fleetSpeed, slowestShip } = calculateFleetSpeed(ships);
 	const duration = calculateTravelDuration(distance, fleetSpeed);
 

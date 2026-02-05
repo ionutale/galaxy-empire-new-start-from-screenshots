@@ -8,7 +8,6 @@ export const GET: RequestHandler = async ({ locals }) => {
 	try {
 		const items = await getPlayerGalactoniteItems(locals.user.id);
 		return json({ items });
-
 	} catch (e: any) {
 		return json({ error: e.message }, { status: 400 });
 	}
@@ -26,7 +25,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 		const result = await purchaseGalactoniteItem(locals.user.id, type, rarity, cost);
 		return json(result);
-
 	} catch (e: any) {
 		return json({ success: false, error: e.message }, { status: 400 });
 	}

@@ -31,7 +31,7 @@ export const load: PageServerLoad = async ({ url, parent }) => {
 	// Create array of 499 systems
 	const systems = Array.from({ length: 499 }, (_, i) => {
 		const systemNum = i + 1;
-		const stats = systemStats.find(s => s.systemId === systemNum);
+		const stats = systemStats.find((s) => s.systemId === systemNum);
 
 		return {
 			systemId: systemNum,

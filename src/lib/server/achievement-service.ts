@@ -246,10 +246,7 @@ export class AchievementService {
 	 */
 	static async initializeAchievements() {
 		for (const achievement of ACHIEVEMENT_DEFINITIONS) {
-			await db
-				.insert(achievements)
-				.values(achievement)
-				.onConflictDoNothing();
+			await db.insert(achievements).values(achievement).onConflictDoNothing();
 		}
 	}
 
@@ -263,9 +260,7 @@ export class AchievementService {
 			.where(eq(userAchievements.userId, userId));
 
 		const unlockedAchievementIds = new Set(
-			userAchievementsResult
-				.filter(ua => ua.isCompleted)
-				.map(ua => ua.achievementId)
+			userAchievementsResult.filter((ua) => ua.isCompleted).map((ua) => ua.achievementId)
 		);
 
 		const allAchievements = await db.select().from(achievements);
@@ -404,10 +399,7 @@ export class AchievementService {
 	 * Get all available achievements
 	 */
 	static async getAllAchievements(): Promise<AchievementDefinition[]> {
-		return await db
-			.select()
-			.from(achievements)
-			.orderBy(achievements.sortOrder);
+		return await db.select().from(achievements).orderBy(achievements.sortOrder);
 	}
 
 	/**

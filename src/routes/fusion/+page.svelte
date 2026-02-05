@@ -6,7 +6,7 @@
 
 	function toggleItem(itemId: number) {
 		if (selectedItems.includes(itemId)) {
-			selectedItems = selectedItems.filter(id => id !== itemId);
+			selectedItems = selectedItems.filter((id) => id !== itemId);
 		} else if (selectedItems.length < 3) {
 			selectedItems = [...selectedItems, itemId];
 		}
@@ -36,16 +36,18 @@
 </script>
 
 <div class="p-4 pb-20">
-	<h1 class="text-2xl font-bold mb-4">Galactonite Fusion</h1>
+	<h1 class="mb-4 text-2xl font-bold">Galactonite Fusion</h1>
 
-	<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+	<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 		<!-- Items Inventory -->
-		<div class="bg-gray-800 p-4 rounded">
-			<h2 class="text-xl font-bold mb-4">Your Items</h2>
+		<div class="rounded bg-gray-800 p-4">
+			<h2 class="mb-4 text-xl font-bold">Your Items</h2>
 			<div class="grid grid-cols-3 gap-2">
 				{#each data.items as item}
 					<button
-						class="p-2 border rounded {selectedItems.includes(item.id) ? 'border-blue-500 bg-blue-900' : 'border-gray-600'}"
+						class="rounded border p-2 {selectedItems.includes(item.id)
+							? 'border-blue-500 bg-blue-900'
+							: 'border-gray-600'}"
 						onclick={() => toggleItem(item.id)}
 						aria-label="Select {item.type} ({item.rarity}) item"
 					>
@@ -57,13 +59,13 @@
 		</div>
 
 		<!-- Fusion Panel -->
-		<div class="bg-gray-800 p-4 rounded">
-			<h2 class="text-xl font-bold mb-4">Fusion</h2>
+		<div class="rounded bg-gray-800 p-4">
+			<h2 class="mb-4 text-xl font-bold">Fusion</h2>
 			<div class="mb-4">
 				Selected: {selectedItems.length}/3 items
 			</div>
 			<button
-				class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded disabled:opacity-50"
+				class="rounded bg-blue-600 px-4 py-2 hover:bg-blue-700 disabled:opacity-50"
 				disabled={selectedItems.length === 0}
 				onclick={fuse}
 			>
@@ -73,8 +75,8 @@
 	</div>
 
 	<!-- Active Boosts -->
-	<div class="mt-6 bg-gray-800 p-4 rounded">
-		<h2 class="text-xl font-bold mb-4">Active Boosts</h2>
+	<div class="mt-6 rounded bg-gray-800 p-4">
+		<h2 class="mb-4 text-xl font-bold">Active Boosts</h2>
 		{#each data.boosts as boost}
 			<div class="flex justify-between">
 				<span>{boost.boostType}: +{boost.value}%</span>

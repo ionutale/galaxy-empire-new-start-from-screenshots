@@ -36,7 +36,11 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		// TODO: Get user ID from session
 		const userId = 1; // Placeholder
 
-		const result = await BuildingService.startBuildingConstruction(planetId, buildingTypeId, userId);
+		const result = await BuildingService.startBuildingConstruction(
+			planetId,
+			buildingTypeId,
+			userId
+		);
 
 		if (!result.success) {
 			throw error(400, result.error || 'Failed to start construction');

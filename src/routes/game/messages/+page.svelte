@@ -43,13 +43,20 @@
 
 	function getMessageIcon(type: string) {
 		switch (type) {
-			case 'system': return '📢';
-			case 'private': return '💬';
-			case 'alliance': return '🤝';
-			case 'combat': return '⚔️';
-			case 'expedition': return '🚀';
-			case 'espionage': return '🕵️';
-			default: return '📧';
+			case 'system':
+				return '📢';
+			case 'private':
+				return '💬';
+			case 'alliance':
+				return '🤝';
+			case 'combat':
+				return '⚔️';
+			case 'expedition':
+				return '🚀';
+			case 'espionage':
+				return '🕵️';
+			default:
+				return '📧';
 		}
 	}
 </script>
@@ -59,26 +66,35 @@
 		<h2 class="text-2xl font-bold text-blue-600 dark:text-blue-300">Communications</h2>
 		<button
 			class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-500"
-			onclick={() => showSendForm = !showSendForm}
+			onclick={() => (showSendForm = !showSendForm)}
 		>
 			{showSendForm ? 'Cancel' : 'Send Message'}
 		</button>
 	</div>
 
 	{#if showSendForm}
-		<div class="mb-6 rounded border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+		<div
+			class="mb-6 rounded border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
+		>
 			<h3 class="mb-4 text-lg font-bold text-gray-900 dark:text-gray-200">Send Message</h3>
-			<form method="POST" action="/api/messages/send" use:enhance={() => {
-				sending = true;
-				return async ({ update }) => {
-					sending = false;
-					showSendForm = false;
-					await invalidate('app:unread-messages');
-					await update();
-				};
-			}}>
+			<form
+				method="POST"
+				action="/api/messages/send"
+				use:enhance={() => {
+					sending = true;
+					return async ({ update }) => {
+						sending = false;
+						showSendForm = false;
+						await invalidate('app:unread-messages');
+						await update();
+					};
+				}}
+			>
 				<div class="mb-4">
-					<label for="messageType" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Message Type</label>
+					<label
+						for="messageType"
+						class="block text-sm font-medium text-gray-700 dark:text-gray-300">Message Type</label
+					>
 					<select
 						id="messageType"
 						bind:value={messageType}
@@ -92,7 +108,11 @@
 				</div>
 				{#if messageType === 'private'}
 					<div class="mb-4">
-						<label for="toUsername" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Recipient Username</label>
+						<label
+							for="toUsername"
+							class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+							>Recipient Username</label
+						>
 						<input
 							type="text"
 							id="toUsername"
@@ -104,7 +124,11 @@
 					</div>
 				{:else if messageType === 'alliance'}
 					<div class="mb-4">
-						<label for="allianceMember" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Alliance Member</label>
+						<label
+							for="allianceMember"
+							class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+							>Alliance Member</label
+						>
 						<select
 							id="allianceMember"
 							name="toUsername"
@@ -120,7 +144,9 @@
 					</div>
 				{/if}
 				<div class="mb-4">
-					<label for="subject" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Subject</label>
+					<label for="subject" class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+						>Subject</label
+					>
 					<input
 						type="text"
 						id="subject"
@@ -132,7 +158,9 @@
 					/>
 				</div>
 				<div class="mb-4">
-					<label for="content" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Message</label>
+					<label for="content" class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+						>Message</label
+					>
 					<textarea
 						id="content"
 						name="content"
@@ -176,7 +204,9 @@
 								{#if msg.isSent}
 									<span class="text-xs text-green-600 dark:text-green-400">(Sent)</span>
 								{:else}
-									<span class="text-xs text-blue-600 dark:text-blue-400">(From: {msg.fromUsername})</span>
+									<span class="text-xs text-blue-600 dark:text-blue-400"
+										>(From: {msg.fromUsername})</span
+									>
 								{/if}
 							{/if}
 						</div>
@@ -184,7 +214,7 @@
 							>{msg.createdAt ? new Date(msg.createdAt).toLocaleString() : ''}</span
 						>
 					</div>
-					<p class="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{msg.content}</p>
+					<p class="text-sm whitespace-pre-wrap text-gray-600 dark:text-gray-400">{msg.content}</p>
 				</div>
 			{/each}
 		{/if}

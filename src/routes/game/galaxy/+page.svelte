@@ -28,7 +28,8 @@
 	>
 		<a
 			href={prevGalaxy()}
-			class="rounded bg-gray-200 p-2 transition hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 {data.galaxy <= 1
+			class="rounded bg-gray-200 p-2 transition hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 {data.galaxy <=
+			1
 				? 'pointer-events-none opacity-50'
 				: ''}"
 		>
@@ -36,11 +37,14 @@
 		</a>
 		<div class="text-center">
 			<h2 class="text-xl font-bold text-blue-600 dark:text-blue-300">Universe Map</h2>
-			<div class="font-mono text-2xl font-bold text-gray-900 dark:text-white">Galaxy {data.galaxy}</div>
+			<div class="font-mono text-2xl font-bold text-gray-900 dark:text-white">
+				Galaxy {data.galaxy}
+			</div>
 		</div>
 		<a
 			href={nextGalaxy()}
-			class="rounded bg-gray-200 p-2 transition hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 {data.galaxy >= 9
+			class="rounded bg-gray-200 p-2 transition hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 {data.galaxy >=
+			9
 				? 'pointer-events-none opacity-50'
 				: ''}"
 		>

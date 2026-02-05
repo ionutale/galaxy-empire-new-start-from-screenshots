@@ -244,10 +244,7 @@
 
 	<!-- Logout -->
 	<div class="text-center">
-		<button
-			onclick={handleLogout}
-			class="text-sm text-red-400 underline hover:text-red-300"
-		>
+		<button onclick={handleLogout} class="text-sm text-red-400 underline hover:text-red-300">
 			Log Out
 		</button>
 	</div>

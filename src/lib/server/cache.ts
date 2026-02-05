@@ -6,7 +6,8 @@ import { users, planets, planetResources } from './db/schema';
 class MemoryCache {
 	private cache = new Map<string, { value: any; expires: number }>();
 
-	set(key: string, value: any, ttlMs: number = 300000) { // 5 minutes default
+	set(key: string, value: any, ttlMs: number = 300000) {
+		// 5 minutes default
 		this.cache.set(key, {
 			value,
 			expires: Date.now() + ttlMs

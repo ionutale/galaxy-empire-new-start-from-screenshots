@@ -361,37 +361,51 @@ async function processArrivingFleet(tx: any, fleet: any) {
 			}
 
 			// Send Reports
-			const loot = result.winner === 'attacker' && !fleetDestroyed ? {
-				metal: stolenMetal,
-				crystal: stolenCrystal,
-				gas: stolenGas
-			} : null;
+			const loot =
+				result.winner === 'attacker' && !fleetDestroyed
+					? {
+							metal: stolenMetal,
+							crystal: stolenCrystal,
+							gas: stolenGas
+						}
+					: null;
 
 			// Create detailed combat report
-			const reportId = await tx.insert(combatReports).values({
-				attackerId: fleet.userId,
-				defenderId: targetPlanet.userId,
-				galaxy: fleet.targetGalaxy,
-				system: fleet.targetSystem,
-				planet: fleet.targetPlanet,
-				mission: fleet.mission,
-				attackerFleet: fleet.ships,
-				defenderFleet: defenderShips,
-				defenderDefenses: defenderDefenses,
-				attackerLosses: result.attackerLosses,
-				defenderLosses: result.defenderLosses,
-				winner: result.winner,
-				rounds: result.rounds,
-				loot: loot,
-				debris: null // TODO: Implement debris field generation
-			}).returning({ id: combatReports.id });
+			const reportId = await tx
+				.insert(combatReports)
+				.values({
+					attackerId: fleet.userId,
+					defenderId: targetPlanet.userId,
+					galaxy: fleet.targetGalaxy,
+					system: fleet.targetSystem,
+					planet: fleet.targetPlanet,
+					mission: fleet.mission,
+					attackerFleet: fleet.ships,
+					defenderFleet: defenderShips,
+					defenderDefenses: defenderDefenses,
+					attackerLosses: result.attackerLosses,
+					defenderLosses: result.defenderLosses,
+					winner: result.winner,
+					rounds: result.rounds,
+					loot: loot,
+					debris: null // TODO: Implement debris field generation
+				})
+				.returning({ id: combatReports.id });
 
 			// Send message notifications with link to detailed report
 			await tx.insert(messages).values({
 				userId: fleet.userId,
 				type: 'combat',
 				title: `Combat Report: ${result.winner === 'attacker' ? 'Victory' : result.winner === 'defender' ? 'Defeat' : 'Draw'}`,
-				content: `Combat at [${fleet.targetGalaxy}:${fleet.targetSystem}:${fleet.targetPlanet}]\nResult: ${result.winner.toUpperCase()}\n\nAttacker Losses: ${Object.entries(result.attackerLosses).map(([type, count]) => `${type}: ${count}`).join(', ') || 'None'}\nDefender Losses: ${Object.entries(result.defenderLosses).map(([type, count]) => `${type}: ${count}`).join(', ') || 'None'}\n\n${loot ? `Loot: Metal ${loot.metal}, Crystal ${loot.crystal}, Gas ${loot.gas}` : ''}\n\n[View Detailed Report](/game/combat-report/${reportId[0].id})`
+				content: `Combat at [${fleet.targetGalaxy}:${fleet.targetSystem}:${fleet.targetPlanet}]\nResult: ${result.winner.toUpperCase()}\n\nAttacker Losses: ${
+					Object.entries(result.attackerLosses)
+						.map(([type, count]) => `${type}: ${count}`)
+						.join(', ') || 'None'
+				}\nDefender Losses: ${
+					Object.entries(result.defenderLosses)
+						.map(([type, count]) => `${type}: ${count}`)
+						.join(', ') || 'None'
+				}\n\n${loot ? `Loot: Metal ${loot.metal}, Crystal ${loot.crystal}, Gas ${loot.gas}` : ''}\n\n[View Detailed Report](/game/combat-report/${reportId[0].id})`
 			});
 
 			if (targetPlanet.userId !== fleet.userId) {
@@ -399,7 +413,15 @@ async function processArrivingFleet(tx: any, fleet: any) {
 					userId: targetPlanet.userId,
 					type: 'combat',
 					title: 'You were attacked!',
-					content: `Combat at [${fleet.targetGalaxy}:${fleet.targetSystem}:${fleet.targetPlanet}]\nResult: ${result.winner === 'attacker' ? 'Defeated' : result.winner === 'defender' ? 'Victory' : 'Draw'}\n\nAttacker Losses: ${Object.entries(result.attackerLosses).map(([type, count]) => `${type}: ${count}`).join(', ') || 'None'}\nDefender Losses: ${Object.entries(result.defenderLosses).map(([type, count]) => `${type}: ${count}`).join(', ') || 'None'}\n\n${loot ? `Looted: Metal ${loot.metal}, Crystal ${loot.crystal}, Gas ${loot.gas}` : ''}\n\n[View Detailed Report](/game/combat-report/${reportId[0].id})`
+					content: `Combat at [${fleet.targetGalaxy}:${fleet.targetSystem}:${fleet.targetPlanet}]\nResult: ${result.winner === 'attacker' ? 'Defeated' : result.winner === 'defender' ? 'Victory' : 'Draw'}\n\nAttacker Losses: ${
+						Object.entries(result.attackerLosses)
+							.map(([type, count]) => `${type}: ${count}`)
+							.join(', ') || 'None'
+					}\nDefender Losses: ${
+						Object.entries(result.defenderLosses)
+							.map(([type, count]) => `${type}: ${count}`)
+							.join(', ') || 'None'
+					}\n\n${loot ? `Looted: Metal ${loot.metal}, Crystal ${loot.crystal}, Gas ${loot.gas}` : ''}\n\n[View Detailed Report](/game/combat-report/${reportId[0].id})`
 				});
 			}
 

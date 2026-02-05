@@ -13,7 +13,7 @@ export async function GET() {
 
 		// Process completed research for all users
 		const usersResult = await db.execute(sql`SELECT id FROM users`);
-		const userRows = usersResult.rows as unknown as {id: number}[];
+		const userRows = usersResult.rows as unknown as { id: number }[];
 		for (const user of userRows) {
 			await ResearchService.processCompletedResearch(user.id);
 		}

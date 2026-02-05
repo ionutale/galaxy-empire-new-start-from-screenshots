@@ -28,7 +28,7 @@
 
 		return () => clearInterval(interval);
 	});
-	
+
 	async function handleResearch(researchTypeId: number, planetId: number) {
 		loading[researchTypeId] = true;
 		try {
@@ -37,13 +37,13 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ researchTypeId, planetId })
 			});
-			
+
 			if (!res.ok) {
 				const err = await res.json();
 				alert(err.error || 'Research failed');
 				return;
 			}
-			
+
 			await invalidateAll();
 		} catch (e) {
 			console.error(e);
@@ -55,7 +55,7 @@
 
 	async function handleCancel(queueId: number) {
 		if (!confirm('Cancel this research?')) return;
-		
+
 		try {
 			const res = await fetch('/api/research/cancel', {
 				method: 'POST',
@@ -77,11 +77,11 @@
 	}
 
 	// Group research by category
-	let energyResearch = $derived(research.filter(r => r.category === 'energy'));
-	let combatResearch = $derived(research.filter(r => r.category === 'combat'));
-	let propulsionResearch = $derived(research.filter(r => r.category === 'propulsion'));
-	let intelligenceResearch = $derived(research.filter(r => r.category === 'intelligence'));
-	let expansionResearch = $derived(research.filter(r => r.category === 'expansion'));
+	let energyResearch = $derived(research.filter((r) => r.category === 'energy'));
+	let combatResearch = $derived(research.filter((r) => r.category === 'combat'));
+	let propulsionResearch = $derived(research.filter((r) => r.category === 'propulsion'));
+	let intelligenceResearch = $derived(research.filter((r) => r.category === 'intelligence'));
+	let expansionResearch = $derived(research.filter((r) => r.category === 'expansion'));
 
 	function formatTimeRemaining(completionAt: Date) {
 		const diff = completionAt.getTime() - currentTime.getTime();
@@ -103,30 +103,42 @@
 	function getResearchIcon(researchTypeId: number) {
 		// Simple mapping - you might want to enhance this based on research types
 		switch (researchTypeId) {
-			case 1: return '⚡'; // Energy
-			case 2: return '🛡️'; // Combat
-			case 3: return '🚀'; // Propulsion
-			case 4: return '🕵️'; // Intelligence
-			case 5: return '🏗️'; // Expansion
-			default: return '🔬';
+			case 1:
+				return '⚡'; // Energy
+			case 2:
+				return '🛡️'; // Combat
+			case 3:
+				return '🚀'; // Propulsion
+			case 4:
+				return '🕵️'; // Intelligence
+			case 5:
+				return '🏗️'; // Expansion
+			default:
+				return '🔬';
 		}
 	}
 </script>
+
 <div class="p-4 pb-20">
 	<h2 class="mb-6 text-2xl font-bold text-blue-600 dark:text-blue-300">Research Lab</h2>
 
 	{#if !hasResearchLab}
-		<div class="mb-6 rounded border border-red-500 bg-red-50 p-4 text-center text-red-800 dark:bg-red-900/50 dark:text-red-200">
+		<div
+			class="mb-6 rounded border border-red-500 bg-red-50 p-4 text-center text-red-800 dark:bg-red-900/50 dark:text-red-200"
+		>
 			You need a Research Lab to conduct research. <a
 				href="/game"
-				class="font-bold underline hover:text-red-900 dark:hover:text-white">Build one in the Facilities menu.</a
+				class="font-bold underline hover:text-red-900 dark:hover:text-white"
+				>Build one in the Facilities menu.</a
 			>
 		</div>
 	{/if}
 
 	<!-- Research Queue -->
 	{#if queue.length > 0}
-		<div class="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-500 dark:bg-blue-900/20">
+		<div
+			class="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-500 dark:bg-blue-900/20"
+		>
 			<h3 class="mb-3 text-lg font-bold text-blue-600 dark:text-blue-300">Research Queue</h3>
 			<div class="space-y-2">
 				{#each queue as item}
@@ -134,8 +146,12 @@
 						<div class="flex items-center space-x-3">
 							<span class="text-2xl">{getResearchIcon(item.researchTypeId || 0)}</span>
 							<div>
-								<span class="font-medium text-gray-900 dark:text-gray-200">Research Level {item.level}</span>
-								<div class="text-sm text-yellow-600 dark:text-yellow-400">{formatTimeRemaining(new Date(item.completionAt))}</div>
+								<span class="font-medium text-gray-900 dark:text-gray-200"
+									>Research Level {item.level}</span
+								>
+								<div class="text-sm text-yellow-600 dark:text-yellow-400">
+									{formatTimeRemaining(new Date(item.completionAt))}
+								</div>
 							</div>
 						</div>
 						<button
@@ -152,7 +168,9 @@
 
 	<!-- Energy Research -->
 	{#if energyResearch.length > 0}
-		<h3 class="mb-4 border-b border-gray-700 pb-2 text-xl font-bold text-gray-300">Energy Technologies</h3>
+		<h3 class="mb-4 border-b border-gray-700 pb-2 text-xl font-bold text-gray-300">
+			Energy Technologies
+		</h3>
 		<div
 			class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 {!hasResearchLab
 				? 'pointer-events-none opacity-50 grayscale'
@@ -182,7 +200,9 @@
 								</span>
 							{/if}
 							{#if tech.cost.crystal > 0}
-								<span class={resources.crystal < tech.cost.crystal ? 'text-red-400' : 'text-gray-300'}>
+								<span
+									class={resources.crystal < tech.cost.crystal ? 'text-red-400' : 'text-gray-300'}
+								>
 									Crystal: {tech.cost.crystal.toLocaleString()}
 								</span>
 							{/if}
@@ -195,7 +215,9 @@
 
 						{#if Object.keys(tech.prerequisites).length > 0}
 							<div class="mb-2 text-xs text-gray-500">
-								Prerequisites: {Object.entries(tech.prerequisites).map(([k, v]) => `${k} ${v}`).join(', ')}
+								Prerequisites: {Object.entries(tech.prerequisites)
+									.map(([k, v]) => `${k} ${v}`)
+									.join(', ')}
 							</div>
 						{/if}
 					</div>
@@ -226,7 +248,9 @@
 
 	<!-- Combat Research -->
 	{#if combatResearch.length > 0}
-		<h3 class="mb-4 border-b border-gray-700 pb-2 text-xl font-bold text-gray-300">Combat Technologies</h3>
+		<h3 class="mb-4 border-b border-gray-700 pb-2 text-xl font-bold text-gray-300">
+			Combat Technologies
+		</h3>
 		<div
 			class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 {!hasResearchLab
 				? 'pointer-events-none opacity-50 grayscale'
@@ -256,7 +280,9 @@
 								</span>
 							{/if}
 							{#if tech.cost.crystal > 0}
-								<span class={resources.crystal < tech.cost.crystal ? 'text-red-400' : 'text-gray-300'}>
+								<span
+									class={resources.crystal < tech.cost.crystal ? 'text-red-400' : 'text-gray-300'}
+								>
 									Crystal: {tech.cost.crystal.toLocaleString()}
 								</span>
 							{/if}
@@ -269,7 +295,9 @@
 
 						{#if Object.keys(tech.prerequisites).length > 0}
 							<div class="mb-2 text-xs text-gray-500">
-								Prerequisites: {Object.entries(tech.prerequisites).map(([k, v]) => `${k} ${v}`).join(', ')}
+								Prerequisites: {Object.entries(tech.prerequisites)
+									.map(([k, v]) => `${k} ${v}`)
+									.join(', ')}
 							</div>
 						{/if}
 					</div>
@@ -300,7 +328,9 @@
 
 	<!-- Propulsion Research -->
 	{#if propulsionResearch.length > 0}
-		<h3 class="mb-4 border-b border-gray-700 pb-2 text-xl font-bold text-gray-300">Propulsion Technologies</h3>
+		<h3 class="mb-4 border-b border-gray-700 pb-2 text-xl font-bold text-gray-300">
+			Propulsion Technologies
+		</h3>
 		<div
 			class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 {!hasResearchLab
 				? 'pointer-events-none opacity-50 grayscale'
@@ -330,7 +360,9 @@
 								</span>
 							{/if}
 							{#if tech.cost.crystal > 0}
-								<span class={resources.crystal < tech.cost.crystal ? 'text-red-400' : 'text-gray-300'}>
+								<span
+									class={resources.crystal < tech.cost.crystal ? 'text-red-400' : 'text-gray-300'}
+								>
 									Crystal: {tech.cost.crystal.toLocaleString()}
 								</span>
 							{/if}
@@ -343,7 +375,9 @@
 
 						{#if Object.keys(tech.prerequisites).length > 0}
 							<div class="mb-2 text-xs text-gray-500">
-								Prerequisites: {Object.entries(tech.prerequisites).map(([k, v]) => `${k} ${v}`).join(', ')}
+								Prerequisites: {Object.entries(tech.prerequisites)
+									.map(([k, v]) => `${k} ${v}`)
+									.join(', ')}
 							</div>
 						{/if}
 					</div>
@@ -374,7 +408,9 @@
 
 	<!-- Intelligence Research -->
 	{#if intelligenceResearch.length > 0}
-		<h3 class="mb-4 border-b border-gray-700 pb-2 text-xl font-bold text-gray-300">Intelligence Technologies</h3>
+		<h3 class="mb-4 border-b border-gray-700 pb-2 text-xl font-bold text-gray-300">
+			Intelligence Technologies
+		</h3>
 		<div
 			class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 {!hasResearchLab
 				? 'pointer-events-none opacity-50 grayscale'
@@ -404,7 +440,9 @@
 								</span>
 							{/if}
 							{#if tech.cost.crystal > 0}
-								<span class={resources.crystal < tech.cost.crystal ? 'text-red-400' : 'text-gray-300'}>
+								<span
+									class={resources.crystal < tech.cost.crystal ? 'text-red-400' : 'text-gray-300'}
+								>
 									Crystal: {tech.cost.crystal.toLocaleString()}
 								</span>
 							{/if}
@@ -417,7 +455,9 @@
 
 						{#if Object.keys(tech.prerequisites).length > 0}
 							<div class="mb-2 text-xs text-gray-500">
-								Prerequisites: {Object.entries(tech.prerequisites).map(([k, v]) => `${k} ${v}`).join(', ')}
+								Prerequisites: {Object.entries(tech.prerequisites)
+									.map(([k, v]) => `${k} ${v}`)
+									.join(', ')}
 							</div>
 						{/if}
 					</div>
@@ -448,7 +488,9 @@
 
 	<!-- Expansion Research -->
 	{#if expansionResearch.length > 0}
-		<h3 class="mb-4 border-b border-gray-700 pb-2 text-xl font-bold text-gray-300">Expansion Technologies</h3>
+		<h3 class="mb-4 border-b border-gray-700 pb-2 text-xl font-bold text-gray-300">
+			Expansion Technologies
+		</h3>
 		<div
 			class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 {!hasResearchLab
 				? 'pointer-events-none opacity-50 grayscale'
@@ -478,7 +520,9 @@
 								</span>
 							{/if}
 							{#if tech.cost.crystal > 0}
-								<span class={resources.crystal < tech.cost.crystal ? 'text-red-400' : 'text-gray-300'}>
+								<span
+									class={resources.crystal < tech.cost.crystal ? 'text-red-400' : 'text-gray-300'}
+								>
 									Crystal: {tech.cost.crystal.toLocaleString()}
 								</span>
 							{/if}
@@ -491,7 +535,9 @@
 
 						{#if Object.keys(tech.prerequisites).length > 0}
 							<div class="mb-2 text-xs text-gray-500">
-								Prerequisites: {Object.entries(tech.prerequisites).map(([k, v]) => `${k} ${v}`).join(', ')}
+								Prerequisites: {Object.entries(tech.prerequisites)
+									.map(([k, v]) => `${k} ${v}`)
+									.join(', ')}
 							</div>
 						{/if}
 					</div>

@@ -174,46 +174,58 @@ export const researchTypes = pgTable('research_types', {
 	icon: varchar('icon', { length: 10 }).default('🔬')
 });
 
-export const userResearchLevels = pgTable('user_research_levels', {
-	id: serial('id').primaryKey(),
-	userId: integer('user_id').references(() => users.id),
-	researchTypeId: integer('research_type_id').references(() => researchTypes.id),
-	level: integer('level').default(0),
-	isResearching: boolean('is_researching').default(false),
-	researchCompletionAt: timestamp('research_completion_at'),
-	createdAt: timestamp('created_at').defaultNow(),
-	updatedAt: timestamp('updated_at').defaultNow()
-}, (t) => ({
-	userResearchIdx: index('user_research_levels_user_research_idx').on(t.userId, t.researchTypeId),
-	userResearchingIdx: index('user_research_levels_researching_idx').on(t.userId, t.isResearching)
-}));
+export const userResearchLevels = pgTable(
+	'user_research_levels',
+	{
+		id: serial('id').primaryKey(),
+		userId: integer('user_id').references(() => users.id),
+		researchTypeId: integer('research_type_id').references(() => researchTypes.id),
+		level: integer('level').default(0),
+		isResearching: boolean('is_researching').default(false),
+		researchCompletionAt: timestamp('research_completion_at'),
+		createdAt: timestamp('created_at').defaultNow(),
+		updatedAt: timestamp('updated_at').defaultNow()
+	},
+	(t) => ({
+		userResearchIdx: index('user_research_levels_user_research_idx').on(t.userId, t.researchTypeId),
+		userResearchingIdx: index('user_research_levels_researching_idx').on(t.userId, t.isResearching)
+	})
+);
 
-export const researchQueue = pgTable('research_queue', {
-	id: serial('id').primaryKey(),
-	userId: integer('user_id').references(() => users.id),
-	researchTypeId: integer('research_type_id').references(() => researchTypes.id),
-	level: integer('level').notNull(),
-	startedAt: timestamp('started_at').defaultNow(),
-	completionAt: timestamp('completion_at').notNull(),
-	planetId: integer('planet_id').references(() => planets.id)
-}, (t) => ({
-	userQueueIdx: index('research_queue_user_idx').on(t.userId),
-	completionIdx: index('research_queue_completion_idx').on(t.completionAt)
-}));
+export const researchQueue = pgTable(
+	'research_queue',
+	{
+		id: serial('id').primaryKey(),
+		userId: integer('user_id').references(() => users.id),
+		researchTypeId: integer('research_type_id').references(() => researchTypes.id),
+		level: integer('level').notNull(),
+		startedAt: timestamp('started_at').defaultNow(),
+		completionAt: timestamp('completion_at').notNull(),
+		planetId: integer('planet_id').references(() => planets.id)
+	},
+	(t) => ({
+		userQueueIdx: index('research_queue_user_idx').on(t.userId),
+		completionIdx: index('research_queue_completion_idx').on(t.completionAt)
+	})
+);
 
-export const shipyardQueue = pgTable('shipyard_queue', {
-	id: serial('id').primaryKey(),
-	userId: integer('user_id').references(() => users.id),
-	planetId: integer('planet_id').references(() => planets.id),
-	shipType: varchar('ship_type', { length: 50 }).notNull(),
-	amount: integer('amount').notNull(),
-	startedAt: timestamp('started_at').defaultNow(),
-	completionAt: timestamp('completion_at').notNull()
-}, (t) => ({
-	userQueueIdx: index('shipyard_queue_user_idx').on(t.userId),
-	planetQueueIdx: index('shipyard_queue_planet_idx').on(t.planetId),
-	completionIdx: index('shipyard_queue_completion_idx').on(t.completionAt)
-}));
+export const shipyardQueue = pgTable(
+	'shipyard_queue',
+	{
+		id: serial('id').primaryKey(),
+		userId: integer('user_id').references(() => users.id),
+		planetId: integer('planet_id').references(() => planets.id),
+		shipType: varchar('ship_type', { length: 50 }).notNull(),
+		amount: integer('amount').notNull(),
+		startedAt: timestamp('started_at').defaultNow(),
+		completionAt: timestamp('completion_at').notNull()
+	},
+	(t) => ({
+		userQueueIdx: index('shipyard_queue_user_idx').on(t.userId),
+		planetQueueIdx: index('shipyard_queue_planet_idx').on(t.planetId),
+		completionIdx: index('shipyard_queue_completion_idx').on(t.completionAt)
+	})
+);
 
 // 5. Fleets & Ships
 export const fleets = pgTable(
@@ -491,18 +503,22 @@ export const userAchievements = pgTable('user_achievements', {
 });
 
 // 12. PvE & Fusion Features
-export const broodTargets = pgTable('brood_targets', {
-	id: serial('id').primaryKey(),
-	galaxy: integer('galaxy').notNull(),
-	system: integer('system').notNull(),
-	planetSlot: integer('planet_slot').notNull(),
-	level: integer('level').default(1),
-	rewards: jsonb('rewards'),
-	lastRaidedAt: timestamp('last_raided_at'),
-	createdAt: timestamp('created_at').defaultNow()
-}, (t) => ({
-	uniqueTarget: unique().on(t.galaxy, t.system, t.planetSlot)
-}));
+export const broodTargets = pgTable(
+	'brood_targets',
+	{
+		id: serial('id').primaryKey(),
+		galaxy: integer('galaxy').notNull(),
+		system: integer('system').notNull(),
+		planetSlot: integer('planet_slot').notNull(),
+		level: integer('level').default(1),
+		rewards: jsonb('rewards'),
+		lastRaidedAt: timestamp('last_raided_at'),
+		createdAt: timestamp('created_at').defaultNow()
+	},
+	(t) => ({
+		uniqueTarget: unique().on(t.galaxy, t.system, t.planetSlot)
+	})
+);
 
 export const galactoniteItems = pgTable('galactonite_items', {
 	id: serial('id').primaryKey(),

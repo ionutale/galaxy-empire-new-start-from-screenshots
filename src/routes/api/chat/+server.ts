@@ -1,5 +1,13 @@
 import { json } from '@sveltejs/kit';
-import { db, chatMessages, users, alliances, userMutes, bannedWords, chatModeration } from '$lib/server/db';
+import {
+	db,
+	chatMessages,
+	users,
+	alliances,
+	userMutes,
+	bannedWords,
+	chatModeration
+} from '$lib/server/db';
 import { desc, eq, and, gte, lte } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
 
@@ -37,10 +45,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 			whereClause = eq(chatMessages.channel, 'global');
 		}
 
-		const res = await query
-			.where(whereClause)
-			.orderBy(desc(chatMessages.createdAt))
-			.limit(50);
+		const res = await query.where(whereClause).orderBy(desc(chatMessages.createdAt)).limit(50);
 
 		return json(res); // Newest first, client handles display order
 	} catch (e) {
@@ -62,17 +67,17 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const activeMute = await db
 		.select()
 		.from(userMutes)
-		.where(and(
-			eq(userMutes.userId, locals.user.id),
-			gte(userMutes.expiresAt, now)
-		))
+		.where(and(eq(userMutes.userId, locals.user.id), gte(userMutes.expiresAt, now)))
 		.limit(1);
 
 	if (activeMute.length > 0) {
 		const expiresAt = activeMute[0].expiresAt;
-		return json({ 
-			error: `You are muted until ${expiresAt?.toLocaleString()}` 
-		}, { status: 403 });
+		return json(
+			{
+				error: `You are muted until ${expiresAt?.toLocaleString()}`
+			},
+			{ status: 403 }
+		);
 	}
 
 	// Rate limiting - check recent messages (max 5 messages per minute)
@@ -80,21 +85,19 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const recentMessages = await db
 		.select()
 		.from(chatMessages)
-		.where(and(
-			eq(chatMessages.userId, locals.user.id),
-			gte(chatMessages.createdAt, oneMinuteAgo)
-		));
+		.where(and(eq(chatMessages.userId, locals.user.id), gte(chatMessages.createdAt, oneMinuteAgo)));
 
 	if (recentMessages.length >= 5) {
-		return json({ error: 'Too many messages. Please wait before sending another.' }, { status: 429 });
+		return json(
+			{ error: 'Too many messages. Please wait before sending another.' },
+			{ status: 429 }
+		);
 	}
 
 	// Enhanced moderation - check for banned words
 	const bannedWordsList = await db.select().from(bannedWords);
 	const lowerContent = content.toLowerCase();
-	const hasBannedWord = bannedWordsList.some(bw => 
-		lowerContent.includes(bw.word.toLowerCase())
-	);
+	const hasBannedWord = bannedWordsList.some((bw) => lowerContent.includes(bw.word.toLowerCase()));
 	if (hasBannedWord) {
 		return json({ error: 'Message contains inappropriate content' }, { status: 400 });
 	}

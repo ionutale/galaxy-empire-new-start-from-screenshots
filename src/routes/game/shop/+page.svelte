@@ -119,7 +119,7 @@
 
 	<!-- Galactonite Items -->
 	<div class="mt-8">
-		<h2 class="text-2xl font-bold text-blue-400 mb-4">Galactonite Items</h2>
+		<h2 class="mb-4 text-2xl font-bold text-blue-400">Galactonite Items</h2>
 		<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
 			<div class="overflow-hidden rounded-lg border border-gray-700 bg-gray-900/80 shadow-lg">
 				<div class="p-4">

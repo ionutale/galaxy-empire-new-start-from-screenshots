@@ -8,7 +8,6 @@ export const GET: RequestHandler = async ({ locals }) => {
 	try {
 		const boosts = await getActiveFusionBoosts(locals.user.id);
 		return json({ boosts });
-
 	} catch (e: any) {
 		return json({ error: e.message }, { status: 400 });
 	}
@@ -26,7 +25,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 		const result = await fuseItems(locals.user.id, itemIds, recipeId);
 		return json(result);
-
 	} catch (e: any) {
 		return json({ success: false, error: e.message }, { status: 400 });
 	}

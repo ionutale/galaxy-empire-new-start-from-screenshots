@@ -148,7 +148,8 @@ describe('Game Service', () => {
 
 		it('should apply commander bonuses to production', async () => {
 			const mockDb = db as any;
-			const mockCommanderBonus = vi.fn()
+			const mockCommanderBonus = vi
+				.fn()
 				.mockResolvedValueOnce(20) // mine bonus
 				.mockResolvedValueOnce(15); // energy bonus
 			const mockBoosterMultipliers = vi.fn().mockResolvedValue({

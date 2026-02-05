@@ -1,7 +1,20 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest';
-import { updateUserPoints, updateAllUserPoints, calculateBuildingPoints, calculateResearchPoints } from './points-calculator';
+import {
+	updateUserPoints,
+	updateAllUserPoints,
+	calculateBuildingPoints,
+	calculateResearchPoints
+} from './points-calculator';
 import { db } from './db';
-import { planets, planetBuildings, planetShips, planetDefenses, userResearch, fleets, users } from './db/schema';
+import {
+	planets,
+	planetBuildings,
+	planetShips,
+	planetDefenses,
+	userResearch,
+	fleets,
+	users
+} from './db/schema';
 import { eq } from 'drizzle-orm';
 
 // Mock the database
@@ -92,10 +105,7 @@ describe('Points Calculator', () => {
 				.mockResolvedValueOnce([{ small_transporter: 5, destroyer: 2 }]) // ships
 				.mockResolvedValueOnce([{ rocket_launcher: 10 }]) // defenses
 				.mockResolvedValueOnce([{ energy_technology: 2, laser_technology: 1 }]) // research
-				.mockResolvedValueOnce([
-					{ ships: { small_transporter: 3 } },
-					{ ships: { destroyer: 1 } }
-				]) // fleets
+				.mockResolvedValueOnce([{ ships: { small_transporter: 3 } }, { ships: { destroyer: 1 } }]) // fleets
 				.mockResolvedValueOnce([]); // update result
 
 			mockDb.update.mockResolvedValue({});
@@ -114,7 +124,7 @@ describe('Points Calculator', () => {
 			mockDb.select
 				.mockResolvedValueOnce([]) // no planets
 				.mockResolvedValueOnce([]) // no research
-				.mockResolvedValueOnce([]) // no fleets
+				.mockResolvedValueOnce([]); // no fleets
 
 			mockDb.update.mockResolvedValue({});
 
@@ -163,7 +173,8 @@ describe('Points Calculator', () => {
 			const updateCall = mockDb.update.mock.calls[0];
 			const points = updateCall[1].set.points;
 
-			const expectedBuildingPoints = calculateBuildingPoints('metal_mine', 2) + calculateBuildingPoints('crystal_mine', 1);
+			const expectedBuildingPoints =
+				calculateBuildingPoints('metal_mine', 2) + calculateBuildingPoints('crystal_mine', 1);
 			expect(points).toBe(Math.floor(expectedBuildingPoints));
 		});
 
@@ -186,7 +197,10 @@ describe('Points Calculator', () => {
 			const points = updateCall[1].set.points;
 
 			const { SHIPS } = require('$lib/game-config');
-			const shipCost = SHIPS.small_transporter.cost.metal + SHIPS.small_transporter.cost.crystal + (SHIPS.small_transporter.cost.gas || 0);
+			const shipCost =
+				SHIPS.small_transporter.cost.metal +
+				SHIPS.small_transporter.cost.crystal +
+				(SHIPS.small_transporter.cost.gas || 0);
 			const expectedPoints = (shipCost * 3) / 1000;
 
 			expect(points).toBe(Math.floor(expectedPoints));
@@ -217,10 +231,7 @@ describe('Points Calculator', () => {
 			mockDb.select
 				.mockResolvedValueOnce([]) // no planets
 				.mockResolvedValueOnce([]) // no research
-				.mockResolvedValueOnce([
-					{ ships: { destroyer: 2 } },
-					{ ships: { cruiser: 1 } }
-				]); // fleets
+				.mockResolvedValueOnce([{ ships: { destroyer: 2 } }, { ships: { cruiser: 1 } }]); // fleets
 
 			mockDb.update.mockResolvedValue({});
 
@@ -230,8 +241,10 @@ describe('Points Calculator', () => {
 			const points = updateCall[1].set.points;
 
 			const { SHIPS } = require('$lib/game-config');
-			const destroyerCost = SHIPS.destroyer.cost.metal + SHIPS.destroyer.cost.crystal + (SHIPS.destroyer.cost.gas || 0);
-			const cruiserCost = SHIPS.cruiser.cost.metal + SHIPS.cruiser.cost.crystal + (SHIPS.cruiser.cost.gas || 0);
+			const destroyerCost =
+				SHIPS.destroyer.cost.metal + SHIPS.destroyer.cost.crystal + (SHIPS.destroyer.cost.gas || 0);
+			const cruiserCost =
+				SHIPS.cruiser.cost.metal + SHIPS.cruiser.cost.crystal + (SHIPS.cruiser.cost.gas || 0);
 			const expectedPoints = (destroyerCost * 2 + cruiserCost * 1) / 1000;
 
 			expect(points).toBe(Math.floor(expectedPoints));

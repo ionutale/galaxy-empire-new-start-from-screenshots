@@ -9,12 +9,12 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		return json({ error: 'Unauthorized' }, { status: 401 });
 	}
 
-    try {
-        const { queueId } = await request.json();
+	try {
+		const { queueId } = await request.json();
 
 		if (!queueId) {
-            return json({ error: 'Missing queue ID' }, { status: 400 });
-        }
+			return json({ error: 'Missing queue ID' }, { status: 400 });
+		}
 
 		// Get queue item and verify ownership
 		const queueItem = await db
@@ -27,8 +27,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			.limit(1);
 
 		if (!queueItem.length) {
-            return json({ error: 'Queue item not found' }, { status: 404 });
-        }
+			return json({ error: 'Queue item not found' }, { status: 404 });
+		}
 
 		// Reset research status
 		await db
@@ -45,9 +45,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			);
 
 		// Remove from queue
-		await db
-			.delete(researchQueue)
-			.where(eq(researchQueue.id, queueId));
+		await db.delete(researchQueue).where(eq(researchQueue.id, queueId));
 
 		return json({ success: true });
 	} catch (error) {

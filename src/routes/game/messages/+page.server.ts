@@ -16,7 +16,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	await db.update(messages).set({ isRead: true }).where(eq(messages.userId, locals.user.id));
 
 	// Load alliance members if user is in an alliance
-	let allianceMembers: {id: number, username: string}[] = [];
+	let allianceMembers: { id: number; username: string }[] = [];
 	if (locals.user.allianceId) {
 		allianceMembers = await db
 			.select({

@@ -1,5 +1,12 @@
 import { db } from './db';
-import { users, userBoosters, transactions, galactoniteItems, fusionRecipes, activeBoosts } from './db/schema';
+import {
+	users,
+	userBoosters,
+	transactions,
+	galactoniteItems,
+	fusionRecipes,
+	activeBoosts
+} from './db/schema';
 import { eq, and, gt, inArray } from 'drizzle-orm';
 
 export interface ShopItem {
@@ -214,7 +221,12 @@ export interface GalactoniteItem {
 	stats: any;
 }
 
-export async function purchaseGalactoniteItem(userId: number, type: string, rarity: string, cost: number) {
+export async function purchaseGalactoniteItem(
+	userId: number,
+	type: string,
+	rarity: string,
+	cost: number
+) {
 	return await db.transaction(async (tx) => {
 		// Check DM
 		const userRes = await tx
@@ -258,19 +270,13 @@ export async function purchaseGalactoniteItem(userId: number, type: string, rari
 }
 
 export async function getPlayerGalactoniteItems(userId: number): Promise<GalactoniteItem[]> {
-	return await db
-		.select()
-		.from(galactoniteItems)
-		.where(eq(galactoniteItems.playerId, userId));
+	return await db.select().from(galactoniteItems).where(eq(galactoniteItems.playerId, userId));
 }
 
 export async function fuseItems(userId: number, itemIds: number[], recipeId: number) {
 	return await db.transaction(async (tx) => {
 		// Get recipe
-		const recipeRes = await tx
-			.select()
-			.from(fusionRecipes)
-			.where(eq(fusionRecipes.id, recipeId));
+		const recipeRes = await tx.select().from(fusionRecipes).where(eq(fusionRecipes.id, recipeId));
 
 		if (!recipeRes.length) throw new Error('Recipe not found');
 
@@ -301,9 +307,7 @@ export async function fuseItems(userId: number, itemIds: number[], recipeId: num
 			.where(eq(users.id, userId));
 
 		// Delete used items
-		await tx
-			.delete(galactoniteItems)
-			.where(inArray(galactoniteItems.id, itemIds));
+		await tx.delete(galactoniteItems).where(inArray(galactoniteItems.id, itemIds));
 
 		// Apply boost
 		const boost = recipe.outputBoost;

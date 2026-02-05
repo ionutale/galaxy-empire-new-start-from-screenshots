@@ -182,8 +182,9 @@ describe('Combat Engine', () => {
 			const defenderFleet = { destroyer: 1 };
 			const defenderDefenses = {};
 
-			await expect(simulateCombat(attackerFleet, defenderFleet, defenderDefenses))
-				.rejects.toThrow('Database connection failed');
+			await expect(simulateCombat(attackerFleet, defenderFleet, defenderDefenses)).rejects.toThrow(
+				'Database connection failed'
+			);
 		});
 	});
 });

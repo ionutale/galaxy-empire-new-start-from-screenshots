@@ -14,7 +14,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 		const result = await purchaseShopItem(locals.user.id, itemId);
 		return json(result);
-
 	} catch (e: any) {
 		return json({ success: false, error: e.message }, { status: 400 });
 	}

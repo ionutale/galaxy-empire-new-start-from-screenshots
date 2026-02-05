@@ -20,9 +20,19 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	// Parse ships from query params
 	const ships: Record<string, number> = {};
 	const shipTypes = [
-		'light_fighter', 'heavy_fighter', 'cruiser', 'battleship', 'battle_cruiser',
-		'bomber', 'destroyer', 'death_star', 'small_cargo', 'large_cargo',
-		'colony_ship', 'espionage_probe', 'recycler'
+		'light_fighter',
+		'heavy_fighter',
+		'cruiser',
+		'battleship',
+		'battle_cruiser',
+		'bomber',
+		'destroyer',
+		'death_star',
+		'small_cargo',
+		'large_cargo',
+		'colony_ship',
+		'espionage_probe',
+		'recycler'
 	];
 
 	for (const type of shipTypes) {

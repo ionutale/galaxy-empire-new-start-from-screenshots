@@ -31,15 +31,17 @@ describe('Fleet Service', () => {
 		it('should successfully dispatch a fleet', async () => {
 			const mockDb = db as any;
 			const mockValidationResult = {
-				rows: [{
-					validation: {
-						valid: true,
-						movement_info: {
-							duration: 3600, // 1 hour
-							fuel_consumption: 50
+				rows: [
+					{
+						validation: {
+							valid: true,
+							movement_info: {
+								duration: 3600, // 1 hour
+								fuel_consumption: 50
+							}
 						}
 					}
-				}]
+				]
 			};
 
 			mockDb.execute.mockResolvedValue(mockValidationResult);
@@ -70,12 +72,14 @@ describe('Fleet Service', () => {
 		it('should throw error when fleet validation fails', async () => {
 			const mockDb = db as any;
 			const mockValidationResult = {
-				rows: [{
-					validation: {
-						valid: false,
-						error: 'Not enough ships available'
+				rows: [
+					{
+						validation: {
+							valid: false,
+							error: 'Not enough ships available'
+						}
 					}
-				}]
+				]
 			};
 
 			mockDb.execute.mockResolvedValue(mockValidationResult);
@@ -83,22 +87,25 @@ describe('Fleet Service', () => {
 			const ships = { small_transporter: 100 };
 			const resources = { metal: 0, crystal: 0, gas: 0 };
 
-			await expect(dispatchFleet(1, 1, 1, 2, 3, 'transport', ships, resources))
-				.rejects.toThrow('Not enough ships available');
+			await expect(dispatchFleet(1, 1, 1, 2, 3, 'transport', ships, resources)).rejects.toThrow(
+				'Not enough ships available'
+			);
 		});
 
 		it('should deduct ships from planet during dispatch', async () => {
 			const mockDb = db as any;
 			const mockValidationResult = {
-				rows: [{
-					validation: {
-						valid: true,
-						movement_info: {
-							duration: 1800,
-							fuel_consumption: 25
+				rows: [
+					{
+						validation: {
+							valid: true,
+							movement_info: {
+								duration: 1800,
+								fuel_consumption: 25
+							}
 						}
 					}
-				}]
+				]
 			};
 
 			mockDb.execute.mockResolvedValue(mockValidationResult);
@@ -125,29 +132,37 @@ describe('Fleet Service', () => {
 
 			// Check ship deductions
 			const shipUpdates = updateCalls.slice(0, 2);
-			expect(shipUpdates.some(call =>
-				call[0] === planetShips &&
-				call[1].set.smallCargo === sql`${planetShips.smallCargo} - ${2}`
-			)).toBe(true);
+			expect(
+				shipUpdates.some(
+					(call) =>
+						call[0] === planetShips &&
+						call[1].set.smallCargo === sql`${planetShips.smallCargo} - ${2}`
+				)
+			).toBe(true);
 
-			expect(shipUpdates.some(call =>
-				call[0] === planetShips &&
-				call[1].set.destroyer === sql`${planetShips.destroyer} - ${1}`
-			)).toBe(true);
+			expect(
+				shipUpdates.some(
+					(call) =>
+						call[0] === planetShips &&
+						call[1].set.destroyer === sql`${planetShips.destroyer} - ${1}`
+				)
+			).toBe(true);
 		});
 
 		it('should deduct resources and fuel from planet', async () => {
 			const mockDb = db as any;
 			const mockValidationResult = {
-				rows: [{
-					validation: {
-						valid: true,
-						movement_info: {
-							duration: 2400,
-							fuel_consumption: 75
+				rows: [
+					{
+						validation: {
+							valid: true,
+							movement_info: {
+								duration: 2400,
+								fuel_consumption: 75
+							}
 						}
 					}
-				}]
+				]
 			};
 
 			mockDb.execute.mockResolvedValue(mockValidationResult);
@@ -170,7 +185,7 @@ describe('Fleet Service', () => {
 			await dispatchFleet(1, 1, 1, 2, 3, 'transport', ships, resources);
 
 			// Find the resource update call
-			const resourceUpdate = updateCalls.find(call => call[0] === planetResources);
+			const resourceUpdate = updateCalls.find((call) => call[0] === planetResources);
 			expect(resourceUpdate).toBeDefined();
 			expect(resourceUpdate[1].set).toEqual({
 				metal: sql`${planetResources.metal} - ${100}`,
@@ -182,15 +197,17 @@ describe('Fleet Service', () => {
 		it('should create fleet record with correct data', async () => {
 			const mockDb = db as any;
 			const mockValidationResult = {
-				rows: [{
-					validation: {
-						valid: true,
-						movement_info: {
-							duration: 3600,
-							fuel_consumption: 50
+				rows: [
+					{
+						validation: {
+							valid: true,
+							movement_info: {
+								duration: 3600,
+								fuel_consumption: 50
+							}
 						}
 					}
-				}]
+				]
 			};
 
 			mockDb.execute.mockResolvedValue(mockValidationResult);
@@ -230,15 +247,17 @@ describe('Fleet Service', () => {
 		it('should calculate correct arrival time', async () => {
 			const mockDb = db as any;
 			const mockValidationResult = {
-				rows: [{
-					validation: {
-						valid: true,
-						movement_info: {
-							duration: 7200, // 2 hours
-							fuel_consumption: 100
+				rows: [
+					{
+						validation: {
+							valid: true,
+							movement_info: {
+								duration: 7200, // 2 hours
+								fuel_consumption: 100
+							}
 						}
 					}
-				}]
+				]
 			};
 
 			mockDb.execute.mockResolvedValue(mockValidationResult);

@@ -55,7 +55,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 
 	// Combine and sort
 	const allMessages = [
-		...systemMessages.map(msg => ({ ...msg, fromUsername: null, isSent: false })),
+		...systemMessages.map((msg) => ({ ...msg, fromUsername: null, isSent: false })),
 		...privateMsgs
 	].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
 

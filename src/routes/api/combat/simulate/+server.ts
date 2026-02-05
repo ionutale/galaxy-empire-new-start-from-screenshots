@@ -23,8 +23,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			return true;
 		};
 
-		if (!validateFleet(attackerFleet) || !validateFleet(defenderFleet) ||
-			(defenderDefenses && !validateFleet(defenderDefenses))) {
+		if (
+			!validateFleet(attackerFleet) ||
+			!validateFleet(defenderFleet) ||
+			(defenderDefenses && !validateFleet(defenderDefenses))
+		) {
 			return json({ error: 'Invalid fleet data' }, { status: 400 });
 		}
 
@@ -37,7 +40,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			defenderFleet,
 			defenderDefenses: defenderDefenses || {}
 		});
-
 	} catch (error) {
 		console.error('Combat simulation error:', error);
 		return json({ error: 'Simulation failed' }, { status: 500 });

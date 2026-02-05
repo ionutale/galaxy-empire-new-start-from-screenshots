@@ -1,5 +1,11 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest';
-import { purchaseCommander, getActiveCommanders, getCommanderBonus, addCommanderExperience, getCommanderExperience } from './commanders';
+import {
+	purchaseCommander,
+	getActiveCommanders,
+	getCommanderBonus,
+	addCommanderExperience,
+	getCommanderExperience
+} from './commanders';
 import { db } from './db';
 import { users, userCommanders } from './db/schema';
 import { eq, and, gt, sql } from 'drizzle-orm';
@@ -43,7 +49,9 @@ describe('Commander Service', () => {
 		});
 
 		it('should throw error for invalid commander', async () => {
-			await expect(purchaseCommander(1, 'invalid_commander', 1)).rejects.toThrow('Invalid commander');
+			await expect(purchaseCommander(1, 'invalid_commander', 1)).rejects.toThrow(
+				'Invalid commander'
+			);
 		});
 
 		it('should throw error for invalid duration', async () => {
@@ -71,13 +79,15 @@ describe('Commander Service', () => {
 			const futureDate = new Date();
 			futureDate.setDate(futureDate.getDate() + 1);
 
-			mockDb.select.mockResolvedValue([{
-				commanderId: 'geologist',
-				expiresAt: futureDate,
-				level: 1,
-				experience: 0,
-				totalExperience: 0
-			}]);
+			mockDb.select.mockResolvedValue([
+				{
+					commanderId: 'geologist',
+					expiresAt: futureDate,
+					level: 1,
+					experience: 0,
+					totalExperience: 0
+				}
+			]);
 
 			const result = await getActiveCommanders(1);
 
@@ -90,13 +100,15 @@ describe('Commander Service', () => {
 			const pastDate = new Date();
 			pastDate.setDate(pastDate.getDate() - 1);
 
-			mockDb.select.mockResolvedValue([{
-				commanderId: 'geologist',
-				expiresAt: pastDate,
-				level: 1,
-				experience: 0,
-				totalExperience: 0
-			}]);
+			mockDb.select.mockResolvedValue([
+				{
+					commanderId: 'geologist',
+					expiresAt: pastDate,
+					level: 1,
+					experience: 0,
+					totalExperience: 0
+				}
+			]);
 
 			const result = await getActiveCommanders(1);
 
@@ -147,11 +159,13 @@ describe('Commander Service', () => {
 			const mockDb = db as any;
 			const mockTransaction = vi.fn().mockImplementation(async (callback) => {
 				return callback({
-					select: vi.fn().mockResolvedValue([{
-						level: 1,
-						experience: 50,
-						totalExperience: 50
-					}]),
+					select: vi.fn().mockResolvedValue([
+						{
+							level: 1,
+							experience: 50,
+							totalExperience: 50
+						}
+					]),
 					update: vi.fn().mockResolvedValue({})
 				});
 			});
@@ -169,11 +183,13 @@ describe('Commander Service', () => {
 			const mockDb = db as any;
 			const mockTransaction = vi.fn().mockImplementation(async (callback) => {
 				return callback({
-					select: vi.fn().mockResolvedValue([{
-						level: 1,
-						experience: 50,
-						totalExperience: 50
-					}]),
+					select: vi.fn().mockResolvedValue([
+						{
+							level: 1,
+							experience: 50,
+							totalExperience: 50
+						}
+					]),
 					update: vi.fn().mockResolvedValue({})
 				});
 			});
@@ -206,11 +222,13 @@ describe('Commander Service', () => {
 	describe('getCommanderExperience', () => {
 		it('should return commander experience data', async () => {
 			const mockDb = db as any;
-			mockDb.select.mockResolvedValue([{
-				level: 2,
-				experience: 50,
-				totalExperience: 150
-			}]);
+			mockDb.select.mockResolvedValue([
+				{
+					level: 2,
+					experience: 50,
+					totalExperience: 150
+				}
+			]);
 
 			const result = await getCommanderExperience(1, 'geologist');
 

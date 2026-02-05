@@ -19,7 +19,10 @@ export const load: PageServerLoad = async ({ parent }) => {
 	]);
 
 	// Get legacy defense data for now
-	const defensesRes = await db.select().from(planetDefenses).where(eq(planetDefenses.planetId, currentPlanet.id));
+	const defensesRes = await db
+		.select()
+		.from(planetDefenses)
+		.where(eq(planetDefenses.planetId, currentPlanet.id));
 
 	return {
 		buildings,

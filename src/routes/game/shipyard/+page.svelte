@@ -44,10 +44,12 @@
 			gas: ship.cost.gas * amount
 		};
 
-		return ship.canBuild &&
+		return (
+			ship.canBuild &&
 			resources.metal >= cost.metal &&
 			resources.crystal >= cost.crystal &&
-			(cost.gas === 0 || resources.gas >= cost.gas);
+			(cost.gas === 0 || resources.gas >= cost.gas)
+		);
 	}
 
 	function formatTimeRemaining(completionAt: Date) {
@@ -118,25 +120,34 @@
 	<h2 class="mb-6 text-2xl font-bold text-blue-600 dark:text-blue-300">Shipyard</h2>
 
 	{#if shipyardLevel === 0}
-		<div class="mb-6 rounded border border-red-500 bg-red-50 p-4 text-center text-red-800 dark:bg-red-900/50 dark:text-red-200">
+		<div
+			class="mb-6 rounded border border-red-500 bg-red-50 p-4 text-center text-red-800 dark:bg-red-900/50 dark:text-red-200"
+		>
 			You need a Shipyard to build ships. <a
 				href="/game"
-				class="font-bold underline hover:text-red-900 dark:hover:text-white">Build one in the Facilities menu.</a
+				class="font-bold underline hover:text-red-900 dark:hover:text-white"
+				>Build one in the Facilities menu.</a
 			>
 		</div>
 	{/if}
 
 	<!-- Construction Queue -->
 	{#if queue.length > 0}
-		<div class="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-500 dark:bg-blue-900/20">
+		<div
+			class="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-500 dark:bg-blue-900/20"
+		>
 			<h3 class="mb-3 text-lg font-bold text-blue-600 dark:text-blue-300">Construction Queue</h3>
 			<div class="space-y-2">
 				{#each queue as item}
 					<div class="flex items-center justify-between rounded bg-white p-3 dark:bg-gray-800">
 						<div class="flex items-center space-x-3">
-							<span class="font-medium text-gray-900 dark:text-gray-200">{item.shipType.replace(/_/g, ' ')}</span>
+							<span class="font-medium text-gray-900 dark:text-gray-200"
+								>{item.shipType.replace(/_/g, ' ')}</span
+							>
 							<span class="text-sm text-gray-600 dark:text-gray-400">x{item.amount}</span>
-							<span class="text-sm text-yellow-600 dark:text-yellow-400">{formatTimeRemaining(new Date(item.completionAt))}</span>
+							<span class="text-sm text-yellow-600 dark:text-yellow-400"
+								>{formatTimeRemaining(new Date(item.completionAt))}</span
+							>
 						</div>
 						<button
 							onclick={() => handleCancel(item.id)}
@@ -156,7 +167,8 @@
 			: ''}"
 	>
 		{#each shipyardInfo as ship}
-			{@const count = ships[ship.shipType.replace(/_([a-z])/g, (g: any) => g[1].toUpperCase())] || 0}
+			{@const count =
+				ships[ship.shipType.replace(/_([a-z])/g, (g: any) => g[1].toUpperCase())] || 0}
 			{@const amount = amounts[ship.shipType] || 1}
 			{@const totalCost = {
 				metal: ship.cost.metal * amount,
@@ -164,10 +176,15 @@
 				gas: ship.cost.gas * amount
 			}}
 
-			<div class="flex flex-col rounded-lg border border-gray-200 bg-white p-4 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+			<div
+				class="flex flex-col rounded-lg border border-gray-200 bg-white p-4 shadow-lg dark:border-gray-700 dark:bg-gray-800"
+			>
 				<div class="mb-2 flex items-start justify-between">
 					<h3 class="text-lg font-bold text-gray-900 dark:text-gray-200">{ship.name}</h3>
-					<span class="rounded bg-blue-100 px-2 py-1 text-xs text-blue-800 dark:bg-blue-900 dark:text-blue-300">Owned: {count}</span>
+					<span
+						class="rounded bg-blue-100 px-2 py-1 text-xs text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+						>Owned: {count}</span
+					>
 				</div>
 
 				<div class="mb-4 space-y-1 text-xs text-gray-600 dark:text-gray-400">
@@ -175,13 +192,16 @@
 						<span>Attack:</span> <span class="text-red-600 dark:text-red-400">{ship.attack}</span>
 					</div>
 					<div class="flex justify-between">
-						<span>Defense:</span> <span class="text-green-600 dark:text-green-400">{ship.defense}</span>
+						<span>Defense:</span>
+						<span class="text-green-600 dark:text-green-400">{ship.defense}</span>
 					</div>
 					<div class="flex justify-between">
-						<span>Speed:</span> <span class="text-yellow-600 dark:text-yellow-400">{ship.speed}</span>
+						<span>Speed:</span>
+						<span class="text-yellow-600 dark:text-yellow-400">{ship.speed}</span>
 					</div>
 					<div class="flex justify-between">
-						<span>Capacity:</span> <span class="text-blue-600 dark:text-blue-400">{ship.capacity}</span>
+						<span>Capacity:</span>
+						<span class="text-blue-600 dark:text-blue-400">{ship.capacity}</span>
 					</div>
 				</div>
 
@@ -218,7 +238,7 @@
 						/>
 						<button
 							onclick={() => handleBuild(ship.shipType)}
-							class="flex flex-1 transform items-center justify-center rounded bg-blue-600 text-sm font-bold transition hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-600 disabled:opacity-50 text-white"
+							class="flex flex-1 transform items-center justify-center rounded bg-blue-600 text-sm font-bold text-white transition hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-600 disabled:opacity-50"
 							disabled={shipyardLevel === 0 || !canBuild(ship) || loading[ship.shipType]}
 						>
 							{#if loading[ship.shipType]}

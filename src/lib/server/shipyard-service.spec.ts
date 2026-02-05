@@ -45,7 +45,9 @@ describe('Shipyard Service', () => {
 				shipyardLevel: 3
 			});
 
-			expect(result.shipyardInfo).toHaveLength(Object.keys(require('$lib/game-config').SHIPS).length);
+			expect(result.shipyardInfo).toHaveLength(
+				Object.keys(require('$lib/game-config').SHIPS).length
+			);
 		});
 
 		it('should return default values when no data found', async () => {
@@ -82,7 +84,7 @@ describe('Shipyard Service', () => {
 
 			const result = await ShipyardService.getShipyardInfo(1, 1);
 
-			result.shipyardInfo.forEach(ship => {
+			result.shipyardInfo.forEach((ship) => {
 				expect(ship.canBuild).toBe(false);
 				expect(ship.reason).toBe('Shipyard required');
 			});
@@ -98,7 +100,7 @@ describe('Shipyard Service', () => {
 
 			const result = await ShipyardService.getShipyardInfo(1, 1);
 
-			const expensiveShip = result.shipyardInfo.find(ship => ship.cost.metal > 10);
+			const expensiveShip = result.shipyardInfo.find((ship) => ship.cost.metal > 10);
 			expect(expensiveShip?.canBuild).toBe(false);
 			expect(expensiveShip?.reason).toBe('Not enough metal');
 		});
@@ -138,9 +140,7 @@ describe('Shipyard Service', () => {
 
 			await ShipyardService.processCompletedShipConstruction();
 
-			expect(mockDb.execute).toHaveBeenCalledWith(
-				sql`CALL process_completed_ship_construction()`
-			);
+			expect(mockDb.execute).toHaveBeenCalledWith(sql`CALL process_completed_ship_construction()`);
 		});
 
 		it('should handle processing errors gracefully', async () => {

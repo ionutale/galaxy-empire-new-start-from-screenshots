@@ -27,7 +27,10 @@ export class ErrorHandler {
 		}
 
 		if (error.message?.includes('building queue full')) {
-			return { success: false, error: 'Building queue is full. Please wait for current constructions to complete.' };
+			return {
+				success: false,
+				error: 'Building queue is full. Please wait for current constructions to complete.'
+			};
 		}
 
 		if (error.message?.includes('research lab required')) {
@@ -46,15 +49,18 @@ export class ErrorHandler {
 		this.logError(error, { operation, type: 'database' });
 
 		// Handle specific database errors
-		if (error.code === '23505') { // Unique constraint violation
+		if (error.code === '23505') {
+			// Unique constraint violation
 			throw new Error('This action would create a duplicate entry.');
 		}
 
-		if (error.code === '23503') { // Foreign key constraint violation
+		if (error.code === '23503') {
+			// Foreign key constraint violation
 			throw new Error('Referenced data does not exist.');
 		}
 
-		if (error.code === '23514') { // Check constraint violation
+		if (error.code === '23514') {
+			// Check constraint violation
 			throw new Error('Data validation failed.');
 		}
 
@@ -62,10 +68,7 @@ export class ErrorHandler {
 		throw error;
 	}
 
-	static async withTransaction<T>(
-		operation: () => Promise<T>,
-		operationName: string
-	): Promise<T> {
+	static async withTransaction<T>(operation: () => Promise<T>, operationName: string): Promise<T> {
 		try {
 			const result = await operation();
 			return result;
@@ -99,7 +102,8 @@ export class ErrorHandler {
 			details
 		};
 
-		if (duration > 1000) { // Log slow operations
+		if (duration > 1000) {
+			// Log slow operations
 			console.warn('Slow Operation:', logEntry);
 		} else if (dev) {
 			console.log('Performance:', logEntry);

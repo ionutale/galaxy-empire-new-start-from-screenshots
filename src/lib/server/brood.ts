@@ -1,5 +1,12 @@
 import { db } from './db';
-import { broodTargets, galactoniteItems, fusionRecipes, activeBoosts, fleets, planetResources } from './db/schema';
+import {
+	broodTargets,
+	galactoniteItems,
+	fusionRecipes,
+	activeBoosts,
+	fleets,
+	planetResources
+} from './db/schema';
 import { eq, and, sql, lte } from 'drizzle-orm';
 import { simulateCombat } from './combat-engine';
 import { users } from './db/schema';
@@ -49,11 +56,7 @@ export class BroodService {
 		const npcFleet = this.generateNpcFleet(target[0].level);
 
 		// Get player fleet
-		const playerFleet = await db
-			.select()
-			.from(fleets)
-			.where(eq(fleets.id, fleetId))
-			.limit(1);
+		const playerFleet = await db.select().from(fleets).where(eq(fleets.id, fleetId)).limit(1);
 
 		if (!playerFleet.length) {
 			throw new Error('Fleet not found');
@@ -103,12 +106,22 @@ export async function processBroodRaids() {
 	const arrivedFleets = await db
 		.select()
 		.from(fleets)
-		.where(and(eq(fleets.mission, 'brood_raid'), eq(fleets.status, 'active'), lte(fleets.arrivalTime, new Date())));
+		.where(
+			and(
+				eq(fleets.mission, 'brood_raid'),
+				eq(fleets.status, 'active'),
+				lte(fleets.arrivalTime, new Date())
+			)
+		);
 
 	for (const fleet of arrivedFleets) {
 		try {
 			// Find the brood target
-			const targetId = await getBroodTargetId(fleet.targetGalaxy, fleet.targetSystem, fleet.targetPlanet);
+			const targetId = await getBroodTargetId(
+				fleet.targetGalaxy,
+				fleet.targetSystem,
+				fleet.targetPlanet
+			);
 			if (!targetId) {
 				// No target, perhaps return fleet
 				await returnFleet(fleet.id);
@@ -132,7 +145,6 @@ export async function processBroodRaids() {
 
 			// Return fleet
 			await returnFleet(fleet.id);
-
 		} catch (e) {
 			console.error('Brood raid error:', e);
 			// Return fleet on error
@@ -145,7 +157,13 @@ async function getBroodTargetId(galaxy: number, system: number, planetSlot: numb
 	const result = await db
 		.select({ id: broodTargets.id })
 		.from(broodTargets)
-		.where(and(eq(broodTargets.galaxy, galaxy), eq(broodTargets.system, system), eq(broodTargets.planetSlot, planetSlot)))
+		.where(
+			and(
+				eq(broodTargets.galaxy, galaxy),
+				eq(broodTargets.system, system),
+				eq(broodTargets.planetSlot, planetSlot)
+			)
+		)
 		.limit(1);
 
 	return result.length ? result[0].id : null;

@@ -44,7 +44,10 @@
 		}, 0);
 	}
 
-	function calculateRemainingFleet(original: Record<string, number>, losses: Record<string, number>) {
+	function calculateRemainingFleet(
+		original: Record<string, number>,
+		losses: Record<string, number>
+	) {
 		const remaining: Record<string, number> = {};
 		for (const [type, count] of Object.entries(original)) {
 			remaining[type] = Math.max(0, count - (losses[type] || 0));
@@ -71,20 +74,26 @@
 				{report.mission.toUpperCase()} MISSION
 			</div>
 			<div class="text-sm text-gray-400">
-				[{report.galaxy}:{report.system}:{report.planet}] • {new Date(report.createdAt).toLocaleString()}
+				[{report.galaxy}:{report.system}:{report.planet}] • {new Date(
+					report.createdAt
+				).toLocaleString()}
 			</div>
 		</div>
 
 		<!-- Result -->
 		<div class="mb-6 text-center">
-			<div class="inline-block rounded-full px-6 py-2 text-lg font-bold {
-				report.winner === 'attacker'
+			<div
+				class="inline-block rounded-full px-6 py-2 text-lg font-bold {report.winner === 'attacker'
 					? 'bg-green-900 text-green-200'
 					: report.winner === 'defender'
-					? 'bg-red-900 text-red-200'
-					: 'bg-yellow-900 text-yellow-200'
-			}">
-				{report.winner === 'attacker' ? 'ATTACKER VICTORY' : report.winner === 'defender' ? 'DEFENDER VICTORY' : 'DRAW'}
+						? 'bg-red-900 text-red-200'
+						: 'bg-yellow-900 text-yellow-200'}"
+			>
+				{report.winner === 'attacker'
+					? 'ATTACKER VICTORY'
+					: report.winner === 'defender'
+						? 'DEFENDER VICTORY'
+						: 'DRAW'}
 			</div>
 		</div>
 
@@ -126,7 +135,8 @@
 					<div>
 						<div class="text-sm font-semibold text-green-300">Remaining Fleet:</div>
 						<div class="text-sm text-green-400">
-							{formatFleet(calculateRemainingFleet(report.attackerFleet, report.attackerLosses)) || 'None'}
+							{formatFleet(calculateRemainingFleet(report.attackerFleet, report.attackerLosses)) ||
+								'None'}
 						</div>
 					</div>
 				</div>
@@ -155,7 +165,9 @@
 
 					<div>
 						<div class="text-sm font-semibold text-gray-300">Defenses Before Combat:</div>
-						<div class="text-sm text-gray-400">{formatFleet(report.defenderDefenses) || 'None'}</div>
+						<div class="text-sm text-gray-400">
+							{formatFleet(report.defenderDefenses) || 'None'}
+						</div>
 						<div class="text-xs text-gray-500">
 							Value: {calculateTotalValue(report.defenderDefenses, false).toLocaleString()} resources
 						</div>
@@ -181,9 +193,8 @@
 			<div class="mt-6 rounded-lg border border-yellow-600 bg-yellow-900/20 p-4">
 				<h3 class="mb-2 font-bold text-yellow-300">Loot Captured</h3>
 				<div class="text-sm text-yellow-200">
-					Metal: {report.loot.metal?.toLocaleString() || 0} •
-					Crystal: {report.loot.crystal?.toLocaleString() || 0} •
-					Gas: {report.loot.gas?.toLocaleString() || 0}
+					Metal: {report.loot.metal?.toLocaleString() || 0} • Crystal: {report.loot.crystal?.toLocaleString() ||
+						0} • Gas: {report.loot.gas?.toLocaleString() || 0}
 				</div>
 			</div>
 		{/if}
@@ -193,8 +204,8 @@
 			<div class="mt-6 rounded-lg border border-purple-600 bg-purple-900/20 p-4">
 				<h3 class="mb-2 font-bold text-purple-300">Debris Field Created</h3>
 				<div class="text-sm text-purple-200">
-					Metal: {report.debris.metal?.toLocaleString() || 0} •
-					Crystal: {report.debris.crystal?.toLocaleString() || 0}
+					Metal: {report.debris.metal?.toLocaleString() || 0} • Crystal: {report.debris.crystal?.toLocaleString() ||
+						0}
 				</div>
 			</div>
 		{/if}

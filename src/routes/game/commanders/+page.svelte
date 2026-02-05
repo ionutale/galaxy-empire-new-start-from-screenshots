@@ -20,7 +20,7 @@
 	let settingsEnabled = $state(false);
 	let settingsTemplateId = $state('');
 	let settingsOriginPlanetId = $state('');
-	
+
 	// Initialize settings from data when available
 	$effect(() => {
 		if (data.autoExploreSettings) {
@@ -40,13 +40,13 @@
 			const response = await fetch('/api/commanders', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ 
+				body: JSON.stringify({
 					action: 'purchase',
-					commanderId, 
-					duration: selectedDuration 
+					commanderId,
+					duration: selectedDuration
 				})
 			});
-			
+
 			if (response.ok) {
 				await invalidateAll();
 			} else {
@@ -65,14 +65,14 @@
 			const response = await fetch('/api/commanders', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ 
+				body: JSON.stringify({
 					action: 'saveSettings',
 					enabled: settingsEnabled,
 					templateId: settingsTemplateId,
 					originPlanetId: settingsOriginPlanetId
 				})
 			});
-			
+
 			if (response.ok) {
 				await invalidateAll();
 			} else {
@@ -120,7 +120,8 @@
 
 					{#if activeCommanders[commander.id]}
 						{@const exp = commanderExperience[commander.id]}
-						{@const currentBonus = commander.baseBonusValue + ((exp?.level || 1) - 1) * commander.levelBonusMultiplier}
+						{@const currentBonus =
+							commander.baseBonusValue + ((exp?.level || 1) - 1) * commander.levelBonusMultiplier}
 						<div class="font-mono text-sm text-purple-300">
 							Bonus: +{currentBonus}% {commander.bonusType.replace('_', ' ')}
 						</div>
@@ -177,10 +178,7 @@
 								>
 									<option value="">Select Template</option>
 									{#each data.templates as template}
-										<option
-											value={template.id}
-											>{template.name}</option
-										>
+										<option value={template.id}>{template.name}</option>
 									{/each}
 								</select>
 
@@ -191,8 +189,7 @@
 								>
 									<option value="">Select Origin Planet</option>
 									{#each data.userPlanets as planet}
-										<option
-											value={planet.id}
+										<option value={planet.id}
 											>{planet.name} [{planet.galaxyId}:{planet.systemId}:{planet.planetNumber}]</option
 										>
 									{/each}

@@ -47,7 +47,10 @@ describe('AchievementService', () => {
 			};
 			const userStats = { battles_won: 10 };
 
-			const result = (AchievementService as any).checkAchievementRequirement(achievement, userStats);
+			const result = (AchievementService as any).checkAchievementRequirement(
+				achievement,
+				userStats
+			);
 
 			expect(result).toBe(true);
 		});
@@ -60,7 +63,10 @@ describe('AchievementService', () => {
 			};
 			const userStats = { battles_won: 3 };
 
-			const result = (AchievementService as any).checkAchievementRequirement(achievement, userStats);
+			const result = (AchievementService as any).checkAchievementRequirement(
+				achievement,
+				userStats
+			);
 
 			expect(result).toBe(false);
 		});
@@ -73,7 +79,10 @@ describe('AchievementService', () => {
 			};
 			const userStats = { in_alliance: 1 };
 
-			const result = (AchievementService as any).checkAchievementRequirement(achievement, userStats);
+			const result = (AchievementService as any).checkAchievementRequirement(
+				achievement,
+				userStats
+			);
 
 			expect(result).toBe(true);
 		});
@@ -110,21 +119,27 @@ describe('AchievementService', () => {
 
 			await (AchievementService as any).grantReward(1, 'dark_matter', 100);
 
-			expect(mockDb.update).toHaveBeenCalledWith(users, {
-				darkMatter: sql`${users.darkMatter} + ${100}`
-			}, {
-				where: eq(users.id, 1)
-			});
+			expect(mockDb.update).toHaveBeenCalledWith(
+				users,
+				{
+					darkMatter: sql`${users.darkMatter} + ${100}`
+				},
+				{
+					where: eq(users.id, 1)
+				}
+			);
 		});
 	});
 
 	describe('getUserStatsForAchievements', () => {
 		it('should return basic user stats', async () => {
 			const mockDb = db as any;
-			mockDb.select.mockResolvedValue([{
-				darkMatter: 500,
-				points: 1000
-			}]);
+			mockDb.select.mockResolvedValue([
+				{
+					darkMatter: 500,
+					points: 1000
+				}
+			]);
 
 			const result = await AchievementService.getUserStatsForAchievements(1);
 
@@ -168,10 +183,12 @@ describe('AchievementService', () => {
 
 		it('should not award already unlocked achievements', async () => {
 			const mockDb = db as any;
-			mockDb.select.mockResolvedValue([{
-				achievementId: 1,
-				isCompleted: true
-			}]);
+			mockDb.select.mockResolvedValue([
+				{
+					achievementId: 1,
+					isCompleted: true
+				}
+			]);
 			mockDb.insert.mockResolvedValue({});
 
 			const userStats = { battles_won: 1 };
@@ -184,23 +201,25 @@ describe('AchievementService', () => {
 	describe('getUserAchievements', () => {
 		it('should return user achievements with details', async () => {
 			const mockDb = db as any;
-			mockDb.select.mockResolvedValue([{
-				id: 1,
-				userId: 1,
-				achievementId: 1,
-				unlockedAt: new Date(),
-				progress: 5,
-				isCompleted: false,
-				achievement: {
+			mockDb.select.mockResolvedValue([
+				{
 					id: 1,
-					name: 'Test Achievement',
-					description: 'Test description',
-					category: 'test',
-					icon: '🏆',
-					rewardType: 'dark_matter',
-					rewardAmount: 100
+					userId: 1,
+					achievementId: 1,
+					unlockedAt: new Date(),
+					progress: 5,
+					isCompleted: false,
+					achievement: {
+						id: 1,
+						name: 'Test Achievement',
+						description: 'Test description',
+						category: 'test',
+						icon: '🏆',
+						rewardType: 'dark_matter',
+						rewardAmount: 100
+					}
 				}
-			}]);
+			]);
 
 			const result = await AchievementService.getUserAchievements(1);
 

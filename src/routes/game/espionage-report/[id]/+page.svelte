@@ -20,10 +20,12 @@
 
 	function formatFleet(fleet: Record<string, number>) {
 		if (!fleet) return 'No data';
-		return Object.entries(fleet)
-			.filter(([_, count]) => count > 0)
-			.map(([type, count]) => `${type}: ${count}`)
-			.join(', ') || 'None';
+		return (
+			Object.entries(fleet)
+				.filter(([_, count]) => count > 0)
+				.map(([type, count]) => `${type}: ${count}`)
+				.join(', ') || 'None'
+		);
 	}
 
 	function formatBuildings(buildings: any) {
@@ -63,11 +65,11 @@
 	<div class="rounded-lg border border-gray-700 bg-gray-800 p-6 shadow-lg">
 		<!-- Header -->
 		<div class="mb-6 text-center">
-			<div class="mb-2 text-lg font-bold text-purple-400">
-				ESPIONAGE MISSION REPORT
-			</div>
+			<div class="mb-2 text-lg font-bold text-purple-400">ESPIONAGE MISSION REPORT</div>
 			<div class="text-sm text-gray-400">
-				Target: {report.targetName} • [{report.galaxy}:{report.system}:{report.planet}] • {new Date(report.createdAt).toLocaleString()}
+				Target: {report.targetName} • [{report.galaxy}:{report.system}:{report.planet}] • {new Date(
+					report.createdAt
+				).toLocaleString()}
 			</div>
 		</div>
 
@@ -147,8 +149,8 @@
 		<!-- Footer Note -->
 		<div class="mt-6 rounded-lg border border-gray-600 bg-gray-900/50 p-4">
 			<div class="text-xs text-gray-400">
-				<strong>Note:</strong> Espionage data is current as of the time the probe was sent.
-				There is a 30% chance of detection when conducting espionage missions.
+				<strong>Note:</strong> Espionage data is current as of the time the probe was sent. There is a
+				30% chance of detection when conducting espionage missions.
 			</div>
 		</div>
 	</div>

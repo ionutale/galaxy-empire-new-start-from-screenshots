@@ -3,6 +3,7 @@
 A sci-fi strategy MMO game built with SvelteKit and PostgreSQL.
 
 ## Documentation
+
 - [**Game Design Document**](docs/GAME_DESIGN_DOCUMENT.md): Features, mechanics, and formulas.
 - [**Development Guide**](docs/DEVELOPMENT_GUIDE.md): Technical stack, database schema, and roadmap.
 

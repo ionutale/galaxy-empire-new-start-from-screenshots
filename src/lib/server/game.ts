@@ -92,7 +92,9 @@ export async function updatePlanetResources(planetId: number) {
 
 		// Energy calculation (static, not accumulated)
 		const energyProd =
-			getProduction('solar_plant', levels.solarPlant) * energyMultiplier * boosterMultipliers.energy;
+			getProduction('solar_plant', levels.solarPlant) *
+			energyMultiplier *
+			boosterMultipliers.energy;
 		const energyCons =
 			Math.ceil(10 * levels.metalMine * Math.pow(1.1, levels.metalMine)) +
 			Math.ceil(10 * levels.crystalMine * Math.pow(1.1, levels.crystalMine)) +

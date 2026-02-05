@@ -40,8 +40,15 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 		// Validate alliance membership for alliance messages
 		if (messageType === 'alliance') {
-			if (!locals.user.allianceId || !recipient.allianceId || locals.user.allianceId !== recipient.allianceId) {
-				return json({ error: 'Can only send alliance messages to alliance members' }, { status: 403 });
+			if (
+				!locals.user.allianceId ||
+				!recipient.allianceId ||
+				locals.user.allianceId !== recipient.allianceId
+			) {
+				return json(
+					{ error: 'Can only send alliance messages to alliance members' },
+					{ status: 403 }
+				);
 			}
 		}
 

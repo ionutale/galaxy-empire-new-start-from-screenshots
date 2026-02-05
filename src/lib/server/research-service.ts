@@ -46,13 +46,16 @@ export class ResearchService {
 			ORDER BY rt.category, rt.name
 		`);
 
-		return result.rows.map(row => this.formatResearchInfo(row));
+		return result.rows.map((row) => this.formatResearchInfo(row));
 	}
 
 	/**
 	 * Get a specific research for a user
 	 */
-	static async getUserResearchById(userId: number, researchTypeId: number): Promise<ResearchInfo | null> {
+	static async getUserResearchById(
+		userId: number,
+		researchTypeId: number
+	): Promise<ResearchInfo | null> {
 		const result = await db.execute(sql`
 			SELECT
 				rt.id,
@@ -168,7 +171,10 @@ export class ResearchService {
 	/**
 	 * Check if user meets research prerequisites
 	 */
-	private static async checkPrerequisites(userId: number, prerequisites: Record<string, number>): Promise<boolean> {
+	private static async checkPrerequisites(
+		userId: number,
+		prerequisites: Record<string, number>
+	): Promise<boolean> {
 		if (Object.keys(prerequisites).length === 0) return true;
 
 		const result = await db.execute(sql`
@@ -179,7 +185,7 @@ export class ResearchService {
 		`);
 
 		const userLevels: Record<string, number> = {};
-		result.rows.forEach(row => {
+		result.rows.forEach((row) => {
 			userLevels[row.name as string] = row.level as number;
 		});
 
@@ -209,9 +215,11 @@ export class ResearchService {
 		if (result.rows.length === 0) return false;
 
 		const resources = result.rows[0];
-		return (resources.metal as number) >= cost.metal &&
-			   (resources.crystal as number) >= cost.crystal &&
-			   (resources.gas as number) >= cost.gas;
+		return (
+			(resources.metal as number) >= cost.metal &&
+			(resources.crystal as number) >= cost.crystal &&
+			(resources.gas as number) >= cost.gas
+		);
 	}
 
 	/**

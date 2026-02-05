@@ -65,7 +65,7 @@
 
 	// Calculate movement when inputs change
 	$effect(() => {
-		const hasShips = Object.values(shipCounts).some(count => count > 0);
+		const hasShips = Object.values(shipCounts).some((count) => count > 0);
 		const hasTarget = targetGalaxy && targetSystem && targetPlanet;
 
 		if (hasShips && hasTarget) {
@@ -207,7 +207,7 @@
 					resources
 				})
 			});
-			
+
 			const result = await response.json();
 
 			if (response.ok) {
@@ -225,7 +225,6 @@
 			loading = false;
 		}
 	}
-
 </script>
 
 <div class="p-4 pb-20">
@@ -286,8 +285,6 @@
 		<h3 class="mb-4 text-lg font-bold text-gray-300">Dispatch Fleet</h3>
 
 		<div>
-
-
 			<!-- Ship Selection -->
 			<div class="mb-6 space-y-2">
 				{#each shipTypes as ship}
@@ -446,7 +443,9 @@
 						</div>
 						<div>
 							<span class="text-gray-400">Fuel Cost:</span>
-							<span class="ml-2 text-white">{movementInfo.fuelConsumption.toLocaleString()} gas</span>
+							<span class="ml-2 text-white"
+								>{movementInfo.fuelConsumption.toLocaleString()} gas</span
+							>
 						</div>
 					</div>
 					{#if movementInfo.slowestShip}

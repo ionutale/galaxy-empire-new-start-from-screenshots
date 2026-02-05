@@ -15,11 +15,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 	const planetId = parseInt(params.id);
 
 	// Verify planet ownership
-	const planet = await db
-		.select()
-		.from(planets)
-		.where(eq(planets.id, planetId))
-		.limit(1);
+	const planet = await db.select().from(planets).where(eq(planets.id, planetId)).limit(1);
 
 	if (!planet.length || planet[0].userId !== user.id) {
 		throw error(404, 'Planet not found');

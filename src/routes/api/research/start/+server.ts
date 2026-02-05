@@ -7,17 +7,21 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		return json({ error: 'Unauthorized' }, { status: 401 });
 	}
 
-    try {
-        const { researchTypeId, planetId } = await request.json();
+	try {
+		const { researchTypeId, planetId } = await request.json();
 
 		if (!researchTypeId || !planetId) {
-            return json({ error: 'Missing required fields' }, { status: 400 });
-        }
+			return json({ error: 'Missing required fields' }, { status: 400 });
+		}
 
-		const result = await ResearchService.startResearch(locals.user.id, Number(researchTypeId), Number(planetId));
+		const result = await ResearchService.startResearch(
+			locals.user.id,
+			Number(researchTypeId),
+			Number(planetId)
+		);
 
 		if (!result.success) {
-            return json({ error: result.error }, { status: 400 });
+			return json({ error: result.error }, { status: 400 });
 		}
 
 		return json({ success: true, completionTime: result.completionTime });

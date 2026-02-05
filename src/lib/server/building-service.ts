@@ -59,13 +59,16 @@ export class BuildingService {
 			ORDER BY bt.category, bt.name
 		`);
 
-		return result.rows.map(row => this.formatBuildingInfo(row));
+		return result.rows.map((row) => this.formatBuildingInfo(row));
 	}
 
 	/**
 	 * Get a specific building for a planet
 	 */
-	static async getPlanetBuilding(planetId: number, buildingTypeId: number): Promise<BuildingInfo | null> {
+	static async getPlanetBuilding(
+		planetId: number,
+		buildingTypeId: number
+	): Promise<BuildingInfo | null> {
 		const result = await db.execute(sql`
 			SELECT
 				bt.id,
@@ -134,7 +137,7 @@ export class BuildingService {
 			// Reserve resources and add to queue
 			// Ensure we have a valid cost object (fallback to 0 if validation failed to return one, which shouldn't happen here)
 			const reservedResources = validation.cost || { metal: 0, crystal: 0, gas: 0 };
-			
+
 			await db.execute(sql`
 				INSERT INTO building_queue (
 					planet_id, building_type_id, target_level,
@@ -149,9 +152,9 @@ export class BuildingService {
 			await db.execute(sql`
 				UPDATE planet_resources
 				SET 
-					metal = GREATEST(0, metal - ${(reservedResources.metal || 0)}),
-					crystal = GREATEST(0, crystal - ${(reservedResources.crystal || 0)}),
-					gas = GREATEST(0, gas - ${(reservedResources.gas || 0)})
+					metal = GREATEST(0, metal - ${reservedResources.metal || 0}),
+					crystal = GREATEST(0, crystal - ${reservedResources.crystal || 0}),
+					gas = GREATEST(0, gas - ${reservedResources.gas || 0})
 				WHERE planet_id = ${planetId}
 			`);
 
@@ -214,7 +217,7 @@ export class BuildingService {
 
 		for (const row of result.rows) {
 			const level = row.level as number;
-			const temperature = row.temperature as number || 50; // Default temperature
+			const temperature = (row.temperature as number) || 50; // Default temperature
 
 			if (row.base_production) {
 				const production = row.base_production as any;
@@ -254,7 +257,9 @@ export class BuildingService {
 	/**
 	 * Calculate building storage capacity for a planet
 	 */
-	static async calculatePlanetStorage(planetId: number): Promise<{ metal: number; crystal: number; gas: number }> {
+	static async calculatePlanetStorage(
+		planetId: number
+	): Promise<{ metal: number; crystal: number; gas: number }> {
 		const result = await db.execute(sql`
 			SELECT bt.name, pb.level
 			FROM planet_buildings pb
@@ -284,7 +289,10 @@ export class BuildingService {
 	/**
 	 * Check if building prerequisites are met
 	 */
-	private static async checkPrerequisites(planetId: number, prerequisites: Record<string, number>): Promise<{ success: boolean; error?: string }> {
+	private static async checkPrerequisites(
+		planetId: number,
+		prerequisites: Record<string, number>
+	): Promise<{ success: boolean; error?: string }> {
 		if (!prerequisites || Object.keys(prerequisites).length === 0) {
 			return { success: true };
 		}
@@ -296,7 +304,10 @@ export class BuildingService {
 				const building = await this.getPlanetBuilding(planetId, buildingTypeId);
 
 				if (!building || building.level < requiredLevel) {
-					return { success: false, error: `Requires ${building?.name || 'Unknown Building'} level ${requiredLevel}` };
+					return {
+						success: false,
+						error: `Requires ${building?.name || 'Unknown Building'} level ${requiredLevel}`
+					};
 				}
 			}
 			// TODO: Add research prerequisites when research system is implemented
@@ -308,7 +319,10 @@ export class BuildingService {
 	/**
 	 * Check if planet has enough resources
 	 */
-	private static async checkResources(planetId: number, cost: BuildingCost): Promise<{ success: boolean; error?: string }> {
+	private static async checkResources(
+		planetId: number,
+		cost: BuildingCost
+	): Promise<{ success: boolean; error?: string }> {
 		const result = await db.execute(sql`
 			SELECT resources FROM planets WHERE id = ${planetId}
 		`);
@@ -322,10 +336,16 @@ export class BuildingService {
 		const currentGas = parseInt(resources?.gas || '0');
 
 		if (currentMetal < cost.metal) {
-			return { success: false, error: `Not enough metal. Need ${cost.metal}, have ${currentMetal}` };
+			return {
+				success: false,
+				error: `Not enough metal. Need ${cost.metal}, have ${currentMetal}`
+			};
 		}
 		if (currentCrystal < cost.crystal) {
-			return { success: false, error: `Not enough crystal. Need ${cost.crystal}, have ${currentCrystal}` };
+			return {
+				success: false,
+				error: `Not enough crystal. Need ${cost.crystal}, have ${currentCrystal}`
+			};
 		}
 		if (currentGas < cost.gas) {
 			return { success: false, error: `Not enough gas. Need ${cost.gas}, have ${currentGas}` };
@@ -359,8 +379,10 @@ export class BuildingService {
 		if (baseProduction) {
 			const prodMultiplier = Math.pow(1.1, level);
 			production = {};
-			if (baseProduction.metal) production.metal = Math.floor(baseProduction.metal * prodMultiplier);
-			if (baseProduction.crystal) production.crystal = Math.floor(baseProduction.crystal * prodMultiplier);
+			if (baseProduction.metal)
+				production.metal = Math.floor(baseProduction.metal * prodMultiplier);
+			if (baseProduction.crystal)
+				production.crystal = Math.floor(baseProduction.crystal * prodMultiplier);
 			if (baseProduction.gas) production.gas = Math.floor(baseProduction.gas * prodMultiplier);
 		}
 
@@ -369,8 +391,10 @@ export class BuildingService {
 		let energyProduction = 0;
 		if (baseEnergy) {
 			const energyMultiplier = Math.pow(1.1, level);
-			if (baseEnergy.consumption) energyConsumption = Math.floor(baseEnergy.consumption * energyMultiplier);
-			if (baseEnergy.production) energyProduction = Math.floor(baseEnergy.production * energyMultiplier);
+			if (baseEnergy.consumption)
+				energyConsumption = Math.floor(baseEnergy.consumption * energyMultiplier);
+			if (baseEnergy.production)
+				energyProduction = Math.floor(baseEnergy.production * energyMultiplier);
 		}
 
 		return {
@@ -415,7 +439,7 @@ export class BuildingService {
 			'Metal Storage': '🏗️',
 			'Crystal Storage': '🏗️',
 			'Gas Storage': '🏗️',
-			'Shipyard': '🚀',
+			Shipyard: '🚀',
 			'Research Lab': '🔬',
 			'Nano Factory': '🏭'
 		};

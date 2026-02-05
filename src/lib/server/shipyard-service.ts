@@ -1,5 +1,12 @@
 import { db } from './db';
-import { shipyardQueue, planetShips, planetBuildings, buildingTypes, planetResources, users } from './db/schema';
+import {
+	shipyardQueue,
+	planetShips,
+	planetBuildings,
+	buildingTypes,
+	planetResources,
+	users
+} from './db/schema';
 import { eq, sql, and, desc } from 'drizzle-orm';
 import { SHIPS } from '$lib/game-config';
 
@@ -31,7 +38,10 @@ export class ShipyardService {
 	/**
 	 * Get shipyard information for a planet
 	 */
-	static async getShipyardInfo(planetId: number, userId: number): Promise<{
+	static async getShipyardInfo(
+		planetId: number,
+		userId: number
+	): Promise<{
 		ships: Record<string, number>;
 		queue: ShipyardQueueItem[];
 		shipyardInfo: ShipyardInfo[];
@@ -44,24 +54,18 @@ export class ShipyardService {
 		shipyardLevel: number;
 	}> {
 		// Get planet ships
-		const shipsRes = await db
-			.select()
-			.from(planetShips)
-			.where(eq(planetShips.planetId, planetId));
+		const shipsRes = await db.select().from(planetShips).where(eq(planetShips.planetId, planetId));
 
-		const ships = shipsRes[0] ? Object.fromEntries(
-			Object.entries(shipsRes[0]).map(([key, value]) => [key, value || 0])
-		) : {};
+		const ships = shipsRes[0]
+			? Object.fromEntries(Object.entries(shipsRes[0]).map(([key, value]) => [key, value || 0]))
+			: {};
 
 		// Get shipyard level
 		const buildRes = await db
 			.select({ level: planetBuildings.level })
 			.from(planetBuildings)
 			.innerJoin(buildingTypes, eq(planetBuildings.buildingTypeId, buildingTypes.id))
-			.where(and(
-				eq(planetBuildings.planetId, planetId),
-				eq(buildingTypes.name, 'Shipyard')
-			));
+			.where(and(eq(planetBuildings.planetId, planetId), eq(buildingTypes.name, 'Shipyard')));
 
 		const shipyardLevel = buildRes[0]?.level || 0;
 
@@ -76,12 +80,14 @@ export class ShipyardService {
 			.from(planetResources)
 			.where(eq(planetResources.planetId, planetId));
 
-		const resources = resRes[0] ? {
-			metal: resRes[0].metal || 0,
-			crystal: resRes[0].crystal || 0,
-			gas: resRes[0].gas || 0,
-			energy: resRes[0].energy || 0
-		} : { metal: 0, crystal: 0, gas: 0, energy: 0 };
+		const resources = resRes[0]
+			? {
+					metal: resRes[0].metal || 0,
+					crystal: resRes[0].crystal || 0,
+					gas: resRes[0].gas || 0,
+					energy: resRes[0].energy || 0
+				}
+			: { metal: 0, crystal: 0, gas: 0, energy: 0 };
 
 		// Get shipyard queue
 		const queueRes = await db
@@ -90,7 +96,7 @@ export class ShipyardService {
 			.where(and(eq(shipyardQueue.planetId, planetId), eq(shipyardQueue.userId, userId)))
 			.orderBy(shipyardQueue.completionAt);
 
-		const queue = queueRes.map(item => ({
+		const queue = queueRes.map((item) => ({
 			id: item.id,
 			shipType: item.shipType,
 			amount: item.amount,
@@ -154,7 +160,9 @@ export class ShipyardService {
 	): Promise<{ success: boolean; error?: string }> {
 		try {
 			// Use stored procedure for validation and construction start
-			await db.execute(sql`CALL start_ship_construction(${userId}, ${planetId}, ${shipType}, ${amount})`);
+			await db.execute(
+				sql`CALL start_ship_construction(${userId}, ${planetId}, ${shipType}, ${amount})`
+			);
 			return { success: true };
 		} catch (error: any) {
 			return { success: false, error: error.message };
@@ -182,7 +190,9 @@ export class ShipyardService {
 	): Promise<{ success: boolean; error?: string }> {
 		try {
 			// Use stored function for cancellation
-			const result = await db.execute(sql`SELECT cancel_ship_construction(${userId}, ${queueId}) as result`);
+			const result = await db.execute(
+				sql`SELECT cancel_ship_construction(${userId}, ${queueId}) as result`
+			);
 			const cancelResult = result.rows[0]?.result as any;
 
 			if (cancelResult?.success) {
