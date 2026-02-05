@@ -80,8 +80,10 @@
 		fetchChat();
 		chatInterval = setInterval(fetchChat, 5000); // Poll every 5s
 
-		// Poll game tick every 5 seconds to process fleets and auto-explore
-		gameTickInterval = setInterval(runGameTick, 5000);
+		// Only poll game tick in production
+		if (!import.meta.env.DEV) {
+			gameTickInterval = setInterval(runGameTick, 5000);
+		}
 	});
 
 	// Watch for dark mode changes and save to localStorage

@@ -13,6 +13,11 @@ export const pool = new Pool({
 	host: env.DB_HOST,
 	port: parseInt(env.DB_PORT || '5432'),
 	database: env.DB_NAME,
+	// Connection pool settings for better performance
+	min: 2,
+	max: 10,
+	idleTimeoutMillis: 30000,
+	connectionTimeoutMillis: 2000,
 	options: `-c timezone=${Intl.DateTimeFormat().resolvedOptions().timeZone}`
 });
 

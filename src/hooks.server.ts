@@ -20,6 +20,9 @@ function startTickLoop() {
 	}
 
 	console.log('Starting game tick loop...');
+	// In development, run game tick every 10 seconds instead of every second
+	const tickInterval = process.env.NODE_ENV === 'production' ? 1000 : 10000;
+
 	globalThis.__game_tick_interval = setInterval(async () => {
 		try {
 			await processFleets();
@@ -31,11 +34,16 @@ function startTickLoop() {
 		} catch (e) {
 			console.error('Tick error:', e);
 		}
-	}, 1000);
+	}, tickInterval);
 }
 
 if (!building) {
-	startTickLoop();
+	// Only start game tick in production
+	if (process.env.NODE_ENV === 'production') {
+		startTickLoop();
+	} else {
+		console.log('Skipping game tick loop in development mode');
+	}
 }
 
 export const handle: Handle = async ({ event, resolve }) => {

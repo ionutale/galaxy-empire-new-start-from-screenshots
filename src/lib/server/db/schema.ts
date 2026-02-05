@@ -296,32 +296,6 @@ export const planetDefenses = pgTable('planet_defenses', {
 });
 
 // 7. Communication & Social
-export const alliances = pgTable('alliances', {
-	id: serial('id').primaryKey(),
-	name: varchar('name', { length: 255 }).unique().notNull(),
-	tag: varchar('tag', { length: 10 }).unique().notNull(),
-	description: text('description'),
-	ownerId: integer('owner_id').references(() => users.id),
-	createdAt: timestamp('created_at').defaultNow()
-});
-
-export const allianceDiplomacy = pgTable(
-	'alliance_diplomacy',
-	{
-		id: serial('id').primaryKey(),
-		initiatorAllianceId: integer('initiator_alliance_id').references(() => alliances.id),
-		targetAllianceId: integer('target_alliance_id').references(() => alliances.id),
-		type: varchar('type', { length: 20 }).notNull(), // 'war', 'peace', 'nap', 'alliance'
-		status: varchar('status', { length: 20 }).default('pending'), // 'pending', 'active', 'expired'
-		expiresAt: timestamp('expires_at'),
-		createdAt: timestamp('created_at').defaultNow(),
-		updatedAt: timestamp('updated_at').defaultNow()
-	},
-	(t) => ({
-		uniqueDiplomacy: unique().on(t.initiatorAllianceId, t.targetAllianceId, t.type, t.status)
-	})
-);
-
 export const messages = pgTable(
 	'messages',
 	{
@@ -550,3 +524,40 @@ export const activeBoosts = pgTable('active_boosts', {
 	createdAt: timestamp('created_at').defaultNow()
 });
 
+// 13. Alliances
+export const alliances = pgTable(
+	'alliances',
+	{
+		id: serial('id').primaryKey(),
+		name: varchar('name', { length: 255 }).notNull(),
+		tag: varchar('tag', { length: 10 }).notNull(),
+		ownerId: integer('owner_id').references(() => users.id),
+		createdAt: timestamp('created_at').defaultNow()
+	},
+	(table) => [
+		unique('alliances_name_unique').on(table.name),
+		unique('alliances_tag_unique').on(table.tag)
+	]
+);
+
+export const allianceDiplomacy = pgTable(
+	'alliance_diplomacy',
+	{
+		id: serial('id').primaryKey(),
+		initiatorAllianceId: integer('initiator_alliance_id').references(() => alliances.id),
+		targetAllianceId: integer('target_alliance_id').references(() => alliances.id),
+		type: varchar('type', { length: 20 }).notNull(), // 'war', 'peace', 'nap', 'alliance'
+		status: varchar('status', { length: 20 }).default('pending'), // 'pending', 'active', 'expired'
+		expiresAt: timestamp('expires_at'),
+		createdAt: timestamp('created_at').defaultNow(),
+		updatedAt: timestamp('updated_at').defaultNow()
+	},
+	(table) => [
+		unique('alliance_diplomacy_unique').on(
+			table.initiatorAllianceId,
+			table.targetAllianceId,
+			table.type,
+			table.status
+		)
+	]
+);
