@@ -6,20 +6,20 @@ import {
 	calculateResearchPoints
 } from './points-calculator';
 import { db } from './db';
-import {
-	planets,
-	planetBuildings,
-	planetShips,
-	planetDefenses,
-	userResearch,
-	fleets,
-	users
-} from './db/schema';
-import { eq } from 'drizzle-orm';
+import { SHIPS } from '$lib/game-config';
 
 // Mock the database
+interface MockDb {
+	select: ReturnType<typeof vi.fn>;
+	insert: ReturnType<typeof vi.fn>;
+	update: ReturnType<typeof vi.fn>;
+	execute: ReturnType<typeof vi.fn>;
+	delete: ReturnType<typeof vi.fn>;
+	transaction: ReturnType<typeof vi.fn>;
+}
+
 vi.mock('./db', async (importOriginal) => {
-	const actual: any = await importOriginal();
+	const actual: unknown = await importOriginal();
 	return {
 		...actual,
 		db: {
@@ -96,7 +96,7 @@ describe('Points Calculator', () => {
 
 	describe('updateUserPoints', () => {
 		it('should calculate and update user points correctly', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 
 			// Mock user planets
 			mockDb.select
@@ -119,7 +119,7 @@ describe('Points Calculator', () => {
 		});
 
 		it('should handle users with no planets', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 
 			mockDb.select
 				.mockResolvedValueOnce([]) // no planets
@@ -136,7 +136,7 @@ describe('Points Calculator', () => {
 		});
 
 		it('should handle empty building/ship/defense data', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 
 			mockDb.select
 				.mockResolvedValueOnce([{ id: 1 }]) // user planets
@@ -156,7 +156,7 @@ describe('Points Calculator', () => {
 		});
 
 		it('should calculate points from buildings correctly', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 
 			mockDb.select
 				.mockResolvedValueOnce([{ id: 1 }]) // user planets
@@ -179,7 +179,7 @@ describe('Points Calculator', () => {
 		});
 
 		it('should calculate points from ships correctly', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 
 			mockDb.select
 				.mockResolvedValueOnce([{ id: 1 }]) // user planets
@@ -196,7 +196,6 @@ describe('Points Calculator', () => {
 			const updateCall = mockDb.update.mock.calls[0];
 			const points = updateCall[1].set.points;
 
-			const { SHIPS } = require('$lib/game-config');
 			const shipCost =
 				SHIPS.small_transporter.cost.metal +
 				SHIPS.small_transporter.cost.crystal +
@@ -207,7 +206,7 @@ describe('Points Calculator', () => {
 		});
 
 		it('should calculate points from research correctly', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 
 			mockDb.select
 				.mockResolvedValueOnce([]) // no planets
@@ -226,7 +225,7 @@ describe('Points Calculator', () => {
 		});
 
 		it('should calculate points from fleet ships correctly', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 
 			mockDb.select
 				.mockResolvedValueOnce([]) // no planets
@@ -240,7 +239,6 @@ describe('Points Calculator', () => {
 			const updateCall = mockDb.update.mock.calls[0];
 			const points = updateCall[1].set.points;
 
-			const { SHIPS } = require('$lib/game-config');
 			const destroyerCost =
 				SHIPS.destroyer.cost.metal + SHIPS.destroyer.cost.crystal + (SHIPS.destroyer.cost.gas || 0);
 			const cruiserCost =
@@ -251,7 +249,7 @@ describe('Points Calculator', () => {
 		});
 
 		it('should handle errors gracefully', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
 			mockDb.select.mockRejectedValue(new Error('Database error'));
@@ -269,7 +267,7 @@ describe('Points Calculator', () => {
 
 	describe('updateAllUserPoints', () => {
 		it('should update points for all users', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 
 			mockDb.select
 				.mockResolvedValueOnce([{ id: 1 }, { id: 2 }, { id: 3 }]) // all users
@@ -295,7 +293,7 @@ describe('Points Calculator', () => {
 		});
 
 		it('should handle errors gracefully', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
 			mockDb.select.mockRejectedValue(new Error('Database error'));

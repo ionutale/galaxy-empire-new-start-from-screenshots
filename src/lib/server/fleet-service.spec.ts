@@ -1,10 +1,19 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { dispatchFleet } from './fleet-service';
 import { db } from './db';
-import { planetShips, fleets, planetResources, userResearch, planets } from './db/schema';
-import { eq, sql, and, inArray } from 'drizzle-orm';
+import { planetShips, fleets, planetResources } from './db/schema';
+import { sql } from 'drizzle-orm';
 
 // Mock the database
+interface MockDb {
+	select: ReturnType<typeof vi.fn>;
+	insert: ReturnType<typeof vi.fn>;
+	update: ReturnType<typeof vi.fn>;
+	execute: ReturnType<typeof vi.fn>;
+	delete: ReturnType<typeof vi.fn>;
+	transaction: ReturnType<typeof vi.fn>;
+}
+
 vi.mock('./db', () => ({
 	db: {
 		select: vi.fn(),
@@ -29,7 +38,7 @@ describe('Fleet Service', () => {
 
 	describe('dispatchFleet', () => {
 		it('should successfully dispatch a fleet', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			const mockValidationResult = {
 				rows: [
 					{
@@ -70,7 +79,7 @@ describe('Fleet Service', () => {
 		});
 
 		it('should throw error when fleet validation fails', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			const mockValidationResult = {
 				rows: [
 					{
@@ -93,7 +102,7 @@ describe('Fleet Service', () => {
 		});
 
 		it('should deduct ships from planet during dispatch', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			const mockValidationResult = {
 				rows: [
 					{
@@ -110,7 +119,7 @@ describe('Fleet Service', () => {
 
 			mockDb.execute.mockResolvedValue(mockValidationResult);
 
-			const updateCalls: any[] = [];
+			const updateCalls: unknown[] = [];
 			const mockTransaction = vi.fn().mockImplementation(async (callback) => {
 				return callback({
 					update: vi.fn().mockImplementation((...args) => {
@@ -150,7 +159,7 @@ describe('Fleet Service', () => {
 		});
 
 		it('should deduct resources and fuel from planet', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			const mockValidationResult = {
 				rows: [
 					{
@@ -167,7 +176,7 @@ describe('Fleet Service', () => {
 
 			mockDb.execute.mockResolvedValue(mockValidationResult);
 
-			const updateCalls: any[] = [];
+			const updateCalls: unknown[] = [];
 			const mockTransaction = vi.fn().mockImplementation(async (callback) => {
 				return callback({
 					update: vi.fn().mockImplementation((...args) => {
@@ -195,7 +204,7 @@ describe('Fleet Service', () => {
 		});
 
 		it('should create fleet record with correct data', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			const mockValidationResult = {
 				rows: [
 					{
@@ -212,7 +221,7 @@ describe('Fleet Service', () => {
 
 			mockDb.execute.mockResolvedValue(mockValidationResult);
 
-			let insertCall: any;
+			let insertCall: unknown;
 			const mockTransaction = vi.fn().mockImplementation(async (callback) => {
 				return callback({
 					update: vi.fn().mockResolvedValue({}),
@@ -245,7 +254,7 @@ describe('Fleet Service', () => {
 		});
 
 		it('should calculate correct arrival time', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			const mockValidationResult = {
 				rows: [
 					{
@@ -262,7 +271,7 @@ describe('Fleet Service', () => {
 
 			mockDb.execute.mockResolvedValue(mockValidationResult);
 
-			let insertCall: any;
+			let insertCall: unknown;
 			const mockTransaction = vi.fn().mockImplementation(async (callback) => {
 				return callback({
 					update: vi.fn().mockResolvedValue({}),

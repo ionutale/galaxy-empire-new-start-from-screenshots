@@ -1,10 +1,18 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { ShipyardService } from './shipyard-service';
 import { db } from './db';
-import { shipyardQueue, planetShips, planetBuildings, planetResources, users } from './db/schema';
-import { eq, sql, and, desc } from 'drizzle-orm';
+import { SHIPS } from '$lib/game-config';
 
 // Mock the database
+interface MockDb {
+	select: ReturnType<typeof vi.fn>;
+	insert: ReturnType<typeof vi.fn>;
+	update: ReturnType<typeof vi.fn>;
+	execute: ReturnType<typeof vi.fn>;
+	delete: ReturnType<typeof vi.fn>;
+	transaction: ReturnType<typeof vi.fn>;
+}
+
 vi.mock('./db', () => ({
 	db: {
 		select: vi.fn(),
@@ -23,7 +31,7 @@ describe('Shipyard Service', () => {
 
 	describe('getShipyardInfo', () => {
 		it('should return complete shipyard information', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			mockDb.select
 				.mockResolvedValueOnce([{ small_transporter: 5, destroyer: 2 }]) // ships
 				.mockResolvedValueOnce([{ shipyard: 3 }]) // shipyard level
@@ -46,12 +54,12 @@ describe('Shipyard Service', () => {
 			});
 
 			expect(result.shipyardInfo).toHaveLength(
-				Object.keys(require('$lib/game-config').SHIPS).length
+				Object.keys(SHIPS).length
 			);
 		});
 
 		it('should return default values when no data found', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			mockDb.select
 				.mockResolvedValueOnce([]) // no ships
 				.mockResolvedValueOnce([]) // no shipyard
@@ -75,7 +83,7 @@ describe('Shipyard Service', () => {
 		});
 
 		it('should mark ships as not buildable when shipyard level is 0', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			mockDb.select
 				.mockResolvedValueOnce([]) // no ships
 				.mockResolvedValueOnce([{ shipyard: 0 }]) // no shipyard
@@ -91,7 +99,7 @@ describe('Shipyard Service', () => {
 		});
 
 		it('should mark ships as not buildable when insufficient resources', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			mockDb.select
 				.mockResolvedValueOnce([]) // no ships
 				.mockResolvedValueOnce([{ shipyard: 3 }]) // shipyard level 3
@@ -108,7 +116,7 @@ describe('Shipyard Service', () => {
 
 	describe('startShipConstruction', () => {
 		it('should successfully start ship construction', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			mockDb.execute.mockResolvedValue({});
 
 			const result = await ShipyardService.startShipConstruction(1, 1, 'small_transporter', 5);
@@ -120,7 +128,7 @@ describe('Shipyard Service', () => {
 		});
 
 		it('should handle construction errors', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			const error = new Error('Invalid ship type');
 			mockDb.execute.mockRejectedValue(error);
 
@@ -135,7 +143,7 @@ describe('Shipyard Service', () => {
 
 	describe('processCompletedShipConstruction', () => {
 		it('should process completed ship construction', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			mockDb.execute.mockResolvedValue({});
 
 			await ShipyardService.processCompletedShipConstruction();
@@ -144,7 +152,7 @@ describe('Shipyard Service', () => {
 		});
 
 		it('should handle processing errors gracefully', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 			const error = new Error('Database error');
 			mockDb.execute.mockRejectedValue(error);
@@ -162,7 +170,7 @@ describe('Shipyard Service', () => {
 
 	describe('cancelShipConstruction', () => {
 		it('should successfully cancel ship construction', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			mockDb.execute.mockResolvedValue({
 				rows: [{ result: { success: true } }]
 			});
@@ -176,7 +184,7 @@ describe('Shipyard Service', () => {
 		});
 
 		it('should handle cancellation errors', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			mockDb.execute.mockResolvedValue({
 				rows: [{ result: { success: false, error: 'Queue item not found' } }]
 			});
@@ -190,7 +198,7 @@ describe('Shipyard Service', () => {
 		});
 
 		it('should handle database errors', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			const error = new Error('Database connection failed');
 			mockDb.execute.mockRejectedValue(error);
 
@@ -203,7 +211,7 @@ describe('Shipyard Service', () => {
 		});
 
 		it('should handle missing result data', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			mockDb.execute.mockResolvedValue({
 				rows: [{}]
 			});

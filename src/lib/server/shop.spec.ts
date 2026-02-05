@@ -1,10 +1,21 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
 import { purchaseShopItem, getActiveBoosters, getBoosterMultipliers } from './shop';
 import { db } from './db';
-import { users, userBoosters, transactions } from './db/schema';
-import { eq, and, gt, sql } from 'drizzle-orm';
+import { userBoosters } from './db/schema';
 
 // Mock the database with proper chaining support
+interface MockDb {
+	select: ReturnType<typeof vi.fn>;
+	from: ReturnType<typeof vi.fn>;
+	where: ReturnType<typeof vi.fn>;
+	insert: ReturnType<typeof vi.fn>;
+	values: ReturnType<typeof vi.fn>;
+	update: ReturnType<typeof vi.fn>;
+	set: ReturnType<typeof vi.fn>;
+	transaction: ReturnType<typeof vi.fn>;
+	execute: ReturnType<typeof vi.fn>;
+}
+
 vi.mock('./db', () => {
 	const mockDb = {
 		select: vi.fn(() => mockDb),
@@ -36,11 +47,11 @@ describe('Shop Service', () => {
 		// Mock the transaction to use the same db mock
 		const mockTransaction = vi.fn().mockImplementation(async (callback) => {
 			// Set up responses for the queries inside the transaction
-			(db as any).where.mockReturnValueOnce([{ darkMatter: 1000 }]); // user DM check
-			(db as any).where.mockReturnValueOnce([]); // existing boosters check
+			(db as unknown as MockDb).where.mockReturnValueOnce([{ darkMatter: 1000 }]); // user DM check
+			(db as unknown as MockDb).where.mockReturnValueOnce([]); // existing boosters check
 			return callback(db);
 		});
-		(db as any).transaction = mockTransaction;
+		(db as unknown as MockDb).transaction = mockTransaction;
 
 		const result = await purchaseShopItem(1, 'metal_booster_small');
 
@@ -67,7 +78,7 @@ describe('Shop Service', () => {
 			mockTx.where.mockResolvedValue([{ darkMatter: 100 }]); // insufficient DM
 			return callback(mockTx);
 		});
-		(db as any).transaction = mockTransaction;
+		(db as unknown as MockDb).transaction = mockTransaction;
 
 		await expect(purchaseShopItem(1, 'metal_booster_small')).rejects.toThrow(
 			'Not enough Dark Matter'
@@ -78,11 +89,11 @@ describe('Shop Service', () => {
 		const existingExpiry = new Date(Date.now() + 3600000); // 1 hour from now
 		const mockTransaction = vi.fn().mockImplementation(async (callback) => {
 			// Set up responses for the queries inside the transaction
-			(db as any).where.mockReturnValueOnce([{ darkMatter: 1000 }]); // user DM check
-			(db as any).where.mockReturnValueOnce([{ id: 1, expiresAt: existingExpiry }]); // existing booster
+			(db as unknown as MockDb).where.mockReturnValueOnce([{ darkMatter: 1000 }]); // user DM check
+			(db as unknown as MockDb).where.mockReturnValueOnce([{ id: 1, expiresAt: existingExpiry }]); // existing booster
 			return callback(db);
 		});
-		(db as any).transaction = mockTransaction;
+		(db as unknown as MockDb).transaction = mockTransaction;
 
 		const result = await purchaseShopItem(1, 'metal_booster_small');
 
@@ -98,32 +109,28 @@ describe('getActiveBoosters', () => {
 			{ boosterId: 'crystal_booster_small', expiresAt: new Date(Date.now() + 7200000) }
 		];
 
-		(db as any).select.mockReturnValue(db);
-		(db as any).from.mockReturnValue(db);
-		(db as any).where.mockResolvedValue(mockBoosters);
+		(db as unknown as MockDb).select.mockReturnValue(db);
+		(db as unknown as MockDb).from.mockReturnValue(db);
+		(db as unknown as MockDb).where.mockResolvedValue(mockBoosters);
 
 		const result = await getActiveBoosters(1);
 
 		expect(result).toEqual(mockBoosters);
-		expect((db as any).select).toHaveBeenCalledWith({
+		expect((db as unknown as MockDb).select).toHaveBeenCalledWith({
 			boosterId: userBoosters.boosterId,
 			expiresAt: userBoosters.expiresAt
 		});
 	});
 
 	it('should filter out expired boosters', async () => {
-		const expiredBooster = {
-			boosterId: 'metal_booster_small',
-			expiresAt: new Date(Date.now() - 3600000)
-		};
 		const activeBooster = {
 			boosterId: 'crystal_booster_small',
 			expiresAt: new Date(Date.now() + 3600000)
 		};
 
-		(db as any).select.mockReturnValue(db);
-		(db as any).from.mockReturnValue(db);
-		(db as any).where.mockResolvedValue([activeBooster]);
+		(db as unknown as MockDb).select.mockReturnValue(db);
+		(db as unknown as MockDb).from.mockReturnValue(db);
+		(db as unknown as MockDb).where.mockResolvedValue([activeBooster]);
 
 		const result = await getActiveBoosters(1);
 
@@ -134,8 +141,8 @@ describe('getActiveBoosters', () => {
 describe('getBoosterMultipliers', () => {
 	it('should return default multipliers when no active boosters', async () => {
 		// Mock the db query in getActiveBoosters
-		const originalSelect = (db as any).select;
-		(db as any).select = vi.fn(() => ({
+		const originalSelect = (db as unknown as MockDb).select;
+		(db as unknown as MockDb).select = vi.fn(() => ({
 			from: vi.fn(() => ({
 				where: vi.fn().mockResolvedValue([])
 			}))
@@ -150,7 +157,7 @@ describe('getBoosterMultipliers', () => {
 			energy: 1.0
 		});
 
-		(db as any).select = originalSelect;
+		(db as unknown as MockDb).select = originalSelect;
 	});
 
 	it('should calculate multipliers from active boosters', async () => {
@@ -160,8 +167,8 @@ describe('getBoosterMultipliers', () => {
 		];
 
 		// Mock the db query in getActiveBoosters
-		const originalSelect = (db as any).select;
-		(db as any).select = vi.fn(() => ({
+		const originalSelect = (db as unknown as MockDb).select;
+		(db as unknown as MockDb).select = vi.fn(() => ({
 			from: vi.fn(() => ({
 				where: vi.fn().mockResolvedValue(activeBoosters)
 			}))
@@ -174,7 +181,7 @@ describe('getBoosterMultipliers', () => {
 		expect(result.gas).toBe(1.0); // no boost
 		expect(result.energy).toBe(1.0); // no boost
 
-		(db as any).select = originalSelect;
+		(db as unknown as MockDb).select = originalSelect;
 	});
 
 	it('should aggregate multiple boosters of same type', async () => {
@@ -184,8 +191,8 @@ describe('getBoosterMultipliers', () => {
 		];
 
 		// Mock the db query in getActiveBoosters
-		const originalSelect = (db as any).select;
-		(db as any).select = vi.fn(() => ({
+		const originalSelect = (db as unknown as MockDb).select;
+		(db as unknown as MockDb).select = vi.fn(() => ({
 			from: vi.fn(() => ({
 				where: vi.fn().mockResolvedValue(activeBoosters)
 			}))
@@ -198,13 +205,13 @@ describe('getBoosterMultipliers', () => {
 		expect(result.gas).toBe(1.0);
 		expect(result.energy).toBe(1.0);
 
-		(db as any).select = originalSelect;
+		(db as unknown as MockDb).select = originalSelect;
 	});
 });
 
 describe('Error handling', () => {
 	it('should handle database errors in purchaseShopItem', async () => {
-		const mockDb = db as any;
+		const mockDb = db as unknown as MockDb;
 		const error = new Error('Database connection failed');
 		mockDb.transaction = vi.fn().mockRejectedValue(error);
 
@@ -216,8 +223,8 @@ describe('Error handling', () => {
 	it('should handle database errors in getActiveBoosters', async () => {
 		const error = new Error('Database connection failed');
 		// Mock the db query to reject
-		const originalSelect = (db as any).select;
-		(db as any).select = vi.fn(() => ({
+		const originalSelect = (db as unknown as MockDb).select;
+		(db as unknown as MockDb).select = vi.fn(() => ({
 			from: vi.fn(() => ({
 				where: vi.fn().mockRejectedValue(error)
 			}))
@@ -225,14 +232,14 @@ describe('Error handling', () => {
 
 		await expect(getActiveBoosters(1)).rejects.toThrow('Database connection failed');
 
-		(db as any).select = originalSelect;
+		(db as unknown as MockDb).select = originalSelect;
 	});
 
 	it('should handle database errors in getBoosterMultipliers', async () => {
 		const error = new Error('Database connection failed');
 		// Mock the db query in getActiveBoosters to reject
-		const originalSelect = (db as any).select;
-		(db as any).select = vi.fn(() => ({
+		const originalSelect = (db as unknown as MockDb).select;
+		(db as unknown as MockDb).select = vi.fn(() => ({
 			from: vi.fn(() => ({
 				where: vi.fn().mockRejectedValue(error)
 			}))
@@ -240,6 +247,6 @@ describe('Error handling', () => {
 
 		await expect(getBoosterMultipliers(1)).rejects.toThrow('Database connection failed');
 
-		(db as any).select = originalSelect;
+		(db as unknown as MockDb).select = originalSelect;
 	});
 });

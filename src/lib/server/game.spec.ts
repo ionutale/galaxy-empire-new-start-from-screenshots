@@ -1,10 +1,18 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { updatePlanetResources } from './game';
 import { db } from './db';
-import { planetResources, planetBuildings, planets } from './db/schema';
-import { eq, sql } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 
 // Mock the database
+interface MockDb {
+	select: ReturnType<typeof vi.fn>;
+	insert: ReturnType<typeof vi.fn>;
+	update: ReturnType<typeof vi.fn>;
+	execute: ReturnType<typeof vi.fn>;
+	delete: ReturnType<typeof vi.fn>;
+	transaction: ReturnType<typeof vi.fn>;
+}
+
 vi.mock('./db', () => ({
 	db: {
 		select: vi.fn(),
@@ -51,7 +59,7 @@ describe('Game Service', () => {
 
 	describe('updatePlanetResources', () => {
 		it('should update planet resources based on production and time elapsed', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			const mockCommanderBonus = vi.fn().mockResolvedValue(10); // 10% bonus
 			const mockBoosterMultipliers = vi.fn().mockResolvedValue({
 				metal: 1.0,
@@ -64,9 +72,6 @@ describe('Game Service', () => {
 				crystal: 10000,
 				gas: 10000
 			});
-
-			require('./shop').getBoosterMultipliers = mockBoosterMultipliers;
-			require('./building-service').BuildingService.calculatePlanetStorage = mockStorageCapacity;
 
 			const mockData = {
 				metal: 1000,
@@ -82,7 +87,7 @@ describe('Game Service', () => {
 				secondsElapsed: 3600
 			};
 
-			mockDb.transaction.mockImplementation(async (callback: any) => {
+			mockDb.transaction.mockImplementation(async (callback: unknown) => {
 				return callback({
 					select: vi.fn().mockResolvedValue([mockData]),
 					update: vi.fn().mockResolvedValue({})
@@ -104,9 +109,9 @@ describe('Game Service', () => {
 		});
 
 		it('should return null when planet not found', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 
-			mockDb.transaction.mockImplementation(async (callback: any) => {
+			mockDb.transaction.mockImplementation(async (callback: unknown) => {
 				return callback({
 					select: vi.fn().mockResolvedValue([]),
 					update: vi.fn().mockResolvedValue({})
@@ -119,7 +124,7 @@ describe('Game Service', () => {
 		});
 
 		it('should not update resources when less than 1 second elapsed', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			const mockData = {
 				metal: 1000,
 				crystal: 500,
@@ -134,7 +139,7 @@ describe('Game Service', () => {
 				secondsElapsed: 0.5
 			};
 
-			mockDb.transaction.mockImplementation(async (callback: any) => {
+			mockDb.transaction.mockImplementation(async (callback: unknown) => {
 				return callback({
 					select: vi.fn().mockResolvedValue([mockData]),
 					update: vi.fn().mockResolvedValue({})
@@ -147,25 +152,11 @@ describe('Game Service', () => {
 		});
 
 		it('should apply commander bonuses to production', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			const mockCommanderBonus = vi
 				.fn()
 				.mockResolvedValueOnce(20) // mine bonus
 				.mockResolvedValueOnce(15); // energy bonus
-			const mockBoosterMultipliers = vi.fn().mockResolvedValue({
-				metal: 1.0,
-				crystal: 1.0,
-				gas: 1.0,
-				energy: 1.0
-			});
-			const mockStorageCapacity = vi.fn().mockResolvedValue({
-				metal: 10000,
-				crystal: 10000,
-				gas: 10000
-			});
-
-			require('./shop').getBoosterMultipliers = mockBoosterMultipliers;
-			require('./building-service').BuildingService.calculatePlanetStorage = mockStorageCapacity;
 
 			const mockData = {
 				metal: 1000,
@@ -181,7 +172,7 @@ describe('Game Service', () => {
 				secondsElapsed: 3600
 			};
 
-			mockDb.transaction.mockImplementation(async (callback: any) => {
+			mockDb.transaction.mockImplementation(async (callback: unknown) => {
 				return callback({
 					select: vi.fn().mockResolvedValue([mockData]),
 					update: vi.fn().mockResolvedValue({})
@@ -195,22 +186,13 @@ describe('Game Service', () => {
 		});
 
 		it('should apply booster multipliers to production', async () => {
-			const mockDb = db as any;
-			const mockCommanderBonus = vi.fn().mockResolvedValue(0);
+			const mockDb = db as unknown as MockDb;
 			const mockBoosterMultipliers = vi.fn().mockResolvedValue({
 				metal: 1.5,
 				crystal: 1.2,
 				gas: 1.8,
 				energy: 1.3
 			});
-			const mockStorageCapacity = vi.fn().mockResolvedValue({
-				metal: 10000,
-				crystal: 10000,
-				gas: 10000
-			});
-
-			require('./shop').getBoosterMultipliers = mockBoosterMultipliers;
-			require('./building-service').BuildingService.calculatePlanetStorage = mockStorageCapacity;
 
 			const mockData = {
 				metal: 1000,
@@ -226,7 +208,7 @@ describe('Game Service', () => {
 				secondsElapsed: 3600
 			};
 
-			mockDb.transaction.mockImplementation(async (callback: any) => {
+			mockDb.transaction.mockImplementation(async (callback: unknown) => {
 				return callback({
 					select: vi.fn().mockResolvedValue([mockData]),
 					update: vi.fn().mockResolvedValue({})
@@ -239,22 +221,12 @@ describe('Game Service', () => {
 		});
 
 		it('should cap resources to storage capacity', async () => {
-			const mockDb = db as any;
-			const mockCommanderBonus = vi.fn().mockResolvedValue(0);
-			const mockBoosterMultipliers = vi.fn().mockResolvedValue({
-				metal: 1.0,
-				crystal: 1.0,
-				gas: 1.0,
-				energy: 1.0
-			});
+			const mockDb = db as unknown as MockDb;
 			const mockStorageCapacity = vi.fn().mockResolvedValue({
 				metal: 1500, // Low capacity
 				crystal: 10000,
 				gas: 10000
 			});
-
-			require('./shop').getBoosterMultipliers = mockBoosterMultipliers;
-			require('./building-service').BuildingService.calculatePlanetStorage = mockStorageCapacity;
 
 			const mockData = {
 				metal: 1400,
@@ -270,7 +242,7 @@ describe('Game Service', () => {
 				secondsElapsed: 3600
 			};
 
-			mockDb.transaction.mockImplementation(async (callback: any) => {
+			mockDb.transaction.mockImplementation(async (callback: unknown) => {
 				return callback({
 					select: vi.fn().mockResolvedValue([mockData]),
 					update: vi.fn().mockResolvedValue({})
@@ -284,22 +256,7 @@ describe('Game Service', () => {
 		});
 
 		it('should reduce production when energy is negative', async () => {
-			const mockDb = db as any;
-			const mockCommanderBonus = vi.fn().mockResolvedValue(0);
-			const mockBoosterMultipliers = vi.fn().mockResolvedValue({
-				metal: 1.0,
-				crystal: 1.0,
-				gas: 1.0,
-				energy: 1.0
-			});
-			const mockStorageCapacity = vi.fn().mockResolvedValue({
-				metal: 10000,
-				crystal: 10000,
-				gas: 10000
-			});
-
-			require('./shop').getBoosterMultipliers = mockBoosterMultipliers;
-			require('./building-service').BuildingService.calculatePlanetStorage = mockStorageCapacity;
+			const mockDb = db as unknown as MockDb;
 
 			const mockData = {
 				metal: 1000,
@@ -315,7 +272,7 @@ describe('Game Service', () => {
 				secondsElapsed: 3600
 			};
 
-			mockDb.transaction.mockImplementation(async (callback: any) => {
+			mockDb.transaction.mockImplementation(async (callback: unknown) => {
 				return callback({
 					select: vi.fn().mockResolvedValue([mockData]),
 					update: vi.fn().mockResolvedValue({})
@@ -331,22 +288,7 @@ describe('Game Service', () => {
 		});
 
 		it('should update the lastUpdate timestamp', async () => {
-			const mockDb = db as any;
-			const mockCommanderBonus = vi.fn().mockResolvedValue(0);
-			const mockBoosterMultipliers = vi.fn().mockResolvedValue({
-				metal: 1.0,
-				crystal: 1.0,
-				gas: 1.0,
-				energy: 1.0
-			});
-			const mockStorageCapacity = vi.fn().mockResolvedValue({
-				metal: 10000,
-				crystal: 10000,
-				gas: 10000
-			});
-
-			require('./shop').getBoosterMultipliers = mockBoosterMultipliers;
-			require('./building-service').BuildingService.calculatePlanetStorage = mockStorageCapacity;
+			const mockDb = db as unknown as MockDb;
 
 			const mockData = {
 				metal: 1000,
@@ -362,8 +304,8 @@ describe('Game Service', () => {
 				secondsElapsed: 3600
 			};
 
-			let updateCall: any;
-			mockDb.transaction.mockImplementation(async (callback: any) => {
+			let updateCall: unknown;
+			mockDb.transaction.mockImplementation(async (callback: unknown) => {
 				return callback({
 					select: vi.fn().mockResolvedValue([mockData]),
 					update: vi.fn().mockImplementation((...args) => {

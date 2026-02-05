@@ -4,11 +4,21 @@ import {
 	getActiveCommanders,
 	getCommanderBonus,
 	addCommanderExperience,
-	getCommanderExperience
+	getCommanderExperience,
+	getExperienceForLevel,
+	getLevelFromExperience
 } from './commanders';
 import { db } from './db';
-import { users, userCommanders } from './db/schema';
-import { eq, and, gt, sql } from 'drizzle-orm';
+
+// Mock database interface
+interface MockDb {
+	select: ReturnType<typeof vi.fn>;
+	insert: ReturnType<typeof vi.fn>;
+	update: ReturnType<typeof vi.fn>;
+	execute: ReturnType<typeof vi.fn>;
+	delete: ReturnType<typeof vi.fn>;
+	transaction: ReturnType<typeof vi.fn>;
+}
 
 // Mock the database
 vi.mock('./db', () => ({
@@ -29,7 +39,7 @@ describe('Commander Service', () => {
 
 	describe('purchaseCommander', () => {
 		it('should successfully purchase a commander', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			const mockTransaction = vi.fn().mockImplementation(async (callback) => {
 				return callback({
 					select: vi.fn().mockResolvedValue([{ darkMatter: 1000 }]),
@@ -59,7 +69,7 @@ describe('Commander Service', () => {
 		});
 
 		it('should throw error when insufficient Dark Matter', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			const mockTransaction = vi.fn().mockImplementation(async (callback) => {
 				return callback({
 					select: vi.fn().mockResolvedValue([{ darkMatter: 50 }]),
@@ -75,7 +85,7 @@ describe('Commander Service', () => {
 
 	describe('getActiveCommanders', () => {
 		it('should return active commanders for user', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			const futureDate = new Date();
 			futureDate.setDate(futureDate.getDate() + 1);
 
@@ -96,7 +106,7 @@ describe('Commander Service', () => {
 		});
 
 		it('should filter out expired commanders', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			const pastDate = new Date();
 			pastDate.setDate(pastDate.getDate() - 1);
 
@@ -118,7 +128,7 @@ describe('Commander Service', () => {
 
 	describe('getCommanderBonus', () => {
 		it('should calculate total bonus from active commanders', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			const futureDate = new Date();
 			futureDate.setDate(futureDate.getDate() + 1);
 
@@ -145,7 +155,7 @@ describe('Commander Service', () => {
 		});
 
 		it('should return 0 when no active commanders provide the bonus type', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			mockDb.select.mockResolvedValue([]);
 
 			const result = await getCommanderBonus(1, 'mine_production');
@@ -156,7 +166,7 @@ describe('Commander Service', () => {
 
 	describe('addCommanderExperience', () => {
 		it('should add experience and level up commander', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			const mockTransaction = vi.fn().mockImplementation(async (callback) => {
 				return callback({
 					select: vi.fn().mockResolvedValue([
@@ -180,7 +190,7 @@ describe('Commander Service', () => {
 		});
 
 		it('should not level up if experience is insufficient', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			const mockTransaction = vi.fn().mockImplementation(async (callback) => {
 				return callback({
 					select: vi.fn().mockResolvedValue([
@@ -204,7 +214,7 @@ describe('Commander Service', () => {
 		});
 
 		it('should return undefined for non-owned commander', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			const mockTransaction = vi.fn().mockImplementation(async (callback) => {
 				return callback({
 					select: vi.fn().mockResolvedValue([]),
@@ -221,7 +231,7 @@ describe('Commander Service', () => {
 
 	describe('getCommanderExperience', () => {
 		it('should return commander experience data', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			mockDb.select.mockResolvedValue([
 				{
 					level: 2,
@@ -242,7 +252,7 @@ describe('Commander Service', () => {
 		});
 
 		it('should return null for non-owned commander', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			mockDb.select.mockResolvedValue([]);
 
 			const result = await getCommanderExperience(1, 'geologist');
@@ -253,16 +263,12 @@ describe('Commander Service', () => {
 
 	describe('Experience calculation functions', () => {
 		it('should calculate experience required for level', () => {
-			const { getExperienceForLevel } = require('./commanders');
-
 			expect(getExperienceForLevel(1)).toBe(100);
 			expect(getExperienceForLevel(2)).toBe(400);
 			expect(getExperienceForLevel(3)).toBe(900);
 		});
 
 		it('should calculate level from experience', () => {
-			const { getLevelFromExperience } = require('./commanders');
-
 			expect(getLevelFromExperience(50)).toBe(1);
 			expect(getLevelFromExperience(150)).toBe(2);
 			expect(getLevelFromExperience(350)).toBe(2);
