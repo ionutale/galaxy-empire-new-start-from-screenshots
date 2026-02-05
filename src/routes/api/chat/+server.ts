@@ -17,7 +17,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	try {
 		const channel = url.searchParams.get('channel') || 'global';
 
-		let query = db
+		const query = db
 			.select({
 				id: chatMessages.id,
 				content: chatMessages.content,

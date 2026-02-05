@@ -2,6 +2,44 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { db } from '$lib/server/db';
 import { sql } from 'drizzle-orm';
 
+// Type definitions for database results
+interface CombatRulesConfig {
+	rounds_per_battle: number;
+	attacker_loss_multiplier: number;
+	defender_loss_multiplier: number;
+	draw_loss_multiplier: number;
+	loot_percentage: number;
+	rapidfire_enabled: boolean;
+}
+
+interface ExpeditionRewardsConfig {
+	resource_min: number;
+	resource_max: number;
+	ship_reward_chance: number;
+}
+
+interface ShipStats {
+	ship_type: string;
+	category: string;
+	attack: number;
+	defense: number;
+	shield: number;
+	capacity: number;
+	speed: number;
+}
+
+interface CombatResult {
+	winner: string;
+	attackerLosses: Record<string, number>;
+	defenderLosses: Record<string, number>;
+}
+
+interface CleanupSettingsConfig {
+	completed_fleets_days: number;
+	old_messages_days: number;
+	audit_logs_days: number;
+}
+
 describe('Advanced Game Features', () => {
 	beforeAll(async () => {
 		// Run the test procedure to populate test results
@@ -25,7 +63,7 @@ describe('Advanced Game Features', () => {
 			);
 
 			const result = await db.execute(sql`SELECT get_game_config('combat_rules') as config`);
-			const config = result.rows[0].config as any;
+			const config = result.rows[0].config as CombatRulesConfig;
 
 			expect(config).toBeDefined();
 			expect(config.rounds_per_battle).toBe(1);
@@ -35,7 +73,7 @@ describe('Advanced Game Features', () => {
 
 		it('should have expedition rewards configuration', async () => {
 			const result = await db.execute(sql`SELECT get_game_config('expedition_rewards') as config`);
-			const config = result.rows[0].config as any;
+			const config = result.rows[0].config as ExpeditionRewardsConfig;
 
 			expect(config).toBeDefined();
 			expect(config.resource_min).toBe(1000);
@@ -58,7 +96,7 @@ describe('Advanced Game Features', () => {
 			);
 
 			const result = await db.execute(sql`SELECT get_game_config('combat_rules') as config`);
-			const config = result.rows[0].config as any;
+			const config = result.rows[0].config as CombatRulesConfig;
 
 			expect(config.rounds_per_battle).toBe(2);
 			expect(config.attacker_loss_multiplier).toBe(0.3);
@@ -75,7 +113,7 @@ describe('Advanced Game Features', () => {
 
 			expect(ships.length).toBeGreaterThan(10);
 
-			const lightFighter = ships.find((s) => s.ship_type === 'light_fighter') as any;
+			const lightFighter = ships.find((s) => s.ship_type === 'light_fighter') as ShipStats;
 			expect(lightFighter).toBeDefined();
 			expect(lightFighter.attack).toBe(50);
 			expect(lightFighter.defense).toBe(10);
@@ -91,7 +129,7 @@ describe('Advanced Game Features', () => {
 
 			expect(defenses.length).toBeGreaterThan(5);
 
-			const rocketLauncher = defenses.find((d) => d.ship_type === 'rocket_launcher') as any;
+			const rocketLauncher = defenses.find((d) => d.ship_type === 'rocket_launcher') as ShipStats;
 			expect(rocketLauncher).toBeDefined();
 			expect(rocketLauncher.attack).toBe(80);
 			expect(rocketLauncher.defense).toBe(20);
@@ -109,7 +147,7 @@ describe('Advanced Game Features', () => {
         ) as combat_result
       `);
 
-			const combatResult = result.rows[0].combat_result as any;
+			const combatResult = result.rows[0].combat_result as CombatResult;
 			expect(combatResult.winner).toBe('attacker');
 			expect(combatResult.attackerLosses.light_fighter).toBeDefined();
 			expect(combatResult.defenderLosses.light_fighter).toBeDefined();
@@ -144,7 +182,7 @@ describe('Advanced Game Features', () => {
 	describe('Cleanup Settings', () => {
 		it('should have cleanup configuration', async () => {
 			const result = await db.execute(sql`SELECT get_game_config('cleanup_settings') as config`);
-			const config = result.rows[0].config as any;
+			const config = result.rows[0].config as CleanupSettingsConfig;
 
 			expect(config).toBeDefined();
 			expect(config.completed_fleets_days).toBe(30);

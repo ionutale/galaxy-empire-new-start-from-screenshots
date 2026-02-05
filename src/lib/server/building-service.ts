@@ -205,7 +205,7 @@ export class BuildingService {
 			WHERE pb.planet_id = ${planetId} AND pb.level > 0
 		`);
 
-		let totalProduction: BuildingProduction = {
+		const totalProduction: BuildingProduction = {
 			metal: 0,
 			crystal: 0,
 			gas: 0,
@@ -267,7 +267,7 @@ export class BuildingService {
 			WHERE pb.planet_id = ${planetId} AND bt.category = 'storage' AND pb.level > 0
 		`);
 
-		let storage = { metal: 10000, crystal: 10000, gas: 10000 }; // Base storage
+		const storage = { metal: 10000, crystal: 10000, gas: 10000 }; // Base storage
 
 		for (const row of result.rows) {
 			const level = row.level as number;

@@ -110,7 +110,7 @@ describe('Fleet Service', () => {
 
 			mockDb.execute.mockResolvedValue(mockValidationResult);
 
-			let updateCalls: any[] = [];
+			const updateCalls: any[] = [];
 			const mockTransaction = vi.fn().mockImplementation(async (callback) => {
 				return callback({
 					update: vi.fn().mockImplementation((...args) => {
@@ -167,7 +167,7 @@ describe('Fleet Service', () => {
 
 			mockDb.execute.mockResolvedValue(mockValidationResult);
 
-			let updateCalls: any[] = [];
+			const updateCalls: any[] = [];
 			const mockTransaction = vi.fn().mockImplementation(async (callback) => {
 				return callback({
 					update: vi.fn().mockImplementation((...args) => {

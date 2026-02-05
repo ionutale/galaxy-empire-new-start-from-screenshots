@@ -1,8 +1,17 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { AchievementService } from './achievement-service';
 import { db } from './db';
-import { achievements, userAchievements, users } from './db/schema';
+import { achievements, users } from './db/schema';
 import { eq, sql } from 'drizzle-orm';
+
+// Mock database interface
+interface MockDb {
+	select: ReturnType<typeof vi.fn>;
+	insert: ReturnType<typeof vi.fn>;
+	update: ReturnType<typeof vi.fn>;
+	execute: ReturnType<typeof vi.fn>;
+	delete: ReturnType<typeof vi.fn>;
+}
 
 // Mock the database for testing
 vi.mock('./db', () => ({
@@ -28,7 +37,7 @@ describe('AchievementService', () => {
 
 	describe('initializeAchievements', () => {
 		it('should create achievement definitions', async () => {
-			const mockDb = db as any;
+			const mockDb = db as MockDb;
 			mockDb.insert.mockResolvedValue({});
 
 			await AchievementService.initializeAchievements();

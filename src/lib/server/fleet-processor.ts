@@ -138,7 +138,7 @@ async function processArrivingFleet(tx: any, fleet: any) {
 		);
 
 	const targetPlanet = targetRes[0];
-	let affectedUserId = targetPlanet?.userId || null;
+	const affectedUserId = targetPlanet?.userId || null;
 
 	if (fleet.mission === 'transport') {
 		if (targetPlanet) {
@@ -298,9 +298,9 @@ async function processArrivingFleet(tx: any, fleet: any) {
 
 			// Looting (if attacker won)
 			let lootMsg = '';
-			let stolenMetal = 0;
-			let stolenCrystal = 0;
-			let stolenGas = 0;
+			const stolenMetal = 0;
+			const stolenCrystal = 0;
+			const stolenGas = 0;
 
 			if (result.winner === 'attacker' && !fleetDestroyed) {
 				// Calculate fleet capacity
