@@ -34,3 +34,10 @@ pnpm run format
 - **Socket.io** for real-time communication
 
 
+## Database setup
+Use the provided `docker-compose.yml` to set up the PostgreSQL database with the pg_cron extension. This will allow you to run scheduled tasks within the database.
+
+Make sure to run `docker-compose up` to start the database service before running the application. The database will be accessible at `localhost:5432` with the credentials specified in the `docker-compose.yml` file.
+
+
+
