@@ -129,9 +129,9 @@ export async function processBroodRaids() {
 		try {
 			// Find the brood target
 			const targetId = await getBroodTargetId(
-				fleet.targetGalaxy,
-				fleet.targetSystem,
-				fleet.targetPlanet
+				fleet.targetGalaxy!,
+				fleet.targetSystem!,
+				fleet.targetPlanet!
 			);
 			if (!targetId) {
 				// No target, perhaps return fleet
@@ -140,7 +140,7 @@ export async function processBroodRaids() {
 			}
 
 			// Perform raid
-			const result = await broodService.raidBroodTarget(fleet.id, targetId);
+			const result = await broodService.raidBroodTarget(fleet.id, targetId, fleet.userId!);
 
 			if (result.success && result.loot) {
 				// Add loot to origin planet
@@ -151,7 +151,7 @@ export async function processBroodRaids() {
 						crystal: sql`${planetResources.crystal} + ${result.loot.crystal || 0}`,
 						gas: sql`${planetResources.gas} + ${result.loot.gas || 0}`
 					})
-					.where(eq(planetResources.planetId, fleet.originPlanetId));
+					.where(eq(planetResources.planetId, fleet.originPlanetId as number));
 			}
 
 			// Return fleet

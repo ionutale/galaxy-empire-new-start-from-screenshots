@@ -1,6 +1,5 @@
-import { db } from './db';
-import type { Fleet } from './db/schema';
 import {
+	db,
 	fleets,
 	planets,
 	planetResources,
@@ -10,7 +9,8 @@ import {
 	messages,
 	users,
 	combatReports
-} from './db/schema';
+} from './db';
+import type { Fleet } from './db';
 import { SHIPS } from '$lib/game-config';
 import { simulateCombat } from './combat-engine';
 import { updateUserPoints } from './points-calculator';
@@ -95,25 +95,25 @@ async function processReturningFleet(tx: TransactionClient, fleet: Fleet) {
 			// Or we can use the schema property.
 			// Since we don't have the schema object instance for dynamic key access easily without `any`,
 			// we'll use sql template for the update.
-			await tx
-				.update(planetShips)
-				.set({ [toCamel(type)]: sql`${sql.identifier(type)} + ${count}` })
-				.where(eq(planetShips.planetId, fleet.originPlanetId));
+				await tx
+					.update(planetShips)
+					.set({ [toCamel(type)]: sql`${sql.identifier(type)} + ${count}` })
+					.where(eq(planetShips.planetId, fleet.originPlanetId as number));
+			}
 		}
-	}
 
-	// Add resources back to origin planet
-	if (fleet.resources) {
-		const resources = fleet.resources as Record<string, number>;
-		await tx
-			.update(planetResources)
-			.set({
-				metal: sql`${planetResources.metal} + ${resources.metal || 0}`,
-				crystal: sql`${planetResources.crystal} + ${resources.crystal || 0}`,
-				gas: sql`${planetResources.gas} + ${resources.gas || 0}`
-			})
-			.where(eq(planetResources.planetId, fleet.originPlanetId));
-	}
+		// Add resources back to origin planet
+		if (fleet.resources) {
+			const resources = fleet.resources as Record<string, number>;
+			await tx
+				.update(planetResources)
+				.set({
+					metal: sql`${planetResources.metal} + ${resources.metal || 0}`,
+					crystal: sql`${planetResources.crystal} + ${resources.crystal || 0}`,
+					gas: sql`${planetResources.gas} + ${resources.gas || 0}`
+				})
+				.where(eq(planetResources.planetId, fleet.originPlanetId as number));
+		}
 
 	// Mark fleet as completed
 	await tx.update(fleets).set({ status: 'completed' }).where(eq(fleets.id, fleet.id));
@@ -367,7 +367,7 @@ async function processArrivingFleet(tx: TransactionClient, fleet: Fleet) {
 					.set({ resources: { metal: stolenMetal, crystal: stolenCrystal, gas: stolenGas } })
 					.where(eq(fleets.id, fleet.id));
 
-				lootMsg = `Stolen: Metal ${stolenMetal}, Crystal ${stolenCrystal}, Gas ${stolenGas}.`;
+				let lootMsg = `Stolen: Metal ${stolenMetal}, Crystal ${stolenCrystal}, Gas ${stolenGas}.`;
 			}
 
 			// Send Reports
