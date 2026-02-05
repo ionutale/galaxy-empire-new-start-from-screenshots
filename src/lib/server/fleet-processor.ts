@@ -1,4 +1,5 @@
 import { db } from './db';
+import type { Fleet } from './db/schema';
 import {
 	fleets,
 	planets,
@@ -8,13 +9,15 @@ import {
 	planetBuildings,
 	messages,
 	users,
-	combatReports,
-	espionageReports
+	combatReports
 } from './db/schema';
 import { SHIPS } from '$lib/game-config';
 import { simulateCombat } from './combat-engine';
 import { updateUserPoints } from './points-calculator';
 import { eq, and, lte, inArray, sql } from 'drizzle-orm';
+
+// Get the transaction type from Drizzle
+type TransactionClient = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 export async function processFleets() {
 	const usersToUpdate = new Set<number>();
@@ -82,9 +85,9 @@ function toCamel(s: string) {
 	return s.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
 }
 
-async function processReturningFleet(tx: any, fleet: any) {
+async function processReturningFleet(tx: TransactionClient, fleet: Fleet) {
 	// Add ships back to origin planet
-	const ships = fleet.ships || {};
+	const ships = (fleet.ships as Record<string, number>) || {};
 
 	for (const [type, count] of Object.entries(ships)) {
 		if (VALID_SHIP_TYPES.includes(type)) {
@@ -101,7 +104,7 @@ async function processReturningFleet(tx: any, fleet: any) {
 
 	// Add resources back to origin planet
 	if (fleet.resources) {
-		const resources = fleet.resources as any;
+		const resources = fleet.resources as Record<string, number>;
 		await tx
 			.update(planetResources)
 			.set({
@@ -124,7 +127,7 @@ async function processReturningFleet(tx: any, fleet: any) {
 	});
 }
 
-async function processArrivingFleet(tx: any, fleet: any) {
+async function processArrivingFleet(tx: TransactionClient, fleet: Fleet) {
 	// Find target planet
 	const targetRes = await tx
 		.select({ id: planets.id, userId: planets.userId })
@@ -143,7 +146,11 @@ async function processArrivingFleet(tx: any, fleet: any) {
 	if (fleet.mission === 'transport') {
 		if (targetPlanet) {
 			// Unload resources
-			const resources = (fleet.resources || { metal: 0, crystal: 0, gas: 0 }) as any;
+			const resources = (fleet.resources || {
+				metal: 0,
+				crystal: 0,
+				gas: 0
+			}) as Record<string, number>;
 			await tx
 				.update(planetResources)
 				.set({
@@ -217,7 +224,7 @@ async function processArrivingFleet(tx: any, fleet: any) {
 			});
 
 			// Fleet stays at new colony (ships added to new planet)
-			const ships = fleet.ships as any;
+			const ships = fleet.ships as Record<string, number>;
 			for (const [type, count] of Object.entries(ships)) {
 				if (VALID_SHIP_TYPES.includes(type)) {
 					await tx
@@ -250,18 +257,22 @@ async function processArrivingFleet(tx: any, fleet: any) {
 				.from(planetDefenses)
 				.where(eq(planetDefenses.planetId, targetPlanet.id));
 
-			const defenderShips = defShipsRes[0] || {};
-			const defenderDefenses = defDefensesRes[0] || {};
+			const defenderShips = (defShipsRes[0] as unknown as Record<string, number>) || {};
+			const defenderDefenses = (defDefensesRes[0] as unknown as Record<string, number>) || {};
 
 			// Clean up DB objects (remove id, planet_id etc)
 			// Drizzle objects are plain JS objects.
 			// We can just pass them to simulateCombat, assuming it handles extra props or we clean them.
 			// The original code deleted id and planet_id.
 
-			const result = await simulateCombat(fleet.ships, defenderShips, defenderDefenses);
+			const result = await simulateCombat(
+				fleet.ships as Record<string, number>,
+				defenderShips,
+				defenderDefenses
+			);
 
 			// Apply losses to Attacker (Fleet)
-			const remainingFleet = { ...fleet.ships } as any;
+			const remainingFleet = { ...(fleet.ships as Record<string, number>) };
 			let fleetDestroyed = true;
 
 			for (const [type, count] of Object.entries(result.attackerLosses)) {
@@ -297,7 +308,6 @@ async function processArrivingFleet(tx: any, fleet: any) {
 			}
 
 			// Looting (if attacker won)
-			let lootMsg = '';
 			const stolenMetal = 0;
 			const stolenCrystal = 0;
 			const stolenGas = 0;

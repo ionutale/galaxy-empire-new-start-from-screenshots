@@ -107,11 +107,11 @@ export class BuildingService {
 			const targetLevel = building.level + 1;
 
 			// Validate construction using stored procedure
-			const validationResult = await db.execute(sql`
+			const validationResult = (await db.execute(sql`
 				SELECT validate_building_construction(${userId}, ${planetId}, ${buildingTypeId}, ${targetLevel}) as validation
-			`);
+			`)) as unknown as { rows: { validation: { valid: boolean; error?: string; cost?: BuildingCost } }[] };
 
-			const validation = validationResult.rows[0].validation as any;
+			const validation = validationResult.rows[0].validation;
 			if (!validation.valid) {
 				return { success: false, error: validation.error };
 			}
@@ -218,7 +218,7 @@ export class BuildingService {
 			const temperature = (row.temperature as number) || 50; // Default temperature
 
 			if (row.base_production) {
-				const production = row.base_production as any;
+				const production = row.base_production as BuildingProduction;
 
 				// Apply level multiplier
 				const multiplier = Math.pow(1.1, level);
@@ -237,7 +237,7 @@ export class BuildingService {
 			}
 
 			if (row.base_energy) {
-				const energy = row.base_energy as any;
+				const energy = row.base_energy as { consumption?: number; production?: number };
 
 				if (energy.consumption) {
 					energyConsumption += Math.floor(energy.consumption * Math.pow(1.1, level));
@@ -327,11 +327,11 @@ export class BuildingService {
 
 		if (result.rows.length === 0) return { success: false, error: 'Planet not found' };
 
-		const resources = result.rows[0].resources as any;
+		const resources = result.rows[0].resources as BuildingCost | null;
 
-		const currentMetal = parseInt(resources?.metal || '0');
-		const currentCrystal = parseInt(resources?.crystal || '0');
-		const currentGas = parseInt(resources?.gas || '0');
+		const currentMetal = resources?.metal || 0;
+		const currentCrystal = resources?.crystal || 0;
+		const currentGas = resources?.gas || 0;
 
 		if (currentMetal < cost.metal) {
 			return {
@@ -355,11 +355,11 @@ export class BuildingService {
 	/**
 	 * Format building info from database row
 	 */
-	private static formatBuildingInfo(row: any): BuildingInfo {
-		const level = row.level || 0;
+	private static formatBuildingInfo(row: Record<string, unknown>): BuildingInfo {
+		const level = (row.level as number) || 0;
 		const baseCost = row.base_cost as BuildingCost;
 		const baseProduction = row.base_production as BuildingProduction;
-		const baseEnergy = row.base_energy as any;
+		const baseEnergy = row.base_energy as { consumption?: number; production?: number };
 
 		// Calculate current cost (exponential scaling)
 		const costMultiplier = Math.pow(1.5, level);

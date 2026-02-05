@@ -2,6 +2,13 @@ import { db } from './db';
 import { broodTargets, fleets, planetResources } from './db/schema';
 import { eq, and, sql, lte } from 'drizzle-orm';
 import { simulateCombat } from './combat-engine';
+import type { CombatResult } from './combat-engine';
+
+export interface BroodRewards {
+	metal?: number;
+	crystal?: number;
+	gas?: number;
+}
 
 export interface BroodTarget {
 	id: number;
@@ -9,43 +16,50 @@ export interface BroodTarget {
 	system: number;
 	planetSlot: number;
 	level: number;
-	rewards: any;
+	rewards: BroodRewards;
 	lastRaidedAt: Date | null;
 }
 
 export interface RaidResult {
 	success: boolean;
-	loot?: any;
-	combatReport?: any;
+	loot?: BroodRewards | null;
+	combatReport?: CombatResult;
 }
 
 export class BroodService {
 	// Get brood targets for a galaxy/system
 	async getBroodTargets(galaxy: number, system: number): Promise<BroodTarget[]> {
-		return await db
+		const results = await db
 			.select()
 			.from(broodTargets)
 			.where(and(eq(broodTargets.galaxy, galaxy), eq(broodTargets.system, system)));
+
+		return results.map((r) => ({
+			...r,
+			rewards: (r.rewards as BroodRewards) || {}
+		}));
 	}
 
 	// Raid a brood target
-	async raidBroodTarget(fleetId: number, targetId: number, userId: number): Promise<RaidResult> {
+	async raidBroodTarget(fleetId: number, targetId: number): Promise<RaidResult> {
 		// Get target
-		const target = await db
+		const targetRows = await db
 			.select()
 			.from(broodTargets)
 			.where(eq(broodTargets.id, targetId))
 			.limit(1);
 
-		if (!target.length) {
+		if (!targetRows.length) {
 			throw new Error('Brood target not found');
 		}
+
+		const target = targetRows[0];
 
 		// TODO: Check if fleet is at the target location
 		// For now, assume it's there
 
 		// Generate NPC fleet based on level
-		const npcFleet = this.generateNpcFleet(target[0].level);
+		const npcFleet = this.generateNpcFleet(target.level);
 
 		// Get player fleet
 		const playerFleet = await db.select().from(fleets).where(eq(fleets.id, fleetId)).limit(1);
@@ -56,15 +70,15 @@ export class BroodService {
 
 		// Simulate combat
 		const combatResult = await simulateCombat(
-			playerFleet[0].ships,
+			playerFleet[0].ships as Record<string, number>,
 			npcFleet,
 			{} // no defenses
 		);
 
 		// If player wins, give rewards
-		let loot = null;
+		let loot: BroodRewards | null = null;
 		if (combatResult.winner === 'attacker') {
-			loot = target[0].rewards || { metal: 1000, crystal: 500 };
+			loot = (target.rewards as BroodRewards) || { metal: 1000, crystal: 500 };
 			// TODO: Add loot to player resources
 		}
 
@@ -121,7 +135,7 @@ export async function processBroodRaids() {
 			}
 
 			// Perform raid
-			const result = await broodService.raidBroodTarget(fleet.id, targetId, fleet.userId);
+			const result = await broodService.raidBroodTarget(fleet.id, targetId);
 
 			if (result.success && result.loot) {
 				// Add loot to origin planet
