@@ -106,4 +106,83 @@ test.describe('User Authentication Flow', () => {
 		await page.locator('a[href="/login"]').click();
 		await expect(page.locator('h1')).toContainText('Commander Login');
 	});
+
+	test.describe('Building Upgrades', () => {
+		test('should register test user, login, and upgrade buildings', async ({ page }) => {
+			// Use a unique username to avoid conflicts with parallel tests
+			const timestamp = Date.now();
+			const username = `test_user_${timestamp}`;
+			const email = `test_user_${timestamp}@test.com`;
+			const password = 'test_pass';
+
+			// Register a new user
+			await page.goto('/register');
+			await page.locator('#username').fill(username);
+			await page.locator('#email').fill(email);
+			await page.locator('#password').fill(password);
+			await page.locator('button[type="submit"]').click();
+			await page.waitForURL('**/game');
+
+			// Verify we're on the game page
+			expect(page.url()).toMatch(/\/game$/);
+
+			// Get the current planet ID from the planet selector
+			const planetSelector = page.locator('select').first();
+			const planetId = await planetSelector.inputValue();
+
+			// Navigate to planet management page
+			await page.goto(`/game/planet/${planetId}`);
+
+			// Wait for the page to load and buildings to appear
+			await page.waitForSelector('h3:has-text("Resource Production")');
+
+			// Define the buildings to upgrade (try just one first to test)
+			const buildingsToUpgrade = [
+				'Metal Mine'
+				// 'Crystal Mine',
+				// 'Gas Extractor',
+				// 'Solar Plant'
+			];
+
+			// Upgrade each building
+			for (const buildingName of buildingsToUpgrade) {
+				await upgradeBuilding(page, buildingName);
+			}
+
+			// Verify that buildings are in the construction queue
+			await page.waitForSelector('h3:has-text("Construction Queue")');
+
+			// Check that all buildings are in the queue by looking for "Level X" text
+			for (const buildingName of buildingsToUpgrade) {
+				await expect(page.locator('.space-y-2 .rounded.bg-gray-800.p-3').filter({ hasText: buildingName })).toBeVisible();
+			}
+		});
+	});
 });
+
+async function upgradeBuilding(page: any, buildingName: string) {
+	// Find the building card by name
+	const buildingCard = page.locator('.rounded.border', { hasText: buildingName }).first();
+
+	// Check if the upgrade button is enabled
+	const upgradeButton = buildingCard.locator('button', { hasText: 'Upgrade to Level' });
+
+	// Wait for button to be visible and check if it's enabled
+	await upgradeButton.waitFor({ state: 'visible', timeout: 5000 });
+
+	const isDisabled = await upgradeButton.isDisabled();
+	if (isDisabled) {
+		console.log(`Upgrade button for ${buildingName} is disabled - possibly insufficient resources`);
+		return; // Skip this building
+	}
+
+	// Click the upgrade button
+	await upgradeButton.click();
+
+	// Wait for the upgrade to process - button should become disabled or show "Upgrading..."
+	await page.waitForTimeout(2000);
+
+	// Verify the building is now upgrading - look for the "Upgrading..." text in the header
+	const upgradingText = buildingCard.locator('span.text-yellow-400').filter({ hasText: 'Upgrading...' });
+	await expect(upgradingText).toBeVisible();
+}
