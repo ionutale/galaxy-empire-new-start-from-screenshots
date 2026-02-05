@@ -8,6 +8,20 @@ export interface ResearchCost {
 	gas: number;
 }
 
+interface ResearchRow {
+	id: number;
+	name: string;
+	description: string;
+	category: string;
+	level: number;
+	base_cost: ResearchCost;
+	base_research_time: number;
+	is_researching: boolean;
+	research_completion: Date | null;
+	prerequisites: any; // JSON field
+	icon: string;
+}
+
 export interface ResearchValidationResult {
 	valid: boolean;
 	error?: string;
@@ -248,7 +262,7 @@ export class ResearchService {
 	/**
 	 * Format research info from database row
 	 */
-	private static formatResearchInfo(row: any): ResearchInfo {
+	private static formatResearchInfo(row: ResearchRow): ResearchInfo {
 		const level = row.level || 0;
 		const baseCost = row.base_cost as ResearchCost;
 		const baseResearchTime = row.base_research_time || 60;

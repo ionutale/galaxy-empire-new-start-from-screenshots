@@ -8,9 +8,17 @@
 	// Dark mode
 	let isDarkMode = $state(false);
 
+	interface ChatMessage {
+		id?: string;
+		createdAt: string;
+		allianceTag?: string;
+		username: string;
+		content: string;
+	}
+
 	// Chat Logic
 	let isChatOpen = $state(false);
-	let chatMessages = $state<any[]>([]);
+	let chatMessages = $state<ChatMessage[]>([]);
 	let newMessage = $state('');
 	let chatChannel = $state('global');
 	let chatInterval: ReturnType<typeof setInterval> | undefined;
@@ -113,7 +121,7 @@
 					const newId = e.currentTarget.value;
 					const url = new URL($page.url);
 					url.searchParams.set('planet', newId);
-					goto(url.toString());
+					goto(resolve(url.toString()));
 				}}
 			>
 				{#each data.planets as planet (planet.id)}
@@ -364,42 +372,42 @@
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">System</span>
 		</a>
 		<a
-			href="/game/alliance"
+			href="{resolve('/game/alliance')}"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🤝</span>
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Alliance</span>
 		</a>
 		<a
-			href="/game/commanders"
+			href="{resolve('/game/commanders')}"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">👨‍✈️</span>
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Officers</span>
 		</a>
 		<a
-			href="/game/shop"
+			href="{resolve('/game/shop')}"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🛒</span>
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Shop</span>
 		</a>
 		<a
-			href="/game/transactions"
+			href="{resolve('/game/transactions')}"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">💰</span>
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">History</span>
 		</a>
 		<a
-			href="/game/highscore"
+			href="{resolve('/game/highscore')}"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🏆</span>
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Rank</span>
 		</a>
 		<a
-			href="/game/achievements"
+			href="{resolve('/game/achievements')}"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🎖️</span>

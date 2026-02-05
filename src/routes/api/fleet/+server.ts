@@ -51,8 +51,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			try {
 				await deleteFleetTemplate(locals.user.id, id);
 				return json({ success: true });
-			} catch (e: any) {
-				return json({ success: false, error: e.message }, { status: 400 });
+			} catch (e: unknown) {
+				const message = e instanceof Error ? e.message : 'Unknown error';
+				return json({ success: false, error: message }, { status: 400 });
 			}
 		}
 

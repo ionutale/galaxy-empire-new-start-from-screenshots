@@ -15,7 +15,7 @@
 	});
 
 	let buildings = $derived(data.buildings || []) as BuildingInfo[];
-	let defenses = $derived(data.defenses || {}) as any;
+	let defenses = $derived(data.defenses || {}) as Record<string, number>;
 
 	// Group buildings by category
 	let resourceBuildings = $derived(buildings.filter((b) => b.category === 'resource'));
