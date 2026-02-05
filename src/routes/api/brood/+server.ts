@@ -11,8 +11,8 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 		const targets = await broodService.getBroodTargets(galaxy, system);
 		return json({ targets });
-	} catch (e: any) {
-		return json({ error: e.message }, { status: 400 });
+	} catch (e: unknown) {
+		return json({ error: (e as Error).message }, { status: 400 });
 	}
 };
 
@@ -28,7 +28,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 		const result = await broodService.raidBroodTarget(fleetId, targetId, locals.user.id);
 		return json(result);
-	} catch (e: any) {
-		return json({ success: false, error: e.message }, { status: 400 });
+	} catch (e: unknown) {
+		return json({ success: false, error: (e as Error).message }, { status: 400 });
 	}
 };

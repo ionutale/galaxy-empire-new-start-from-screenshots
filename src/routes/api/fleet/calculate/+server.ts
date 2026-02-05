@@ -4,6 +4,11 @@ import { db } from '$lib/server/db';
 import { sql } from 'drizzle-orm';
 import { formatDuration } from '$lib/server/fleet-movement';
 
+interface MovementInfo {
+	distance: number;
+	duration: number;
+}
+
 export const GET: RequestHandler = async ({ locals, url }) => {
 	if (!locals.user) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
@@ -52,7 +57,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 			) as movement_info
 		`);
 
-		const movementInfo = result.rows[0].movement_info as any;
+		const movementInfo = result.rows[0].movement_info as MovementInfo;
 
 		return json({
 			distance: Math.round(movementInfo.distance),

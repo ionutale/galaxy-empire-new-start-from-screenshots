@@ -4,6 +4,12 @@ import { buildingQueue, planetResources, planetBuildings } from '$lib/server/db/
 import { eq, sql } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
 
+interface Resources {
+	metal: number;
+	crystal: number;
+	gas: number;
+}
+
 export const POST: RequestHandler = async ({ request, locals }) => {
 	if (!locals.user) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
@@ -30,7 +36,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		}
 
 		// Refund resources
-		const reservedResources = queueItem[0].resourcesReserved as any;
+		const reservedResources = queueItem[0].resourcesReserved as Resources;
 		await db
 			.update(planetResources)
 			.set({

@@ -23,11 +23,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 					resources
 				);
 				return json({ success: true });
-			} catch (e: any) {
+			} catch (e: unknown) {
 				console.error('Dispatch error:', e);
 				// Pass specific error messages back to the client
 				if (
-					e.message.startsWith('Not enough') ||
+					(e as Error).message.startsWith('Not enough') ||
 					e.message.startsWith('No ships') ||
 					e.message.includes('Max expedition limit') ||
 					e.message.includes('Max fleet limit') ||
@@ -43,8 +43,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			try {
 				await createFleetTemplate(locals.user.id, name, ships);
 				return json({ success: true });
-			} catch (e: any) {
-				return json({ success: false, error: e.message }, { status: 400 });
+			} catch (e: unknown) {
+				return json({ success: false, error: (e as Error).message }, { status: 400 });
 			}
 		} else if (action === 'deleteTemplate') {
 			const { id } = data;
@@ -57,7 +57,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		}
 
 		throw error(400, 'Invalid action');
-	} catch (e: any) {
+	} catch (e: unknown) {
 		console.error('API Error:', e);
 		throw error(500, 'Internal server error');
 	}

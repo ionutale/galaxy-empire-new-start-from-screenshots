@@ -62,8 +62,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		}
 
 		throw error(400, 'Invalid action');
-	} catch (e: any) {
+	} catch (e: unknown) {
 		console.error('Alliance API Error:', e);
-		return json({ success: false, error: e.message }, { status: 400 });
+		return json({ success: false, error: (e as Error).message }, { status: 400 });
 	}
 };

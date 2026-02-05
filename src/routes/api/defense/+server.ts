@@ -8,6 +8,8 @@ import {
 	planetResources
 } from '$lib/server/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
+
+type DefenseColumn = keyof typeof planetDefenses.$inferSelect;
 import { DEFENSES } from '$lib/game-config';
 import { updatePlanetResources } from '$lib/server/game';
 import { updateUserPoints } from '$lib/server/points-calculator';
@@ -71,7 +73,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 			// Check max limit (for shields)
 			const defenseKey = defenseType.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
-			const defenseColumn = (planetDefenses as any)[defenseKey];
+			const defenseColumn = planetDefenses[defenseKey as DefenseColumn];
 
 			if (!defenseColumn) throw new Error('Invalid defense column');
 
@@ -106,7 +108,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 		await updateUserPoints(locals.user.id);
 		return json({ success: true });
-	} catch (e: any) {
-		return json({ error: e.message }, { status: 400 });
+	} catch (e: unknown) {
+		return json({ error: (e as Error).message }, { status: 400 });
 	}
 };

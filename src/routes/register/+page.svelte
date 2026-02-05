@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { ActionData } from './$types';
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 	import Spinner from '$lib/components/Spinner.svelte';
 
 	let { form }: { form: ActionData } = $props();
@@ -81,7 +82,7 @@
 
 		<p class="mt-4 text-center text-sm text-gray-400">
 			Already have an account? <a
-				href="/login"
+				href="{resolve('/login')}"
 				class="inline-block text-blue-400 transition-transform hover:underline active:scale-95"
 				>Login</a
 			>

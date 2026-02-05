@@ -68,8 +68,8 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 		}
 
 		return json({ error: 'Invalid action' }, { status: 400 });
-	} catch (e: any) {
+	} catch (e: unknown) {
 		console.error(`Error in settings action ${action}:`, e);
-		return json({ error: e.message || 'Server error' }, { status: 500 });
+		return json({ error: (e as Error).message || 'Server error' }, { status: 500 });
 	}
 };

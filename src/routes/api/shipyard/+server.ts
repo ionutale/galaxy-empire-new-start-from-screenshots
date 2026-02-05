@@ -61,7 +61,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		} else {
 			throw error(400, 'Invalid action');
 		}
-	} catch (err: any) {
+	} catch (err: unknown) {
 		console.error('Error in shipyard API:', err);
 		throw error(500, 'Internal server error');
 	}

@@ -8,6 +8,13 @@ export interface ResearchCost {
 	gas: number;
 }
 
+export interface ResearchValidationResult {
+	valid: boolean;
+	error?: string;
+	cost?: ResearchCost;
+	target_level?: number;
+}
+
 export interface ResearchInfo {
 	id: number;
 	name: string;
@@ -91,7 +98,7 @@ export class ResearchService {
 			SELECT validate_research_start(${userId}, ${researchTypeId}, ${planetId}) as validation
 		`);
 
-		const validation = validationResult.rows[0].validation as any;
+		const validation = validationResult.rows[0].validation as ResearchValidationResult;
 		if (!validation.valid) {
 			return { success: false, error: validation.error };
 		}

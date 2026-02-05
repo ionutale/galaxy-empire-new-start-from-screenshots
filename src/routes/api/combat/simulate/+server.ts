@@ -2,6 +2,8 @@ import { json } from '@sveltejs/kit';
 import { simulateCombat } from '$lib/server/combat-engine';
 import type { RequestHandler } from './$types';
 
+type Fleet = Record<string, number>;
+
 export const POST: RequestHandler = async ({ request, locals }) => {
 	if (!locals.user) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
@@ -15,7 +17,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		}
 
 		// Validate input data
-		const validateFleet = (fleet: any) => {
+		const validateFleet = (fleet: Fleet) => {
 			if (typeof fleet !== 'object') return false;
 			for (const [, value] of Object.entries(fleet)) {
 				if (typeof value !== 'number' || value < 0) return false;

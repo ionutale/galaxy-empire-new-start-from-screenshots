@@ -9,6 +9,11 @@ import {
 import { eq, sql, and } from 'drizzle-orm';
 import { SHIPS } from '$lib/game-config';
 
+interface CancelShipResult {
+	success: boolean;
+	error?: string;
+}
+
 export interface ShipyardInfo {
 	shipType: string;
 	name: string;
@@ -163,8 +168,8 @@ export class ShipyardService {
 				sql`CALL start_ship_construction(${userId}, ${planetId}, ${shipType}, ${amount})`
 			);
 			return { success: true };
-		} catch (error: any) {
-			return { success: false, error: error.message };
+		} catch (error: unknown) {
+			return { success: false, error: (error as Error).message };
 		}
 	}
 
@@ -192,15 +197,15 @@ export class ShipyardService {
 			const result = await db.execute(
 				sql`SELECT cancel_ship_construction(${userId}, ${queueId}) as result`
 			);
-			const cancelResult = result.rows[0]?.result as any;
+			const cancelResult = result.rows[0]?.result as CancelShipResult;
 
 			if (cancelResult?.success) {
 				return { success: true };
 			} else {
 				return { success: false, error: cancelResult?.error || 'Unknown error' };
 			}
-		} catch (error: any) {
-			return { success: false, error: error.message };
+		} catch (error: unknown) {
+			return { success: false, error: (error as Error).message };
 		}
 	}
 }

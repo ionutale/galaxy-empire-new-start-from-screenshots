@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
-	import { goto, invalidate } from '$app/navigation';
+	import { goto, invalidate, resolve } from '$app/navigation';
 	import { page } from '$app/stores';
 
 	let { children, data } = $props();
@@ -131,14 +131,14 @@
 		<div class="flex items-center space-x-4">
 			<div class="flex space-x-2">
 				<a
-					href="/game/commanders"
+					href="{resolve('/game/commanders')}"
 					class="flex h-8 w-8 items-center justify-center rounded-full border border-gray-600 bg-gray-700 transition-colors hover:bg-gray-600"
 					title="Officers"
 				>
 					<span class="text-sm">👨‍✈️</span>
 				</a>
 				<a
-					href="/game/shop"
+					href="{resolve('/game/shop')}"
 					class="flex h-8 w-8 items-center justify-center rounded-full border border-gray-600 bg-gray-700 transition-colors hover:bg-gray-600"
 					title="Shop"
 				>
@@ -152,7 +152,7 @@
 			>
 				{isDarkMode ? '☀️' : '🌙'}
 			</button>
-			<a href="/game/messages" class="relative transition-transform active:scale-95">
+			<a href="{resolve('/game/messages')}" class="relative transition-transform active:scale-95">
 				<span class="text-2xl">✉️</span>
 				{#if data.unreadMessages > 0}
 					<span
@@ -163,7 +163,7 @@
 				{/if}
 			</a>
 			<a
-				href="/game/settings"
+				href="{resolve('/game/settings')}"
 				class="text-2xl transition transition-transform hover:text-gray-300 active:scale-95"
 			>
 				⚙️
@@ -308,56 +308,56 @@
 		class="no-scrollbar z-20 flex min-h-[4rem] shrink-0 items-center overflow-x-auto border-t border-gray-700 bg-gray-800 px-2 pb-8 md:pb-safe"
 	>
 		<a
-			href="/game"
+			href="{resolve('/game')}"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🪐</span>
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Base</span>
 		</a>
 		<a
-			href="/game/planet"
+			href="{resolve('/game/planet')}"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🌍</span>
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Planets</span>
 		</a>
 		<a
-			href="/game/research"
+			href="{resolve('/game/research')}"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🔬</span>
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Research</span>
 		</a>
 		<a
-			href="/game/shipyard"
+			href="{resolve('/game/shipyard')}"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🛠️</span>
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Shipyard</span>
 		</a>
 		<a
-			href="/game/fleet"
+			href="{resolve('/game/fleet')}"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🚀</span>
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Fleet</span>
 		</a>
 		<a
-			href="/game/fleet/movements"
+			href="{resolve('/game/fleet/movements')}"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">📡</span>
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Movements</span>
 		</a>
 		<a
-			href="/game/galaxy"
+			href="{resolve('/game/galaxy')}"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">🌌</span>
 			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Galaxy</span>
 		</a>
 		<a
-			href="/game/system"
+			href="{resolve('/game/system')}"
 			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
 		>
 			<span class="mb-1 text-xl">☀️</span>

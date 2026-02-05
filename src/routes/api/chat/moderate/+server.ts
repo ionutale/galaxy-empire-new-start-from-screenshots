@@ -115,8 +115,8 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 		});
 
 		return json({ success: true });
-	} catch (e: any) {
-		if (e.code === '23505') {
+	} catch (e: unknown) {
+		if ((e as any).code === '23505') {
 			// Unique constraint violation
 			return json({ error: 'Word already banned' }, { status: 400 });
 		}
