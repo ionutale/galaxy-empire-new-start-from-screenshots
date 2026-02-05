@@ -20,7 +20,7 @@ interface MockDb {
 }
 
 vi.mock('./db', async (importOriginal) => {
-	const actual: any = await importOriginal();
+	const actual: any = await importOriginal(); // eslint-disable-line @typescript-eslint/no-explicit-any
 	return {
 		...actual,
 		db: {
