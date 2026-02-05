@@ -74,7 +74,7 @@
 
 	<!-- Galaxy Grid -->
 	<div class="grid grid-cols-25 gap-1">
-		{#each data.systems as system}
+		{#each data.systems as system (system.systemId)}
 			<a
 				href="/game/system?galaxy={data.galaxy}&system={system.systemId}"
 				class="flex aspect-square items-center justify-center rounded border border-gray-300 text-xs font-bold text-gray-900 transition hover:border-gray-400 hover:shadow-lg dark:border-gray-600 dark:text-white {getSystemColor(

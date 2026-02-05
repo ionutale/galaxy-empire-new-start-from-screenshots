@@ -138,7 +138,7 @@
 		>
 			<h3 class="mb-3 text-lg font-bold text-blue-600 dark:text-blue-300">Construction Queue</h3>
 			<div class="space-y-2">
-				{#each queue as item}
+				{#each queue as item (item.id)}
 					<div class="flex items-center justify-between rounded bg-white p-3 dark:bg-gray-800">
 						<div class="flex items-center space-x-3">
 							<span class="font-medium text-gray-900 dark:text-gray-200"
@@ -166,7 +166,7 @@
 			? 'pointer-events-none opacity-50 grayscale'
 			: ''}"
 	>
-		{#each shipyardInfo as ship}
+		{#each shipyardInfo as ship (ship.shipType)}
 			{@const count =
 				ships[ship.shipType.replace(/_([a-z])/g, (g: any) => g[1].toUpperCase())] || 0}
 			{@const amount = amounts[ship.shipType] || 1}

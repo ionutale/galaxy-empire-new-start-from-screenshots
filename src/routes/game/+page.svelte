@@ -182,7 +182,7 @@
 			Resources
 		</h3>
 		<div class="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-			{#each resourceBuildings as building}
+			{#each resourceBuildings as building (building.id)}
 				<div
 					class="flex flex-col rounded-lg border border-gray-200 bg-white/80 p-4 shadow-lg backdrop-blur-sm dark:border-gray-700 dark:bg-gray-800/80"
 				>
@@ -277,7 +277,7 @@
 		<!-- Facilities Section -->
 		<h3 class="mb-4 border-b border-gray-700 pb-2 text-xl font-bold text-gray-300">Facilities</h3>
 		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-			{#each facilityBuildings as building}
+			{#each facilityBuildings as building (building.id)}
 				<div
 					class="flex flex-col rounded-lg border border-gray-700 bg-gray-800/80 p-4 shadow-lg backdrop-blur-sm"
 				>
@@ -366,7 +366,7 @@
 				? 'pointer-events-none opacity-50 grayscale'
 				: ''}"
 		>
-			{#each defenseTypes as type}
+			{#each defenseTypes as type (type)}
 				{@const defense = DEFENSES[type as keyof typeof DEFENSES]}
 				{@const count = defenses[toCamel(type)] || 0}
 
@@ -434,7 +434,7 @@
 		<!-- Storage Section -->
 		<h3 class="mt-8 mb-4 border-b border-gray-700 pb-2 text-xl font-bold text-gray-300">Storage</h3>
 		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-			{#each storageBuildings as building}
+			{#each storageBuildings as building (building.id)}
 				<div
 					class="flex flex-col rounded-lg border border-gray-700 bg-gray-800/80 p-4 shadow-lg backdrop-blur-sm"
 				>

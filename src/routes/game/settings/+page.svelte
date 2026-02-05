@@ -143,7 +143,7 @@
 			<div>
 				<span class="mb-2 block text-sm text-gray-400">Avatar</span>
 				<div class="grid grid-cols-3 gap-2 sm:grid-cols-6">
-					{#each avatars as avatar}
+					{#each avatars as avatar (avatar.id)}
 						<label class="cursor-pointer" for="avatar-{avatar.id}">
 							<input
 								type="radio"

@@ -243,7 +243,7 @@
 		<div class="mb-6 rounded-lg border border-gray-700 bg-gray-800 p-4">
 			<h3 class="mb-4 text-lg font-bold text-gray-300">Fleet Templates</h3>
 			<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-				{#each data.templates as template}
+				{#each data.templates as template (template.id)}
 					<div
 						class="flex items-center justify-between gap-2 rounded border border-gray-700 bg-gray-900/50 p-3"
 					>
@@ -287,7 +287,7 @@
 		<div>
 			<!-- Ship Selection -->
 			<div class="mb-6 space-y-2">
-				{#each shipTypes as ship}
+				{#each shipTypes as ship (ship.id)}
 					{@const shipKey = toCamel(ship.id)}
 					<div class="flex items-center justify-between rounded bg-gray-900/50 p-2">
 						<span class="text-gray-300">{ship.name}</span>

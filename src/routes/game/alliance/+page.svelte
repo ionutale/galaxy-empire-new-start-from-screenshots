@@ -142,7 +142,7 @@
 						</tr>
 					</thead>
 					<tbody>
-						{#each data.members as member, i}
+						{#each data.members as member, i (member.id || i)}
 							<tr class="border-b border-gray-800">
 								<td class="py-2 text-gray-300">{member.username}</td>
 								<td class="py-2 text-gray-400">{member.points}</td>
@@ -167,7 +167,7 @@
 								class="rounded border border-gray-600 bg-gray-900 px-3 py-2 text-white"
 							>
 								<option value="">Select Alliance</option>
-								{#each data.allAlliances || [] as alliance}
+								{#each data.allAlliances || [] as alliance (alliance.id)}
 									{#if alliance.id !== data.alliance.id}
 										<option value={alliance.id}>[{alliance.tag}] {alliance.name}</option>
 									{/if}
@@ -186,7 +186,7 @@
 								class="rounded border border-gray-600 bg-gray-900 px-3 py-2 text-white"
 							>
 								<option value="">Select Alliance</option>
-								{#each data.allAlliances || [] as alliance}
+								{#each data.allAlliances || [] as alliance (alliance.id)}
 									{#if alliance.id !== data.alliance.id}
 										<option value={alliance.id}>[{alliance.tag}] {alliance.name}</option>
 									{/if}
@@ -206,7 +206,7 @@
 						<div>
 							<h4 class="mb-2 text-lg font-semibold text-gray-300">Current Relations</h4>
 							<div class="space-y-2">
-								{#each data.diplomacy as relation}
+								{#each data.diplomacy as relation (relation.id)}
 									<div class="flex items-center justify-between rounded bg-gray-900 p-3">
 										<div class="flex items-center space-x-3">
 											<span class="text-lg">
@@ -287,7 +287,7 @@
 					<p class="text-gray-400">No alliances found.</p>
 				{:else}
 					<div class="space-y-2">
-						{#each data.alliances as alliance}
+						{#each data.alliances as alliance (alliance.id)}
 							<div class="flex items-center justify-between rounded bg-gray-900 p-3">
 								<div>
 									<span class="font-bold text-blue-400">[{alliance.tag}]</span>

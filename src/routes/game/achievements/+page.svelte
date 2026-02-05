@@ -14,7 +14,7 @@
 	}
 
 	export let data: PageData;
-	// @ts-ignore
+	// @ts-expect-error
 	$: achievements = data.achievements as UserAchievement[];
 	$: newlyUnlocked = data.newlyUnlocked;
 
@@ -68,7 +68,7 @@
 		<div class="mb-8 rounded-lg border border-green-600 bg-green-800 p-6">
 			<h2 class="mb-4 text-xl font-bold text-green-200">🎉 New Achievements Unlocked!</h2>
 			<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-				{#each newlyUnlocked as achievement}
+				{#each newlyUnlocked as achievement (achievement.id || achievement.name)}
 					<div class="rounded-lg bg-green-700 p-4">
 						<div class="mb-2 text-3xl">{achievement.icon}</div>
 						<h3 class="font-bold text-green-100">{achievement.name}</h3>
@@ -85,13 +85,13 @@
 		</div>
 	{/if}
 
-	{#each Object.entries(achievementsByCategory) as [category, categoryAchievements]}
+	{#each Object.entries(achievementsByCategory) as [category, categoryAchievements] (category)}
 		<div class="mb-8">
 			<h2 class="mb-4 text-2xl font-bold text-white">
 				{categoryInfo[category]?.name || category}
 			</h2>
 			<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-				{#each categoryAchievements as userAchievement}
+				{#each categoryAchievements as userAchievement (userAchievement.id || userAchievement.achievement?.name)}
 					<div
 						class="rounded-lg border-2 bg-gray-800 p-6 {userAchievement.isCompleted
 							? 'border-green-500'

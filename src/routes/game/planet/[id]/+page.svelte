@@ -187,7 +187,7 @@
 		<div class="mb-6 rounded-lg border border-blue-500 bg-blue-900/20 p-4">
 			<h3 class="mb-3 text-lg font-bold text-blue-300">Construction Queue</h3>
 			<div class="space-y-2">
-				{#each queue as item}
+				{#each queue as item (item.id)}
 					<div class="flex items-center justify-between rounded bg-gray-800 p-3">
 						<div class="flex items-center space-x-3">
 							<span class="text-2xl">{getBuildingIcon(item.buildingTypeId.toString())}</span>
@@ -216,7 +216,7 @@
 			Resource Production
 		</h3>
 		<div class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-			{#each resourceBuildings as building}
+			{#each resourceBuildings as building (building.id)}
 				<div
 					class="flex flex-col justify-between rounded border border-gray-700 bg-gray-800 p-4 transition-all duration-200 hover:scale-105 hover:border-blue-500 hover:shadow-lg"
 				>
@@ -304,7 +304,7 @@
 	{#if facilityBuildings.length > 0}
 		<h3 class="mb-4 border-b border-gray-700 pb-2 text-xl font-bold text-gray-300">Facilities</h3>
 		<div class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-			{#each facilityBuildings as building}
+			{#each facilityBuildings as building (building.id)}
 				<div class="flex flex-col justify-between rounded border border-gray-700 bg-gray-800 p-4">
 					<div>
 						<div class="mb-2 flex items-center justify-between">
@@ -390,7 +390,7 @@
 	{#if storageBuildings.length > 0}
 		<h3 class="mb-4 border-b border-gray-700 pb-2 text-xl font-bold text-gray-300">Storage</h3>
 		<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-			{#each storageBuildings as building}
+			{#each storageBuildings as building (building.id)}
 				<div class="flex flex-col justify-between rounded border border-gray-700 bg-gray-800 p-4">
 					<div>
 						<div class="mb-2 flex items-center justify-between">

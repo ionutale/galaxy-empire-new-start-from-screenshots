@@ -102,7 +102,7 @@
 		</div>
 	{:else}
 		<div class="space-y-3">
-			{#each allFleets as fleet}
+			{#each allFleets as fleet (fleet.id)}
 				<div
 					id="fleet-{fleet.id}"
 					class="flex flex-col gap-4 rounded-lg border border-gray-700 bg-gray-800 p-4 shadow-lg"

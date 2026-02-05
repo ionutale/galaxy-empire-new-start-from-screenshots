@@ -141,7 +141,7 @@
 		>
 			<h3 class="mb-3 text-lg font-bold text-blue-600 dark:text-blue-300">Research Queue</h3>
 			<div class="space-y-2">
-				{#each queue as item}
+				{#each queue as item (item.id)}
 					<div class="flex items-center justify-between rounded bg-white p-3 dark:bg-gray-800">
 						<div class="flex items-center space-x-3">
 							<span class="text-2xl">{getResearchIcon(item.researchTypeId || 0)}</span>
@@ -176,7 +176,7 @@
 				? 'pointer-events-none opacity-50 grayscale'
 				: ''}"
 		>
-			{#each energyResearch as tech}
+			{#each energyResearch as tech (tech.id)}
 				<div class="flex flex-col justify-between rounded border border-gray-700 bg-gray-800 p-4">
 					<div>
 						<div class="mb-2 flex items-center justify-between">
@@ -256,7 +256,7 @@
 				? 'pointer-events-none opacity-50 grayscale'
 				: ''}"
 		>
-			{#each combatResearch as tech}
+			{#each combatResearch as tech (tech.id)}
 				<div class="flex flex-col justify-between rounded border border-gray-700 bg-gray-800 p-4">
 					<div>
 						<div class="mb-2 flex items-center justify-between">
@@ -336,7 +336,7 @@
 				? 'pointer-events-none opacity-50 grayscale'
 				: ''}"
 		>
-			{#each propulsionResearch as tech}
+			{#each propulsionResearch as tech (tech.id)}
 				<div class="flex flex-col justify-between rounded border border-gray-700 bg-gray-800 p-4">
 					<div>
 						<div class="mb-2 flex items-center justify-between">
@@ -416,7 +416,7 @@
 				? 'pointer-events-none opacity-50 grayscale'
 				: ''}"
 		>
-			{#each intelligenceResearch as tech}
+			{#each intelligenceResearch as tech (tech.id)}
 				<div class="flex flex-col justify-between rounded border border-gray-700 bg-gray-800 p-4">
 					<div>
 						<div class="mb-2 flex items-center justify-between">
@@ -496,7 +496,7 @@
 				? 'pointer-events-none opacity-50 grayscale'
 				: ''}"
 		>
-			{#each expansionResearch as tech}
+			{#each expansionResearch as tech (tech.id)}
 				<div class="flex flex-col justify-between rounded border border-gray-700 bg-gray-800 p-4">
 					<div>
 						<div class="mb-2 flex items-center justify-between">

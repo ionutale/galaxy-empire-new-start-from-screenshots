@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { SHIPS, DEFENSES } from '$lib/game-config';
 
-	interface CombatFleet extends Record<string, number> {}
+	type CombatFleet = Record<string, number>;
 	interface CombatReport {
 		mission: string;
 		galaxy: number;

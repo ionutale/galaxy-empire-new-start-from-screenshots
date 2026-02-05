@@ -2,7 +2,6 @@
 	let { data } = $props();
 
 	let selectedItems: number[] = $state([]);
-	let selectedRecipe = $state(null);
 
 	function toggleItem(itemId: number) {
 		if (selectedItems.includes(itemId)) {
@@ -29,7 +28,7 @@
 			} else {
 				alert(result.error);
 			}
-		} catch (e) {
+		} catch {
 			alert('Fusion failed');
 		}
 	}
@@ -43,7 +42,7 @@
 		<div class="rounded bg-gray-800 p-4">
 			<h2 class="mb-4 text-xl font-bold">Your Items</h2>
 			<div class="grid grid-cols-3 gap-2">
-				{#each data.items as item}
+				{#each data.items as item (item.id)}
 					<button
 						class="rounded border p-2 {selectedItems.includes(item.id)
 							? 'border-blue-500 bg-blue-900'
@@ -77,7 +76,7 @@
 	<!-- Active Boosts -->
 	<div class="mt-6 rounded bg-gray-800 p-4">
 		<h2 class="mb-4 text-xl font-bold">Active Boosts</h2>
-		{#each data.boosts as boost}
+		{#each data.boosts as boost (boost.id)}
 			<div class="flex justify-between">
 				<span>{boost.boostType}: +{boost.value}%</span>
 				<span>Expires: {new Date(boost.expiresAt).toLocaleString()}</span>

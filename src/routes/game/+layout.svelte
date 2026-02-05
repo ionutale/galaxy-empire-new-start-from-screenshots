@@ -1,12 +1,67 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
-	import { goto } from '$app/navigation';
+	import { goto, invalidate } from '$app/navigation';
 	import { page } from '$app/stores';
 
 	let { children, data } = $props();
 
 	// Dark mode
 	let isDarkMode = $state(false);
+
+	// Chat Logic
+	let isChatOpen = $state(false);
+	let chatMessages = $state<any[]>([]);
+	let newMessage = $state('');
+	let chatChannel = $state('global');
+	let chatInterval: ReturnType<typeof setInterval> | undefined;
+	let gameTickInterval: ReturnType<typeof setInterval> | undefined;
+
+	async function fetchChat() {
+		try {
+			const res = await fetch(`/api/chat?channel=${chatChannel}`);
+			if (res.ok) {
+				chatMessages = await res.json();
+			}
+		} catch (e) {
+			console.error('Failed to fetch chat', e);
+		}
+	}
+
+	async function runGameTick() {
+		try {
+			const res = await fetch('/api/game-tick');
+			if (res.ok) {
+				// Invalidate game data to refresh UI (resources, fleets, etc.)
+				invalidate('app:game-data');
+			}
+		} catch (e) {
+			console.error('Game tick failed', e);
+		}
+	}
+
+	async function sendChat() {
+		if (!newMessage.trim()) return;
+
+		try {
+			const res = await fetch('/api/chat', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ content: newMessage, channel: chatChannel })
+			});
+
+			if (res.ok) {
+				newMessage = '';
+				await fetchChat();
+			}
+		} catch (e) {
+			console.error('Failed to send message', e);
+		}
+	}
+
+	function switchChannel(channel: string) {
+		chatChannel = channel;
+		fetchChat();
+	}
 
 	// Initialize dark mode from localStorage
 	onMount(() => {

@@ -137,7 +137,7 @@
 							class="mt-1 block w-full rounded border border-gray-300 bg-gray-50 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
 						>
 							<option value="">Select a member</option>
-							{#each data.allianceMembers as member}
+							{#each data.allianceMembers as member (member.id || member.username)}
 								<option value={member.username}>{member.username}</option>
 							{/each}
 						</select>
@@ -190,7 +190,7 @@
 		{#if allMessages.length === 0}
 			<div class="p-4 text-center text-gray-500">No messages.</div>
 		{:else}
-			{#each allMessages as msg}
+			{#each allMessages as msg (msg.id)}
 				<div
 					class="rounded border border-gray-200 bg-white p-4 shadow-sm {msg.isRead
 						? 'opacity-75'

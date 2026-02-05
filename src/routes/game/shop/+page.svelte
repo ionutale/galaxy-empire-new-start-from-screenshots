@@ -69,7 +69,7 @@
 	</div>
 
 	<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-		{#each Object.values(shopItems) as item}
+		{#each Object.values(shopItems) as item (item.id)}
 			<div
 				class="overflow-hidden rounded-lg border border-gray-700 bg-gray-900/80 shadow-lg transition-colors hover:border-yellow-500/50"
 			>

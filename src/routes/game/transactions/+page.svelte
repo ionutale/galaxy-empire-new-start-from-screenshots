@@ -28,7 +28,7 @@
 						</tr>
 					</thead>
 					<tbody>
-						{#each transactions as transaction}
+						{#each transactions as transaction (transaction.id)}
 							<tr class="border-b border-gray-700 hover:bg-gray-700">
 								<td class="px-4 py-3">
 									{new Date(transaction.createdAt).toLocaleDateString()}
