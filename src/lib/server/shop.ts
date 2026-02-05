@@ -270,7 +270,8 @@ export async function purchaseGalactoniteItem(
 }
 
 export async function getPlayerGalactoniteItems(userId: number): Promise<GalactoniteItem[]> {
-	return await db.select().from(galactoniteItems).where(eq(galactoniteItems.playerId, userId));
+	const items = await db.select().from(galactoniteItems).where(eq(galactoniteItems.playerId, userId));
+	return items as unknown as GalactoniteItem[];
 }
 
 export async function fuseItems(userId: number, itemIds: number[], recipeId: number) {
@@ -281,6 +282,7 @@ export async function fuseItems(userId: number, itemIds: number[], recipeId: num
 		if (!recipeRes.length) throw new Error('Recipe not found');
 
 		const recipe = recipeRes[0];
+		const recipeCost = recipe.cost || 0;
 
 		// Check DM cost
 		const userRes = await tx
@@ -288,7 +290,10 @@ export async function fuseItems(userId: number, itemIds: number[], recipeId: num
 			.from(users)
 			.where(eq(users.id, userId));
 
-		if (userRes[0].darkMatter < recipe.cost) throw new Error('Not enough Dark Matter');
+		if (userRes.length === 0) throw new Error('User not found');
+		const userDM = userRes[0].darkMatter || 0;
+
+		if (userDM < recipeCost) throw new Error('Not enough Dark Matter');
 
 		// Check items ownership and count
 		const items = await tx
@@ -303,14 +308,14 @@ export async function fuseItems(userId: number, itemIds: number[], recipeId: num
 		// Deduct DM
 		await tx
 			.update(users)
-			.set({ darkMatter: userRes[0].darkMatter - recipe.cost })
+			.set({ darkMatter: userDM - recipeCost })
 			.where(eq(users.id, userId));
 
 		// Delete used items
 		await tx.delete(galactoniteItems).where(inArray(galactoniteItems.id, itemIds));
 
 		// Apply boost
-		const boost = recipe.outputBoost;
+		const boost = recipe.outputBoost as { type: string; value: number; duration: number };
 		const expiresAt = new Date(Date.now() + boost.duration * 1000);
 
 		await tx.insert(activeBoosts).values({
@@ -324,7 +329,7 @@ export async function fuseItems(userId: number, itemIds: number[], recipeId: num
 		await tx.insert(transactions).values({
 			userId,
 			type: 'fusion',
-			amount: recipe.cost,
+			amount: recipeCost,
 			description: `Fused items for ${boost.type} boost`,
 			metadata: JSON.stringify({ recipeId, boost })
 		});

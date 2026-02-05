@@ -35,13 +35,18 @@ export class BroodService {
 			.where(and(eq(broodTargets.galaxy, galaxy), eq(broodTargets.system, system)));
 
 		return results.map((r) => ({
-			...r,
+			id: r.id,
+			galaxy: r.galaxy,
+			system: r.system,
+			planetSlot: r.planetSlot,
+			level: r.level || 1,
+			lastRaidedAt: r.lastRaidedAt,
 			rewards: (r.rewards as BroodRewards) || {}
 		}));
 	}
 
 	// Raid a brood target
-	async raidBroodTarget(fleetId: number, targetId: number): Promise<RaidResult> {
+	async raidBroodTarget(fleetId: number, targetId: number, userId: number): Promise<RaidResult> {
 		// Get target
 		const targetRows = await db
 			.select()
@@ -59,7 +64,7 @@ export class BroodService {
 		// For now, assume it's there
 
 		// Generate NPC fleet based on level
-		const npcFleet = this.generateNpcFleet(target.level);
+		const npcFleet = this.generateNpcFleet(target.level || 1);
 
 		// Get player fleet
 		const playerFleet = await db.select().from(fleets).where(eq(fleets.id, fleetId)).limit(1);

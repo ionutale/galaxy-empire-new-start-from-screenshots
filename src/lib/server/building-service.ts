@@ -1,4 +1,5 @@
 import { sql } from 'drizzle-orm';
+import { db } from './db';
 import { ErrorHandler } from './error-handler';
 
 export interface BuildingCost {
@@ -57,7 +58,7 @@ export class BuildingService {
 			ORDER BY bt.category, bt.name
 		`);
 
-		return result.rows.map((row) => this.formatBuildingInfo(row));
+		return result.rows.map((row) => this.formatBuildingInfo(row as any));
 	}
 
 	/**
@@ -86,7 +87,7 @@ export class BuildingService {
 		`);
 
 		if (result.rows.length === 0) return null;
-		return this.formatBuildingInfo(result.rows[0]);
+		return this.formatBuildingInfo(result.rows[0] as any);
 	}
 
 	/**
@@ -357,11 +358,11 @@ export class BuildingService {
 	/**
 	 * Format building info from database row
 	 */
-	private static formatBuildingInfo(row: Record<string, unknown>): BuildingInfo {
-		const level = (row.level as number) || 0;
-		const baseCost = row.base_cost as BuildingCost;
-		const baseProduction = row.base_production as BuildingProduction;
-		const baseEnergy = row.base_energy as { consumption?: number; production?: number };
+	private static formatBuildingInfo(row: any): BuildingInfo {
+		const level = Number(row.level) || 0;
+		const baseCost = (row.base_cost as BuildingCost) || { metal: 0, crystal: 0, gas: 0 };
+		const baseProduction = row.base_production as BuildingProduction | null;
+		const baseEnergy = (row.base_energy as { consumption?: number; production?: number }) || {};
 
 		// Calculate current cost (exponential scaling)
 		const costMultiplier = Math.pow(1.5, level);
@@ -398,11 +399,11 @@ export class BuildingService {
 		}
 
 		return {
-			id: row.id,
-			building_type_id: row.id, // Alias for compatibility
-			name: row.name,
-			description: row.description,
-			category: row.category,
+			id: Number(row.id),
+			building_type_id: Number(row.id), // Alias for compatibility
+			name: String(row.name),
+			description: String(row.description),
+			category: String(row.category),
 			level,
 			cost,
 			upgradeCost: cost, // Alias for compatibility
@@ -411,10 +412,10 @@ export class BuildingService {
 			energyProduction,
 			buildTime,
 			canUpgrade: level < 100, // Max level check
-			isUpgrading: row.is_upgrading || false,
-			upgradeCompletion: row.upgrade_completion ? new Date(row.upgrade_completion) : undefined,
-			prerequisites: row.prerequisites || {},
-			icon: this.getBuildingIcon(row.name) // Add icon based on building name
+			isUpgrading: Boolean(row.is_upgrading),
+			upgradeCompletion: row.upgrade_completion ? new Date(String(row.upgrade_completion)) : undefined,
+			prerequisites: (row.prerequisites as Record<string, number>) || {},
+			icon: this.getBuildingIcon(String(row.name)) // Add icon based on building name
 		};
 	}
 

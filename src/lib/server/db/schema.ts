@@ -251,7 +251,8 @@ export const fleets = pgTable(
 		originPlanetIdIdx: index('fleets_origin_planet_id_idx').on(t.originPlanetId)
 	})
 );
-
+export type Fleet = typeof fleets.$inferSelect;
+export type NewFleet = typeof fleets.$inferInsert;
 export const planetShips = pgTable('planet_ships', {
 	planetId: integer('planet_id')
 		.primaryKey()
