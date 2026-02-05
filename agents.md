@@ -9,7 +9,7 @@ Example commands:
 
 ```bash
 pnpm run lint
-pnpm run  check
+pnpm run check
 pnpm run format
 ```
 
