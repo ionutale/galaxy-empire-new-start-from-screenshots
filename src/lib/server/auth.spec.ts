@@ -20,6 +20,21 @@ vi.mock('crypto', () => ({
 	randomUUID: vi.fn().mockReturnValue('session-uuid-123')
 }));
 
+// Mock database interface
+interface MockDb {
+	select: ReturnType<typeof vi.fn>;
+	from: ReturnType<typeof vi.fn>;
+	innerJoin: ReturnType<typeof vi.fn>;
+	where: ReturnType<typeof vi.fn>;
+	insert: ReturnType<typeof vi.fn>;
+	values: ReturnType<typeof vi.fn>;
+	delete: ReturnType<typeof vi.fn>;
+	update: ReturnType<typeof vi.fn>;
+	set: ReturnType<typeof vi.fn>;
+	execute: ReturnType<typeof vi.fn>;
+	transaction: ReturnType<typeof vi.fn>;
+}
+
 // Mock the database with proper chaining support
 vi.mock('./db', () => {
 	const mockDb = {
@@ -82,22 +97,23 @@ describe('Auth Service', () => {
 	describe('createSession', () => {
 		it('should create a new session with 30-day expiration', async () => {
 			// Mock the insert chain
-			(db as any).insert.mockReturnValue(db);
-			(db as any).values.mockResolvedValue({});
+			const mockDb = db as unknown as MockDb;
+			mockDb.insert.mockReturnValue(db);
+			mockDb.values.mockResolvedValue({});
 
 			const sessionId = await createSession(1);
 
 			expect(sessionId).toBe('session-uuid-123');
-			expect((db as any).insert).toHaveBeenCalledWith(sessions);
+			expect(mockDb.insert).toHaveBeenCalledWith(sessions);
 
-			expect((db as any).values).toHaveBeenCalledWith({
+			expect(mockDb.values).toHaveBeenCalledWith({
 				id: 'session-uuid-123',
 				userId: 1,
 				expiresAt: expect.any(Date)
 			});
 
 			// Check expiration is approximately 30 days from now
-			const valuesCall = (db as any).values.mock.calls[0];
+			const valuesCall = mockDb.values.mock.calls[0];
 			const expiresAt = valuesCall[0].expiresAt;
 			const expectedExpiry = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30);
 			const timeDiff = Math.abs(expiresAt.getTime() - expectedExpiry.getTime());
@@ -116,15 +132,16 @@ describe('Auth Service', () => {
 				allianceId: null
 			};
 
-			(db as any).select.mockReturnValue(db);
-			(db as any).from.mockReturnValue(db);
-			(db as any).innerJoin.mockReturnValue(db);
-			(db as any).where.mockResolvedValue([mockSessionData]);
+			const mockDb = db as unknown as MockDb;
+			mockDb.select.mockReturnValue(db);
+			mockDb.from.mockReturnValue(db);
+			mockDb.innerJoin.mockReturnValue(db);
+			mockDb.where.mockResolvedValue([mockSessionData]);
 
 			const result = await getSession('session-uuid-123');
 
 			expect(result).toEqual(mockSessionData);
-			expect((db as any).select).toHaveBeenCalledWith({
+			expect(mockDb.select).toHaveBeenCalledWith({
 				id: sessions.id,
 				userId: sessions.userId,
 				expiresAt: sessions.expiresAt,
@@ -135,10 +152,11 @@ describe('Auth Service', () => {
 		});
 
 		it('should return undefined for expired session', async () => {
-			(db as any).select.mockReturnValue(db);
-			(db as any).from.mockReturnValue(db);
-			(db as any).innerJoin.mockReturnValue(db);
-			(db as any).where.mockResolvedValue([]);
+			const mockDb = db as unknown as MockDb;
+			mockDb.select.mockReturnValue(db);
+			mockDb.from.mockReturnValue(db);
+			mockDb.innerJoin.mockReturnValue(db);
+			mockDb.where.mockResolvedValue([]);
 
 			const result = await getSession('expired-session-id');
 
@@ -146,10 +164,11 @@ describe('Auth Service', () => {
 		});
 
 		it('should return undefined for non-existent session', async () => {
-			(db as any).select.mockReturnValue(db);
-			(db as any).from.mockReturnValue(db);
-			(db as any).innerJoin.mockReturnValue(db);
-			(db as any).where.mockResolvedValue([]);
+			const mockDb = db as unknown as MockDb;
+			mockDb.select.mockReturnValue(db);
+			mockDb.from.mockReturnValue(db);
+			mockDb.innerJoin.mockReturnValue(db);
+			mockDb.where.mockResolvedValue([]);
 
 			const result = await getSession('non-existent-session');
 
@@ -159,39 +178,43 @@ describe('Auth Service', () => {
 
 	describe('deleteSession', () => {
 		it('should delete session from database', async () => {
-			(db as any).delete.mockReturnValue(db);
-			(db as any).where.mockResolvedValue({});
+			const mockDb = db as unknown as MockDb;
+			mockDb.delete.mockReturnValue(db);
+			mockDb.where.mockResolvedValue({});
 
 			await deleteSession('session-uuid-123');
 
-			expect((db as any).delete).toHaveBeenCalledWith(sessions);
-			expect((db as any).where).toHaveBeenCalledWith(eq(sessions.id, 'session-uuid-123'));
+			expect(mockDb.delete).toHaveBeenCalledWith(sessions);
+			expect(mockDb.where).toHaveBeenCalledWith(eq(sessions.id, 'session-uuid-123'));
 		});
 	});
 
 	describe('Error handling', () => {
 		it('should handle database errors in createSession', async () => {
 			const error = new Error('Database connection failed');
-			(db as any).insert.mockReturnValue(db);
-			(db as any).values.mockRejectedValue(error);
+			const mockDb = db as unknown as MockDb;
+			mockDb.insert.mockReturnValue(db);
+			mockDb.values.mockRejectedValue(error);
 
 			await expect(createSession(1)).rejects.toThrow('Database connection failed');
 		});
 
 		it('should handle database errors in getSession', async () => {
 			const error = new Error('Database connection failed');
-			(db as any).select.mockReturnValue(db);
-			(db as any).from.mockReturnValue(db);
-			(db as any).innerJoin.mockReturnValue(db);
-			(db as any).where.mockRejectedValue(error);
+			const mockDb = db as unknown as MockDb;
+			mockDb.select.mockReturnValue(db);
+			mockDb.from.mockReturnValue(db);
+			mockDb.innerJoin.mockReturnValue(db);
+			mockDb.where.mockRejectedValue(error);
 
 			await expect(getSession('session-id')).rejects.toThrow('Database connection failed');
 		});
 
 		it('should handle database errors in deleteSession', async () => {
 			const error = new Error('Database connection failed');
-			(db as any).delete.mockReturnValue(db);
-			(db as any).where.mockRejectedValue(error);
+			const mockDb = db as unknown as MockDb;
+			mockDb.delete.mockReturnValue(db);
+			mockDb.where.mockRejectedValue(error);
 
 			await expect(deleteSession('session-id')).rejects.toThrow('Database connection failed');
 		});

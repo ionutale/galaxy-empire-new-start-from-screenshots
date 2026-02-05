@@ -2,8 +2,10 @@
 
 To ensure code quality and consistency, always run the following checks before committing your code:
 
+- **Prettier**: Use Prettier to format your code.
 - **Linting**: Use ESLint to check for code style and potential errors.
 - **Type Checking**: Use TypeScript to verify type correctness.
+- **Formatting**: Use Prettier to maintain consistent code formatting.
 
 Example commands:
 

@@ -3,6 +3,11 @@ import { simulateCombat } from './combat-engine';
 import { db } from './db';
 import { sql } from 'drizzle-orm';
 
+// Mock database interface
+interface MockDb {
+	execute: ReturnType<typeof vi.fn>;
+}
+
 // Mock the database
 vi.mock('./db', () => ({
 	db: {
@@ -22,7 +27,7 @@ describe('Combat Engine', () => {
 
 	describe('simulateCombat', () => {
 		it('should simulate combat between fleets and defenses', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			const mockCombatResult = {
 				winner: 'attacker',
 				attackerLosses: { small_transporter: 2 },
@@ -53,7 +58,7 @@ describe('Combat Engine', () => {
 		});
 
 		it('should handle defender victory', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			const mockCombatResult = {
 				winner: 'defender',
 				attackerLosses: { destroyer: 3, cruiser: 2 },
@@ -77,7 +82,7 @@ describe('Combat Engine', () => {
 		});
 
 		it('should handle draw', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			const mockCombatResult = {
 				winner: 'draw',
 				attackerLosses: { destroyer: 2 },
@@ -101,7 +106,7 @@ describe('Combat Engine', () => {
 		});
 
 		it('should handle empty defender forces', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			const mockCombatResult = {
 				winner: 'attacker',
 				attackerLosses: {},
@@ -125,7 +130,7 @@ describe('Combat Engine', () => {
 		});
 
 		it('should handle empty attacker fleet', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			const mockCombatResult = {
 				winner: 'defender',
 				attackerLosses: {},
@@ -149,7 +154,7 @@ describe('Combat Engine', () => {
 		});
 
 		it('should provide default values when combat result is incomplete', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			const mockCombatResult = {
 				winner: 'attacker'
 				// Missing losses and rounds
@@ -174,7 +179,7 @@ describe('Combat Engine', () => {
 		});
 
 		it('should handle database errors', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			const error = new Error('Database connection failed');
 			mockDb.execute.mockRejectedValue(error);
 

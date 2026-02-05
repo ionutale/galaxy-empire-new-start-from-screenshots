@@ -1,7 +1,7 @@
 import { dev } from '$app/environment';
 
 export class ErrorHandler {
-	private static logError(error: Error, context?: any) {
+	private static logError(error: Error, context?: unknown) {
 		const timestamp = new Date().toISOString();
 		const errorInfo = {
 			timestamp,
@@ -18,26 +18,27 @@ export class ErrorHandler {
 		}
 	}
 
-	static handleApiError(error: any, operation: string): { success: false; error: string } {
-		this.logError(error, { operation });
+	static handleApiError(error: unknown, operation: string): { success: false; error: string } {
+		const err = error instanceof Error ? error : new Error(String(error));
+		this.logError(err, { operation });
 
 		// Provide user-friendly error messages
-		if (error.message?.includes('insufficient resources')) {
+		if (err.message?.includes('insufficient resources')) {
 			return { success: false, error: 'Not enough resources to complete this action.' };
 		}
 
-		if (error.message?.includes('building queue full')) {
+		if (err.message?.includes('building queue full')) {
 			return {
 				success: false,
 				error: 'Building queue is full. Please wait for current constructions to complete.'
 			};
 		}
 
-		if (error.message?.includes('research lab required')) {
+		if (err.message?.includes('research lab required')) {
 			return { success: false, error: 'You need a Research Lab to conduct research.' };
 		}
 
-		if (error.message?.includes('prerequisites not met')) {
+		if (err.message?.includes('prerequisites not met')) {
 			return { success: false, error: 'Prerequisites not met for this action.' };
 		}
 
@@ -45,21 +46,23 @@ export class ErrorHandler {
 		return { success: false, error: 'An unexpected error occurred. Please try again.' };
 	}
 
-	static handleDatabaseError(error: any, operation: string) {
-		this.logError(error, { operation, type: 'database' });
+	static handleDatabaseError(error: unknown, operation: string) {
+		const err = error instanceof Error ? error : new Error(String(error));
+		this.logError(err, { operation, type: 'database' });
 
 		// Handle specific database errors
-		if (error.code === '23505') {
+		const dbError = error as { code?: string };
+		if (dbError.code === '23505') {
 			// Unique constraint violation
 			throw new Error('This action would create a duplicate entry.');
 		}
 
-		if (error.code === '23503') {
+		if (dbError.code === '23503') {
 			// Foreign key constraint violation
 			throw new Error('Referenced data does not exist.');
 		}
 
-		if (error.code === '23514') {
+		if (dbError.code === '23514') {
 			// Check constraint violation
 			throw new Error('Data validation failed.');
 		}
@@ -73,12 +76,13 @@ export class ErrorHandler {
 			const result = await operation();
 			return result;
 		} catch (error) {
-			this.logError(error as Error, { operation: operationName, type: 'transaction' });
+			const err = error instanceof Error ? error : new Error(String(error));
+			this.logError(err, { operation: operationName, type: 'transaction' });
 			throw error;
 		}
 	}
 
-	static logUserAction(userId: number, action: string, details?: any) {
+	static logUserAction(userId: number, action: string, details?: unknown) {
 		const logEntry = {
 			timestamp: new Date().toISOString(),
 			userId,
@@ -94,7 +98,7 @@ export class ErrorHandler {
 		}
 	}
 
-	static logPerformance(operation: string, duration: number, details?: any) {
+	static logPerformance(operation: string, duration: number, details?: unknown) {
 		const logEntry = {
 			timestamp: new Date().toISOString(),
 			operation,
@@ -113,10 +117,10 @@ export class ErrorHandler {
 
 // Performance monitoring decorator
 export function withPerformanceLogging(operationName: string) {
-	return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+	return function (target: unknown, propertyKey: string, descriptor: PropertyDescriptor) {
 		const originalMethod = descriptor.value;
 
-		descriptor.value = async function (...args: any[]) {
+		descriptor.value = async function (...args: unknown[]) {
 			const start = Date.now();
 			try {
 				const result = await originalMethod.apply(this, args);

@@ -38,7 +38,7 @@ describe('AchievementService', () => {
 	describe('initializeAchievements', () => {
 		it('should create achievement definitions', async () => {
 			const mockDb = db as unknown as MockDb;
-			mockDb.insert.mockResolvedValue({} as any);
+			mockDb.insert.mockResolvedValue({});
 
 			await AchievementService.initializeAchievements();
 
@@ -95,10 +95,10 @@ describe('AchievementService', () => {
 		it('should return current stat value for progress tracking', () => {
 			const achievement = {
 				requirementTarget: 'metal_mine_level'
-			};
+			} as AchievementDefinition;
 			const userStats = { metal_mine_level: 15 };
 
-			const result = (AchievementService as any).getCurrentProgress(achievement, userStats);
+			const result = AchievementService.getCurrentProgress(achievement, userStats);
 
 			expect(result).toBe(15);
 		});
@@ -106,10 +106,10 @@ describe('AchievementService', () => {
 		it('should return 0 for missing stat', () => {
 			const achievement = {
 				requirementTarget: 'unknown_stat'
-			};
+			} as AchievementDefinition;
 			const userStats = { metal_mine_level: 15 };
 
-			const result = (AchievementService as any).getCurrentProgress(achievement, userStats);
+			const result = AchievementService.getCurrentProgress(achievement, userStats);
 
 			expect(result).toBe(0);
 		});
@@ -117,10 +117,10 @@ describe('AchievementService', () => {
 
 	describe('grantReward', () => {
 		it('should grant dark matter reward', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			mockDb.update.mockResolvedValue({});
 
-			await (AchievementService as any).grantReward(1, 'dark_matter', 100);
+			await AchievementService.grantReward(1, 'dark_matter', 100);
 
 			expect(mockDb.update).toHaveBeenCalledWith(
 				users,
@@ -136,7 +136,7 @@ describe('AchievementService', () => {
 
 	describe('getUserStatsForAchievements', () => {
 		it('should return basic user stats', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			mockDb.select.mockResolvedValue([
 				{
 					darkMatter: 500,
@@ -161,7 +161,7 @@ describe('AchievementService', () => {
 		});
 
 		it('should return empty object for non-existent user', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			mockDb.select.mockResolvedValue([]);
 
 			const result = await AchievementService.getUserStatsForAchievements(999);
@@ -172,7 +172,7 @@ describe('AchievementService', () => {
 
 	describe('checkAchievements', () => {
 		it('should award newly unlocked achievements', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			mockDb.select.mockResolvedValue([]); // No existing achievements
 			mockDb.insert.mockResolvedValue({});
 			mockDb.update.mockResolvedValue({});
@@ -185,7 +185,7 @@ describe('AchievementService', () => {
 		});
 
 		it('should not award already unlocked achievements', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			mockDb.select.mockResolvedValue([
 				{
 					achievementId: 1,
@@ -203,7 +203,7 @@ describe('AchievementService', () => {
 
 	describe('getUserAchievements', () => {
 		it('should return user achievements with details', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			mockDb.select.mockResolvedValue([
 				{
 					id: 1,
@@ -233,7 +233,7 @@ describe('AchievementService', () => {
 
 	describe('getAllAchievements', () => {
 		it('should return all achievement definitions', async () => {
-			const mockDb = db as any;
+			const mockDb = db as unknown as MockDb;
 			mockDb.select.mockResolvedValue([
 				{ id: 1, name: 'Achievement 1' },
 				{ id: 2, name: 'Achievement 2' }

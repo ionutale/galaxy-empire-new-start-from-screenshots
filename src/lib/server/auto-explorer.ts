@@ -71,14 +71,16 @@ export async function processAutoExplore() {
 
 						console.log(`[AutoExplore] Auto-dispatched expedition for user ${explorer.userId}`);
 						dispatchedCount++;
-					} catch (dispatchErr: any) {
+					} catch (dispatchErr: unknown) {
+						const error =
+							dispatchErr instanceof Error ? dispatchErr : new Error(String(dispatchErr));
 						if (
-							dispatchErr.message.startsWith('Not enough') ||
-							dispatchErr.message.includes('Max expedition limit') ||
-							dispatchErr.message.includes('Max fleet limit')
+							error.message.startsWith('Not enough') ||
+							error.message.includes('Max expedition limit') ||
+							error.message.includes('Max fleet limit')
 						) {
 							console.log(
-								`[AutoExplore] Auto-explore stopped for user ${explorer.userId}: ${dispatchErr.message}`
+								`[AutoExplore] Auto-explore stopped for user ${explorer.userId}: ${error.message}`
 							);
 							break; // Stop trying for this user
 						}

@@ -46,6 +46,7 @@ export class BroodService {
 	}
 
 	// Raid a brood target
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async raidBroodTarget(fleetId: number, targetId: number, _userId: number): Promise<RaidResult> {
 		// Get target
 		const targetRows = await db

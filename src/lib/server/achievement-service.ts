@@ -253,7 +253,10 @@ export class AchievementService {
 	/**
 	 * Check and award achievements for a user based on their stats
 	 */
-	static async checkAchievements(userId: number, userStats: Record<string, any>) {
+	static async checkAchievements(
+		userId: number,
+		userStats: Record<string, number | string | boolean>
+	) {
 		const userAchievementsResult = await db
 			.select()
 			.from(userAchievements)
@@ -334,17 +337,18 @@ export class AchievementService {
 	/**
 	 * Get current progress for an achievement
 	 */
-	private static getCurrentProgress(
+	public static getCurrentProgress(
 		achievement: AchievementDefinition,
-		userStats: Record<string, any>
+		userStats: Record<string, number | string | boolean>
 	): number {
-		return userStats[achievement.requirementTarget] || 0;
+		const targetValue = (userStats[achievement.requirementTarget] as number) || 0;
+		return targetValue;
 	}
 
 	/**
 	 * Grant reward to user
 	 */
-	private static async grantReward(userId: number, rewardType: string, amount: number) {
+	public static async grantReward(userId: number, rewardType: string, amount: number) {
 		switch (rewardType) {
 			case 'dark_matter':
 				await db
@@ -405,7 +409,9 @@ export class AchievementService {
 	/**
 	 * Get user stats for achievement checking
 	 */
-	static async getUserStatsForAchievements(userId: number): Promise<Record<string, any>> {
+	static async getUserStatsForAchievements(
+		userId: number
+	): Promise<Record<string, number | string | boolean>> {
 		// This would aggregate various stats from different tables
 		// For now, return basic stats - this should be expanded based on actual game stats
 		const userResult = await db

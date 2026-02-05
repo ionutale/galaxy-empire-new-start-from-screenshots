@@ -2,11 +2,27 @@ import { db } from './db';
 import { eq, sql } from 'drizzle-orm';
 import { users, planets, planetResources } from './db/schema';
 
+// Define types for cached data
+type PlanetData = {
+	id: number;
+	name: string | null;
+	galaxyId: number;
+	systemId: number;
+	planetNumber: number;
+	planetType: string;
+	fieldsUsed: number | null;
+	fieldsMax: number | null;
+	metal: number | null;
+	crystal: number | null;
+	gas: number | null;
+	energy: number | null;
+}[];
+
 // Simple in-memory cache with TTL
 class MemoryCache {
-	private cache = new Map<string, { value: any; expires: number }>();
+	private cache = new Map<string, { value: unknown; expires: number }>();
 
-	set(key: string, value: any, ttlMs: number = 300000) {
+	set(key: string, value: unknown, ttlMs: number = 300000) {
 		// 5 minutes default
 		this.cache.set(key, {
 			value,
@@ -14,7 +30,7 @@ class MemoryCache {
 		});
 	}
 
-	get(key: string): any | null {
+	get(key: string): unknown | null {
 		const item = this.cache.get(key);
 		if (!item) return null;
 
@@ -56,7 +72,7 @@ export class CacheService {
 	 */
 	static async getUserPlanets(userId: number) {
 		const cacheKey = `user_planets_${userId}`;
-		let result = cache.get(cacheKey);
+		let result: PlanetData | null = cache.get(cacheKey) as PlanetData | null;
 
 		if (!result) {
 			result = await db

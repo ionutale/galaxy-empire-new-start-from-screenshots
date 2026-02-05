@@ -35,7 +35,7 @@
 <div class="p-4 pb-20">
 	<h2 class="mb-6 text-2xl font-bold text-blue-600 dark:text-blue-300">Planet Overview</h2>
 
-	{#if data.planets.length === 0}
+	{#if !data.planets || data.planets.length === 0}
 		<div class="text-center text-gray-600 dark:text-gray-400">
 			<p>You don't have any planets yet.</p>
 		</div>

@@ -20,12 +20,16 @@ export async function dispatchFleet(
 		) as validation
 	`);
 
-	const validation = validationResult.rows[0].validation as any;
+	const validation = validationResult.rows[0].validation as {
+		valid: boolean;
+		error?: string;
+		movement_info?: { fuel_consumption: number; duration: number };
+	};
 	if (!validation.valid) {
 		throw new Error(validation.error);
 	}
 
-	const movementInfo = validation.movement_info;
+	const movementInfo = validation.movement_info!;
 	const fuelNeeded = movementInfo.fuel_consumption;
 
 	return await db.transaction(async (tx) => {
