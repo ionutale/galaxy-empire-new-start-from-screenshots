@@ -3,6 +3,7 @@
 	import type { ResearchInfo } from '$lib/server/research-service';
 	import { onMount } from 'svelte';
 	import { invalidateAll } from '$app/navigation';
+	import { fly, fade } from 'svelte/transition';
 
 	let { data } = $props();
 	let loading = $state<Record<string, boolean>>({});
@@ -83,6 +84,14 @@
 	let intelligenceResearch = $derived(research.filter((r) => r.category === 'intelligence'));
 	let expansionResearch = $derived(research.filter((r) => r.category === 'expansion'));
 
+	const categories = [
+		{ name: 'Energy Technologies', items: energyResearch, color: 'blue' },
+		{ name: 'Combat Technologies', items: combatResearch, color: 'red' },
+		{ name: 'Propulsion Technologies', items: propulsionResearch, color: 'purple' },
+		{ name: 'Intelligence Technologies', items: intelligenceResearch, color: 'green' },
+		{ name: 'Expansion Technologies', items: expansionResearch, color: 'gold' }
+	];
+
 	function formatTimeRemaining(completionAt: Date) {
 		const diff = completionAt.getTime() - currentTime.getTime();
 		if (diff <= 0) return 'Complete';
@@ -116,82 +125,97 @@
 	}
 
 	function getResearchIcon(researchTypeId: number) {
-		// Simple mapping - you might want to enhance this based on research types
 		switch (researchTypeId) {
-			case 1:
-				return '⚡'; // Energy
-			case 2:
-				return '🛡️'; // Combat
-			case 3:
-				return '🚀'; // Propulsion
-			case 4:
-				return '🕵️'; // Intelligence
-			case 5:
-				return '🏗️'; // Expansion
-			default:
-				return '🔬';
+			case 1: return '⚡';
+			case 2: return '🛡️';
+			case 3: return '🚀';
+			case 4: return '🕵️';
+			case 5: return '🏗️';
+			default: return '🔬';
 		}
 	}
 </script>
 
-<div class="p-4 pb-20">
-	<h2 class="mb-6 text-2xl font-bold text-blue-600 dark:text-blue-300">Research Lab</h2>
+<div class="px-6 py-8 pb-32">
+	<div class="mb-10 flex items-center justify-between">
+		<div>
+			<h1 class="text-4xl font-black tracking-tighter text-white glow-blue">
+				RESEARCH <span class="text-blue-500">LAB</span>
+			</h1>
+			<p class="text-sm font-medium tracking-wide text-gray-500 uppercase">Scientific Advancement Center</p>
+		</div>
+		
+		{#if queue.length > 0}
+			<div class="flex items-center space-x-2 rounded-full border border-blue-500/20 bg-blue-500/5 px-4 py-2">
+				<span class="flex h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
+				<span class="text-xs font-bold text-blue-400 uppercase tracking-widest">{queue.length} Active Project{queue.length > 1 ? 's' : ''}</span>
+			</div>
+		{/if}
+	</div>
 
 	{#if !hasResearchLab}
 		<div
-			class="mb-6 rounded border border-red-500 bg-red-50 p-4 text-center text-red-800 dark:bg-red-900/50 dark:text-red-200"
+			class="mb-8 overflow-hidden rounded-2xl border border-red-500/50 bg-red-500/5 p-6 backdrop-blur-md"
+			in:fade
 		>
-			You need a Research Lab to conduct research. <a
-				href="/game"
-				class="font-bold underline hover:text-red-900 dark:hover:text-white"
-				>Build one in the Facilities menu.</a
-			>
+			<div class="flex items-center space-x-4">
+				<span class="text-3xl">⚠️</span>
+				<div>
+					<h3 class="font-bold text-red-400">Infrastructure Required</h3>
+					<p class="text-sm text-red-200/80">
+						You need a Research Lab to conduct research. <a
+							href="/game"
+							class="font-black text-white underline hover:no-underline"
+							>Establish one in Facilities.</a
+						>
+					</p>
+				</div>
+			</div>
 		</div>
 	{/if}
 
 	<!-- Research Queue -->
 	{#if queue.length > 0}
-		<div
-			class="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-500 dark:bg-blue-900/20"
-		>
-			<h3 class="mb-3 text-lg font-bold text-blue-600 dark:text-blue-300">Research Queue</h3>
-			<div class="space-y-2">
+		<div class="mb-12 space-y-4">
+			<h2 class="text-xs font-black tracking-[0.2em] text-blue-400 uppercase">Ongoing Research</h2>
+			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 				{#each queue as item (item.id)}
-					<div class="flex items-center justify-between rounded bg-white p-3 dark:bg-gray-800">
-						<div class="flex items-center space-x-3">
-							<span class="text-2xl">{getResearchIcon(item.researchTypeId || 0)}</span>
-							<div>
-								<span class="font-medium text-gray-900 dark:text-gray-200"
-									>Research Level {item.level}</span
-								>
-								<div class="text-sm text-yellow-600 dark:text-yellow-400">
-									{formatTimeRemaining(new Date(item.completionAt))}
+					<div 
+						class="glass-panel group relative overflow-hidden rounded-2xl p-4 transition-all hover:border-blue-500/50 shadow-lg"
+						in:fly={{ y: 20, duration: 400 }}
+					>
+						<div class="flex items-center justify-between">
+							<div class="flex items-center space-x-4">
+								<div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-2xl group-hover:bg-blue-500/20 transition-colors">
+									{getResearchIcon(item.researchTypeId || 0)}
 								</div>
-							</div>
-						</div>
-						<div class="flex items-center space-x-3">
-							<!-- Scientific-themed progress bar -->
-							<div
-								class="relative h-3 w-24 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700"
-							>
-								<div
-									class="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-500 transition-all duration-1000 ease-out"
-									style="width: {calculateProgress(item.startedAt, new Date(item.completionAt))}%"
-								>
-									<div
-										class="absolute inset-0 animate-pulse bg-gradient-to-r from-transparent via-white/20 to-transparent"
-									></div>
+								<div>
+									<h4 class="font-bold text-white leading-tight">Level {item.level} Promotion</h4>
+									<p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">
+										{formatTimeRemaining(new Date(item.completionAt))}
+									</p>
 								</div>
-								<div
-									class="absolute inset-0 animate-pulse bg-gradient-to-r from-transparent via-emerald-200/30 to-transparent delay-300"
-								></div>
 							</div>
 							<button
 								onclick={() => handleCancel(item.id)}
-								class="rounded bg-red-600 px-3 py-1 text-sm font-bold text-white hover:bg-red-500"
+								class="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-gray-400 hover:bg-red-500/20 hover:text-red-400 transition-all"
 							>
-								Cancel
+								✕
 							</button>
+						</div>
+
+						<!-- Progress HUD -->
+						<div class="mt-4 space-y-2">
+							<div class="flex justify-between text-[10px] font-black text-gray-500 uppercase tracking-tighter">
+								<span>Completion</span>
+								<span class="text-blue-400">{calculateProgress(item.startedAt, new Date(item.completionAt))}%</span>
+							</div>
+							<div class="h-1.5 w-full overflow-hidden rounded-full bg-white/5">
+								<div
+									class="h-full rounded-full bg-gradient-to-r from-blue-600 to-cyan-400 shadow-[0_0_10px_rgba(37,99,235,0.5)] transition-all duration-1000"
+									style="width: {calculateProgress(item.startedAt, new Date(item.completionAt))}%"
+								></div>
+							</div>
 						</div>
 					</div>
 				{/each}
@@ -199,403 +223,104 @@
 		</div>
 	{/if}
 
-	<!-- Energy Research -->
-	{#if energyResearch.length > 0}
-		<h3 class="mb-4 border-b border-gray-700 pb-2 text-xl font-bold text-gray-300">
-			Energy Technologies
-		</h3>
-		<div
-			class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 {!hasResearchLab
-				? 'pointer-events-none opacity-50 grayscale'
-				: ''}"
-		>
-			{#each energyResearch as tech (tech.id)}
-				<div class="flex flex-col justify-between rounded border border-gray-700 bg-gray-800 p-4">
-					<div>
-						<div class="mb-2 flex items-center justify-between">
-							<div class="flex items-center space-x-3">
-								<span class="text-3xl">{tech.icon}</span>
-								<div>
-									<h3 class="text-lg font-bold text-gray-200">{tech.name}</h3>
-									<span class="font-mono text-xs text-blue-400">Level {tech.level}</span>
-								</div>
-							</div>
-						</div>
-
-						{#if tech.description}
-							<p class="mb-3 text-sm text-gray-400">{tech.description}</p>
-						{/if}
-
-						<div class="mb-2 flex flex-wrap gap-2 text-xs text-gray-400">
-							{#if tech.cost.metal > 0}
-								<span class={resources.metal < tech.cost.metal ? 'text-red-400' : 'text-gray-300'}>
-									Metal: {tech.cost.metal.toLocaleString()}
-								</span>
-							{/if}
-							{#if tech.cost.crystal > 0}
-								<span
-									class={resources.crystal < tech.cost.crystal ? 'text-red-400' : 'text-gray-300'}
-								>
-									Crystal: {tech.cost.crystal.toLocaleString()}
-								</span>
-							{/if}
-							{#if tech.cost.gas > 0}
-								<span class={resources.gas < tech.cost.gas ? 'text-red-400' : 'text-gray-300'}>
-									Gas: {tech.cost.gas.toLocaleString()}
-								</span>
-							{/if}
-						</div>
-
-						{#if Object.keys(tech.prerequisites).length > 0}
-							<div class="mb-2 text-xs text-gray-500">
-								Prerequisites: {Object.entries(tech.prerequisites)
-									.map(([k, v]) => `${k} ${v}`)
-									.join(', ')}
-							</div>
-						{/if}
+	<!-- Research Categories -->
+	<div class="space-y-16">
+		{#each categories as cat}
+			{#if cat.items.length > 0}
+				<section class="space-y-6" in:fade={{ delay: 200 }}>
+					<div class="flex items-center space-x-4">
+						<div class="h-2 w-2 rounded-full bg-{cat.color}-500 shadow-[0_0_10px_rgba(var(--color-accent-{cat.color}),0.5)]"></div>
+						<h2 class="text-xl font-black tracking-tight text-white uppercase">{cat.name}</h2>
+						<div class="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent"></div>
 					</div>
 
-					<button
-						onclick={() => data.currentPlanet && handleResearch(tech.id, data.currentPlanet.id)}
-						disabled={!hasResearchLab ||
-							!tech.canResearch ||
-							resources.metal < tech.cost.metal ||
-							resources.crystal < tech.cost.crystal ||
-							resources.gas < tech.cost.gas ||
-							tech.isResearching ||
-							loading[tech.id]}
-						class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
-					>
-						{#if loading[tech.id]}
-							<Spinner size="sm" class="mr-2" />
-						{:else if tech.isResearching}
-							Researching...
-						{:else}
-							Research Level {tech.level + 1}
-						{/if}
-					</button>
-				</div>
-			{/each}
-		</div>
-	{/if}
-
-	<!-- Combat Research -->
-	{#if combatResearch.length > 0}
-		<h3 class="mb-4 border-b border-gray-700 pb-2 text-xl font-bold text-gray-300">
-			Combat Technologies
-		</h3>
-		<div
-			class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 {!hasResearchLab
-				? 'pointer-events-none opacity-50 grayscale'
-				: ''}"
-		>
-			{#each combatResearch as tech (tech.id)}
-				<div class="flex flex-col justify-between rounded border border-gray-700 bg-gray-800 p-4">
-					<div>
-						<div class="mb-2 flex items-center justify-between">
-							<div class="flex items-center space-x-3">
-								<span class="text-3xl">{tech.icon}</span>
+					<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+						{#each cat.items as tech (tech.id)}
+							<div 
+								class="glass-panel group relative flex flex-col justify-between overflow-hidden rounded-2xl p-5 transition-all hover:-translate-y-1 hover:border-white/20 active:translate-y-0 {!hasResearchLab ? 'opacity-40 grayscale pointer-events-none' : ''}"
+							>
 								<div>
-									<h3 class="text-lg font-bold text-gray-200">{tech.name}</h3>
-									<span class="font-mono text-xs text-blue-400">Level {tech.level}</span>
+									<div class="mb-4 flex items-center justify-between">
+										<span class="text-3xl transition-transform group-hover:scale-110 duration-300">{tech.icon}</span>
+										<div class="flex flex-col items-end">
+											<span class="text-[10px] font-black tracking-widest text-blue-400 uppercase">Level</span>
+											<span class="font-mono text-xl font-black text-white">{tech.level}</span>
+										</div>
+									</div>
+
+									<h3 class="mb-1 text-lg font-black tracking-tight text-white group-hover:text-blue-400 transition-colors uppercase">{tech.name}</h3>
+									<p class="mb-4 line-clamp-2 text-xs leading-relaxed text-gray-400 group-hover:text-gray-300 transition-colors">
+										{tech.description}
+									</p>
+
+									<!-- Resources Grid -->
+									<div class="mb-6 grid grid-cols-2 gap-2">
+										{#if tech.cost.metal > 0}
+											<div class="flex items-center justify-between rounded-lg bg-white/5 p-2 border border-white/5">
+												<span class="text-[10px] font-bold text-gray-500 uppercase">M</span>
+												<span class="font-mono text-[10px] font-bold {resources.metal < tech.cost.metal ? 'text-red-400' : 'text-gray-200'}">
+													{tech.cost.metal.toLocaleString()}
+												</span>
+											</div>
+										{/if}
+										{#if tech.cost.crystal > 0}
+											<div class="flex items-center justify-between rounded-lg bg-white/5 p-2 border border-white/5">
+												<span class="text-[10px] font-bold text-blue-500 uppercase">C</span>
+												<span class="font-mono text-[10px] font-bold {resources.crystal < tech.cost.crystal ? 'text-red-400' : 'text-blue-200'}">
+													{tech.cost.crystal.toLocaleString()}
+												</span>
+											</div>
+										{/if}
+										{#if tech.cost.gas > 0}
+											<div class="flex items-center justify-between rounded-lg bg-white/5 p-2 border border-white/5">
+												<span class="text-[10px] font-bold text-purple-500 uppercase">G</span>
+												<span class="font-mono text-[10px] font-bold {resources.gas < tech.cost.gas ? 'text-red-400' : 'text-purple-200'}">
+													{tech.cost.gas.toLocaleString()}
+												</span>
+											</div>
+										{/if}
+									</div>
 								</div>
-							</div>
-						</div>
 
-						{#if tech.description}
-							<p class="mb-3 text-sm text-gray-400">{tech.description}</p>
-						{/if}
-
-						<div class="mb-2 flex flex-wrap gap-2 text-xs text-gray-400">
-							{#if tech.cost.metal > 0}
-								<span class={resources.metal < tech.cost.metal ? 'text-red-400' : 'text-gray-300'}>
-									Metal: {tech.cost.metal.toLocaleString()}
-								</span>
-							{/if}
-							{#if tech.cost.crystal > 0}
-								<span
-									class={resources.crystal < tech.cost.crystal ? 'text-red-400' : 'text-gray-300'}
+								<button
+									onclick={() => data.currentPlanet && handleResearch(tech.id, data.currentPlanet.id)}
+									disabled={!hasResearchLab ||
+										!tech.canResearch ||
+										resources.metal < tech.cost.metal ||
+										resources.crystal < tech.cost.crystal ||
+										resources.gas < tech.cost.gas ||
+										tech.isResearching ||
+										loading[tech.id]}
+									class="group/btn relative w-full overflow-hidden rounded-xl bg-blue-600 py-3 text-xs font-black tracking-widest text-white uppercase transition-all hover:bg-blue-500 disabled:bg-white/5 disabled:text-gray-600 disabled:pointer-events-none active:scale-[0.98]"
 								>
-									Crystal: {tech.cost.crystal.toLocaleString()}
-								</span>
-							{/if}
-							{#if tech.cost.gas > 0}
-								<span class={resources.gas < tech.cost.gas ? 'text-red-400' : 'text-gray-300'}>
-									Gas: {tech.cost.gas.toLocaleString()}
-								</span>
-							{/if}
-						</div>
-
-						{#if Object.keys(tech.prerequisites).length > 0}
-							<div class="mb-2 text-xs text-gray-500">
-								Prerequisites: {Object.entries(tech.prerequisites)
-									.map(([k, v]) => `${k} ${v}`)
-									.join(', ')}
+									<div class="relative z-10 flex items-center justify-center space-x-2">
+										{#if loading[tech.id]}
+											<Spinner size="sm" />
+										{:else if tech.isResearching}
+											<span>In Progress</span>
+										{:else}
+											<span>Commence Level {tech.level + 1}</span>
+										{/if}
+									</div>
+									<div class="absolute inset-0 z-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700"></div>
+								</button>
 							</div>
-						{/if}
+						{/each}
 					</div>
-
-					<button
-						onclick={() => data.currentPlanet && handleResearch(tech.id, data.currentPlanet.id)}
-						disabled={!hasResearchLab ||
-							!tech.canResearch ||
-							resources.metal < tech.cost.metal ||
-							resources.crystal < tech.cost.crystal ||
-							resources.gas < tech.cost.gas ||
-							tech.isResearching ||
-							loading[tech.id]}
-						class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
-					>
-						{#if loading[tech.id]}
-							<Spinner size="sm" class="mr-2" />
-						{:else if tech.isResearching}
-							Researching...
-						{:else}
-							Research Level {tech.level + 1}
-						{/if}
-					</button>
-				</div>
-			{/each}
-		</div>
-	{/if}
-
-	<!-- Propulsion Research -->
-	{#if propulsionResearch.length > 0}
-		<h3 class="mb-4 border-b border-gray-700 pb-2 text-xl font-bold text-gray-300">
-			Propulsion Technologies
-		</h3>
-		<div
-			class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 {!hasResearchLab
-				? 'pointer-events-none opacity-50 grayscale'
-				: ''}"
-		>
-			{#each propulsionResearch as tech (tech.id)}
-				<div class="flex flex-col justify-between rounded border border-gray-700 bg-gray-800 p-4">
-					<div>
-						<div class="mb-2 flex items-center justify-between">
-							<div class="flex items-center space-x-3">
-								<span class="text-3xl">{tech.icon}</span>
-								<div>
-									<h3 class="text-lg font-bold text-gray-200">{tech.name}</h3>
-									<span class="font-mono text-xs text-blue-400">Level {tech.level}</span>
-								</div>
-							</div>
-						</div>
-
-						{#if tech.description}
-							<p class="mb-3 text-sm text-gray-400">{tech.description}</p>
-						{/if}
-
-						<div class="mb-2 flex flex-wrap gap-2 text-xs text-gray-400">
-							{#if tech.cost.metal > 0}
-								<span class={resources.metal < tech.cost.metal ? 'text-red-400' : 'text-gray-300'}>
-									Metal: {tech.cost.metal.toLocaleString()}
-								</span>
-							{/if}
-							{#if tech.cost.crystal > 0}
-								<span
-									class={resources.crystal < tech.cost.crystal ? 'text-red-400' : 'text-gray-300'}
-								>
-									Crystal: {tech.cost.crystal.toLocaleString()}
-								</span>
-							{/if}
-							{#if tech.cost.gas > 0}
-								<span class={resources.gas < tech.cost.gas ? 'text-red-400' : 'text-gray-300'}>
-									Gas: {tech.cost.gas.toLocaleString()}
-								</span>
-							{/if}
-						</div>
-
-						{#if Object.keys(tech.prerequisites).length > 0}
-							<div class="mb-2 text-xs text-gray-500">
-								Prerequisites: {Object.entries(tech.prerequisites)
-									.map(([k, v]) => `${k} ${v}`)
-									.join(', ')}
-							</div>
-						{/if}
-					</div>
-
-					<button
-						onclick={() => data.currentPlanet && handleResearch(tech.id, data.currentPlanet.id)}
-						disabled={!hasResearchLab ||
-							!tech.canResearch ||
-							resources.metal < tech.cost.metal ||
-							resources.crystal < tech.cost.crystal ||
-							resources.gas < tech.cost.gas ||
-							tech.isResearching ||
-							loading[tech.id]}
-						class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
-					>
-						{#if loading[tech.id]}
-							<Spinner size="sm" class="mr-2" />
-						{:else if tech.isResearching}
-							Researching...
-						{:else}
-							Research Level {tech.level + 1}
-						{/if}
-					</button>
-				</div>
-			{/each}
-		</div>
-	{/if}
-
-	<!-- Intelligence Research -->
-	{#if intelligenceResearch.length > 0}
-		<h3 class="mb-4 border-b border-gray-700 pb-2 text-xl font-bold text-gray-300">
-			Intelligence Technologies
-		</h3>
-		<div
-			class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 {!hasResearchLab
-				? 'pointer-events-none opacity-50 grayscale'
-				: ''}"
-		>
-			{#each intelligenceResearch as tech (tech.id)}
-				<div class="flex flex-col justify-between rounded border border-gray-700 bg-gray-800 p-4">
-					<div>
-						<div class="mb-2 flex items-center justify-between">
-							<div class="flex items-center space-x-3">
-								<span class="text-3xl">{tech.icon}</span>
-								<div>
-									<h3 class="text-lg font-bold text-gray-200">{tech.name}</h3>
-									<span class="font-mono text-xs text-blue-400">Level {tech.level}</span>
-								</div>
-							</div>
-						</div>
-
-						{#if tech.description}
-							<p class="mb-3 text-sm text-gray-400">{tech.description}</p>
-						{/if}
-
-						<div class="mb-2 flex flex-wrap gap-2 text-xs text-gray-400">
-							{#if tech.cost.metal > 0}
-								<span class={resources.metal < tech.cost.metal ? 'text-red-400' : 'text-gray-300'}>
-									Metal: {tech.cost.metal.toLocaleString()}
-								</span>
-							{/if}
-							{#if tech.cost.crystal > 0}
-								<span
-									class={resources.crystal < tech.cost.crystal ? 'text-red-400' : 'text-gray-300'}
-								>
-									Crystal: {tech.cost.crystal.toLocaleString()}
-								</span>
-							{/if}
-							{#if tech.cost.gas > 0}
-								<span class={resources.gas < tech.cost.gas ? 'text-red-400' : 'text-gray-300'}>
-									Gas: {tech.cost.gas.toLocaleString()}
-								</span>
-							{/if}
-						</div>
-
-						{#if Object.keys(tech.prerequisites).length > 0}
-							<div class="mb-2 text-xs text-gray-500">
-								Prerequisites: {Object.entries(tech.prerequisites)
-									.map(([k, v]) => `${k} ${v}`)
-									.join(', ')}
-							</div>
-						{/if}
-					</div>
-
-					<button
-						onclick={() => data.currentPlanet && handleResearch(tech.id, data.currentPlanet.id)}
-						disabled={!hasResearchLab ||
-							!tech.canResearch ||
-							resources.metal < tech.cost.metal ||
-							resources.crystal < tech.cost.crystal ||
-							resources.gas < tech.cost.gas ||
-							tech.isResearching ||
-							loading[tech.id]}
-						class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
-					>
-						{#if loading[tech.id]}
-							<Spinner size="sm" class="mr-2" />
-						{:else if tech.isResearching}
-							Researching...
-						{:else}
-							Research Level {tech.level + 1}
-						{/if}
-					</button>
-				</div>
-			{/each}
-		</div>
-	{/if}
-
-	<!-- Expansion Research -->
-	{#if expansionResearch.length > 0}
-		<h3 class="mb-4 border-b border-gray-700 pb-2 text-xl font-bold text-gray-300">
-			Expansion Technologies
-		</h3>
-		<div
-			class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 {!hasResearchLab
-				? 'pointer-events-none opacity-50 grayscale'
-				: ''}"
-		>
-			{#each expansionResearch as tech (tech.id)}
-				<div class="flex flex-col justify-between rounded border border-gray-700 bg-gray-800 p-4">
-					<div>
-						<div class="mb-2 flex items-center justify-between">
-							<div class="flex items-center space-x-3">
-								<span class="text-3xl">{tech.icon}</span>
-								<div>
-									<h3 class="text-lg font-bold text-gray-200">{tech.name}</h3>
-									<span class="font-mono text-xs text-blue-400">Level {tech.level}</span>
-								</div>
-							</div>
-						</div>
-
-						{#if tech.description}
-							<p class="mb-3 text-sm text-gray-400">{tech.description}</p>
-						{/if}
-
-						<div class="mb-2 flex flex-wrap gap-2 text-xs text-gray-400">
-							{#if tech.cost.metal > 0}
-								<span class={resources.metal < tech.cost.metal ? 'text-red-400' : 'text-gray-300'}>
-									Metal: {tech.cost.metal.toLocaleString()}
-								</span>
-							{/if}
-							{#if tech.cost.crystal > 0}
-								<span
-									class={resources.crystal < tech.cost.crystal ? 'text-red-400' : 'text-gray-300'}
-								>
-									Crystal: {tech.cost.crystal.toLocaleString()}
-								</span>
-							{/if}
-							{#if tech.cost.gas > 0}
-								<span class={resources.gas < tech.cost.gas ? 'text-red-400' : 'text-gray-300'}>
-									Gas: {tech.cost.gas.toLocaleString()}
-								</span>
-							{/if}
-						</div>
-
-						{#if Object.keys(tech.prerequisites).length > 0}
-							<div class="mb-2 text-xs text-gray-500">
-								Prerequisites: {Object.entries(tech.prerequisites)
-									.map(([k, v]) => `${k} ${v}`)
-									.join(', ')}
-							</div>
-						{/if}
-					</div>
-
-					<button
-						onclick={() => data.currentPlanet && handleResearch(tech.id, data.currentPlanet.id)}
-						disabled={!hasResearchLab ||
-							!tech.canResearch ||
-							resources.metal < tech.cost.metal ||
-							resources.crystal < tech.cost.crystal ||
-							resources.gas < tech.cost.gas ||
-							tech.isResearching ||
-							loading[tech.id]}
-						class="flex w-full items-center justify-center rounded bg-blue-600 py-2 text-sm font-bold transition-transform hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:opacity-50"
-					>
-						{#if loading[tech.id]}
-							<Spinner size="sm" class="mr-2" />
-						{:else if tech.isResearching}
-							Researching...
-						{:else}
-							Research Level {tech.level + 1}
-						{/if}
-					</button>
-				</div>
-			{/each}
-		</div>
-	{/if}
+				</section>
+			{/if}
+		{/each}
+	</div>
 </div>
+
+<style>
+	.glass-panel {
+		background: rgba(13, 17, 23, 0.7);
+		backdrop-filter: blur(12px);
+		border: 1px solid rgba(255, 255, 255, 0.05);
+	}
+	
+	.glow-blue {
+		text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+	}
+</style>

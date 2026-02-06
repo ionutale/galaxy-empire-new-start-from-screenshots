@@ -25,10 +25,9 @@ export const load: LayoutServerLoad = async ({ locals, depends, url, cookies }) 
 	depends('app:unread-messages');
 	depends('app:game-data');
 
-	// Trigger fleet processing on page load (Lazy approach for demo)
-	// In production, use a separate worker/cron
-	await processFleets();
-	await processAutoExplore();
+	// Fleet processing is now handled by PostgreSQL pg_cron
+	// await processFleets();
+	// await processAutoExplore();
 
 	// Fetch user's planets
 	const planetsRes = await db

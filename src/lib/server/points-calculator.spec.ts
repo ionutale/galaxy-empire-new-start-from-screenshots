@@ -9,28 +9,36 @@ import { db } from './db';
 import { users } from './db/schema';
 import { SHIPS } from '$lib/game-config';
 
-// Mock the database
+// Mock database interface
 interface MockDb {
 	select: ReturnType<typeof vi.fn>;
 	insert: ReturnType<typeof vi.fn>;
 	update: ReturnType<typeof vi.fn>;
-	execute: ReturnType<typeof vi.fn>;
-	delete: ReturnType<typeof vi.fn>;
 	transaction: ReturnType<typeof vi.fn>;
 }
 
-vi.mock('./db', async (importOriginal) => {
-	const actual: any = await importOriginal(); // eslint-disable-line @typescript-eslint/no-explicit-any
+// Mock the database with proper chaining support
+vi.mock('./db', () => {
+	const mockQuery = {
+		from: vi.fn(() => mockQuery),
+		where: vi.fn(),
+		values: vi.fn(() => Promise.resolve()),
+		set: vi.fn(() => mockQuery),
+		limit: vi.fn(() => mockQuery)
+	};
+	
+	const mockDb = {
+		select: vi.fn(() => mockQuery),
+		insert: vi.fn(() => mockQuery),
+		update: vi.fn(() => mockQuery),
+		transaction: vi.fn()
+	};
+
+	// Expose mockQuery for tests
+	(mockDb as any).__mockQuery = mockQuery;
+
 	return {
-		...actual,
-		db: {
-			select: vi.fn(),
-			insert: vi.fn(),
-			update: vi.fn(),
-			execute: vi.fn(),
-			delete: vi.fn(),
-			transaction: vi.fn()
-		}
+		db: mockDb
 	};
 });
 

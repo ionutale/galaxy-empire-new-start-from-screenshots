@@ -14,36 +14,10 @@ declare global {
 	var __game_tick_interval: NodeJS.Timeout | undefined;
 }
 
-function startTickLoop() {
-	if (globalThis.__game_tick_interval) {
-		clearInterval(globalThis.__game_tick_interval);
-	}
-
-	console.log('Starting game tick loop...');
-	// In development, run game tick every 10 seconds instead of every second
-	const tickInterval = process.env.NODE_ENV === 'production' ? 1000 : 10000;
-
-	globalThis.__game_tick_interval = setInterval(async () => {
-		try {
-			await processFleets();
-			await processAutoExplore();
-			await ShipyardService.processCompletedShipConstruction();
-			await ResearchService.processCompletedResearch();
-			await processBroodRaids();
-			await db.execute(sql`CALL process_completed_buildings()`);
-		} catch (e) {
-			console.error('Tick error:', e);
-		}
-	}, tickInterval);
-}
-
+// Game ticks are handled by pg_cron in the database.
+// We disable the Node.js interval to prevent resource contention and latency issues.
 if (!building) {
-	// Only start game tick in production
-	if (process.env.NODE_ENV === 'production') {
-		startTickLoop();
-	} else {
-		console.log('Skipping game tick loop in development mode');
-	}
+	console.log('Game tick loop is managed by PostgreSQL (pg_cron). Skipping Node.js tick loop.');
 }
 
 export const handle: Handle = async ({ event, resolve }) => {

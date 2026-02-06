@@ -2,11 +2,9 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { goto, invalidate } from '$app/navigation';
 	import { page } from '$app/stores';
+	import '$lib/styles/theme.css';
 
 	let { children, data } = $props();
-
-	// Dark mode
-	let isDarkMode = $state(false);
 
 	interface ChatMessage {
 		id?: string;
@@ -39,7 +37,6 @@
 		try {
 			const res = await fetch('/api/game-tick');
 			if (res.ok) {
-				// Invalidate game data to refresh UI (resources, fleets, etc.)
 				invalidate('app:game-data');
 			}
 		} catch (e) {
@@ -71,160 +68,188 @@
 		fetchChat();
 	}
 
-	// Initialize dark mode from localStorage
 	onMount(() => {
-		const saved = localStorage.getItem('darkMode');
-		isDarkMode = saved === 'true';
-		document.documentElement.classList.toggle('dark', isDarkMode);
-
+		// Force dark mode
+		document.documentElement.classList.add('dark');
+		
 		fetchChat();
-		chatInterval = setInterval(fetchChat, 5000); // Poll every 5s
+		chatInterval = setInterval(fetchChat, 5000);
 
-		// Only poll game tick in production
 		if (!import.meta.env.DEV) {
 			gameTickInterval = setInterval(runGameTick, 5000);
 		}
-	});
-
-	// Watch for dark mode changes and save to localStorage
-	$effect(() => {
-		localStorage.setItem('darkMode', isDarkMode.toString());
-		document.documentElement.classList.toggle('dark', isDarkMode);
 	});
 
 	onDestroy(() => {
 		if (chatInterval) clearInterval(chatInterval);
 		if (gameTickInterval) clearInterval(gameTickInterval);
 	});
+
+	// Grouping navigation for better UX
+	const navGroups = [
+		{
+			title: 'Base',
+			items: [
+				{ href: '/game', icon: '🪐', label: 'Overview' },
+				{ href: '/game/planet', icon: '🌍', label: 'Planets' },
+				{ href: '/game/research', icon: '🔬', label: 'Research' }
+			]
+		},
+		{
+			title: 'Military',
+			items: [
+				{ href: '/game/shipyard', icon: '🛠️', label: 'Shipyard' },
+				{ href: '/game/fleet', icon: '🚀', label: 'Fleet' },
+				{ href: '/game/fleet/movements', icon: '📡', label: 'Radar' }
+			]
+		},
+		{
+			title: 'Universe',
+			items: [
+				{ href: '/game/galaxy', icon: '🌌', label: 'Galaxy' },
+				{ href: '/game/system', icon: '☀️', label: 'System' }
+			]
+		},
+		{
+			title: 'Empire',
+			items: [
+				{ href: '/game/alliance', icon: '🤝', label: 'Alliance' },
+				{ href: '/game/highscore', icon: '🏆', label: 'Rank' },
+				{ href: '/game/shop', icon: '🛒', label: 'Premium' }
+			]
+		}
+	];
 </script>
 
-<div
-	class="flex h-[100dvh] h-screen flex-col overflow-hidden font-sans {isDarkMode
-		? 'bg-gray-900 text-white'
-		: 'bg-gray-100 text-gray-900'} {isDarkMode ? 'dark' : ''}"
->
+<div class="space-background">
+	<div class="stars"></div>
+</div>
+
+<div class="flex h-[100dvh] h-screen flex-col overflow-hidden font-sans text-white">
 	<!-- Top Bar (HUD) -->
-	<header
-		class="z-20 flex h-12 shrink-0 items-center justify-between border-b px-4 {isDarkMode
-			? 'border-gray-700 bg-gray-800'
-			: 'border-gray-300 bg-white'}"
-	>
-		<div class="flex items-center space-x-4">
-			<div class="hidden items-center space-x-2 sm:flex">
-				<div class="font-bold text-yellow-500">Rank 1</div>
-				<span class="text-xs text-green-500">▲</span>
+	<header class="hud-bar z-30 flex h-14 shrink-0 items-center justify-between px-6 backdrop-blur-md">
+		<div class="flex items-center space-x-6">
+			<div class="flex flex-col">
+				<div class="text-xs font-bold tracking-widest text-blue-400 uppercase">Commander</div>
+				<div class="text-lg font-bold tracking-tight glow-blue">{data.user.username}</div>
 			</div>
+
+			<div class="h-8 w-px bg-white/10"></div>
 
 			<!-- Planet Selector -->
-			<select
-				class="max-w-[150px] rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-900 focus:border-blue-500 focus:outline-none sm:max-w-[200px] sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-				value={data.currentPlanet?.id}
-				onchange={(e) => {
-					const newId = e.currentTarget.value;
-					const url = new URL($page.url);
-					url.searchParams.set('planet', newId);
-					goto(url.toString());
-				}}
-			>
-				{#each data.planets as planet (planet.id)}
-					<option value={planet.id}>
-						{planet.name} [{planet.galaxyId}:{planet.systemId}:{planet.planetNumber}]
-					</option>
-				{/each}
-			</select>
-		</div>
-
-		<div class="hidden text-lg font-bold tracking-wider text-blue-600 md:block dark:text-blue-300">
-			{data.user.username}
-		</div>
-
-		<div class="flex items-center space-x-4">
-			<div class="flex space-x-2">
-				<a
-					href="/game/commanders"
-					class="flex h-8 w-8 items-center justify-center rounded-full border border-gray-600 bg-gray-700 transition-colors hover:bg-gray-600"
-					title="Officers"
+			<div class="relative flex flex-col">
+				<span class="text-[10px] tracking-widest text-gray-500 uppercase">Sector</span>
+				<select
+					class="cursor-pointer border-none bg-transparent p-0 text-sm font-bold text-gray-200 focus:ring-0"
+					value={data.currentPlanet?.id}
+					onchange={(e) => {
+						const newId = e.currentTarget.value;
+						const url = new URL($page.url);
+						url.searchParams.set('planet', newId);
+						goto(url.toString());
+					}}
 				>
-					<span class="text-sm">👨‍✈️</span>
+					{#each data.planets as planet (planet.id)}
+						<option value={planet.id} class="bg-gray-900">
+							{planet.name} [{planet.galaxyId}:{planet.systemId}:{planet.planetNumber}]
+						</option>
+					{/each}
+				</select>
+			</div>
+		</div>
+
+		<div class="flex items-center space-x-6">
+			<div class="hidden flex-col items-end sm:flex text-right">
+				<div class="text-xs font-bold tracking-widest text-emerald-400 uppercase">Rank 1</div>
+				<div class="text-[10px] text-emerald-500/80">Imperial Vanguard</div>
+			</div>
+			
+			<div class="flex space-x-3">
+				<a
+					href="/game/messages"
+					class="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 transition-all hover:bg-white/10 hover:border-blue-500/50 active:scale-95"
+				>
+					<span class="text-xl">✉️</span>
+					{#if data.unreadMessages > 0}
+						<span
+							class="absolute -top-1 -right-1 flex h-5 w-5 animate-pulse items-center justify-center rounded-full bg-red-600 text-[10px] font-bold shadow-[0_0_10px_rgba(220,38,38,0.5)]"
+						>
+							{data.unreadMessages}
+						</span>
+					{/if}
 				</a>
 				<a
-					href="/game/shop"
-					class="flex h-8 w-8 items-center justify-center rounded-full border border-gray-600 bg-gray-700 transition-colors hover:bg-gray-600"
-					title="Shop"
+					href="/game/settings"
+					class="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 transition-all hover:bg-white/10 hover:border-blue-500/50 active:scale-95"
 				>
-					<span class="text-sm">🛒</span>
+					<span class="text-xl">⚙️</span>
 				</a>
 			</div>
-			<button
-				onclick={() => (isDarkMode = !isDarkMode)}
-				class="text-2xl transition-transform active:scale-95"
-				title="Toggle dark mode"
-			>
-				{isDarkMode ? '☀️' : '🌙'}
-			</button>
-			<a href="/game/messages" class="relative transition-transform active:scale-95">
-				<span class="text-2xl">✉️</span>
-				{#if data.unreadMessages > 0}
-					<span
-						class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs"
-					>
-						{data.unreadMessages}
-					</span>
-				{/if}
-			</a>
-			<a
-				href="/game/settings"
-				class="text-2xl transition transition-transform hover:text-gray-300 active:scale-95"
-			>
-				⚙️
-			</a>
 		</div>
 	</header>
 
-	<!-- Resource Bar -->
+	<!-- Resource HUD -->
 	<div
-		class="z-20 flex h-14 shrink-0 items-center justify-around border-b border-gray-700 bg-gray-800/90 px-2 text-xs shadow-lg sm:text-sm"
+		class="z-20 flex h-16 shrink-0 items-center justify-center border-b border-white/5 bg-black/40 backdrop-blur-sm px-4"
 	>
-		{#if data.resources}
-			<div class="flex flex-col items-center">
-				<span class="mb-1 text-gray-400">Metal</span>
-				<span class="font-mono font-bold text-gray-200"
-					>{Math.floor(data.resources.metal || 0).toLocaleString()}</span
-				>
-			</div>
-			<div class="flex flex-col items-center">
-				<span class="mb-1 text-blue-400">Crystal</span>
-				<span class="font-mono font-bold text-blue-200"
-					>{Math.floor(data.resources.crystal || 0).toLocaleString()}</span
-				>
-			</div>
-			<div class="flex flex-col items-center">
-				<span class="mb-1 text-purple-400">Gas</span>
-				<span class="font-mono font-bold text-purple-200"
-					>{Math.floor(data.resources.gas || 0).toLocaleString()}</span
-				>
-			</div>
-			<div class="flex flex-col items-center">
-				<span class="mb-1 text-yellow-400">Energy</span>
-				<span class="font-mono font-bold text-yellow-200">{data.resources.energy || 0}</span>
-			</div>
-			<div class="flex flex-col items-center">
-				<span class="mb-1 text-purple-600">Dark Matter</span>
-				<span class="font-mono font-bold text-purple-300"
-					>{data.user.darkMatter.toLocaleString()}</span
-				>
-			</div>
-		{/if}
+		<div class="flex w-full max-w-5xl items-center justify-around gap-2 px-2">
+			{#if data.resources}
+				<div class="resource-pill" data-tooltip="Metal Production">
+					<span class="text-lg">⚙️</span>
+					<div class="flex flex-col">
+						<span class="text-[9px] font-bold text-gray-400 uppercase">Metal</span>
+						<span class="font-mono text-sm font-bold text-gray-100"
+							>{Math.floor(data.resources.metal || 0).toLocaleString()}</span
+						>
+					</div>
+				</div>
+
+				<div class="resource-pill" data-tooltip="Crystal Production">
+					<span class="text-lg">💎</span>
+					<div class="flex flex-col">
+						<span class="text-[9px] font-bold text-blue-400 uppercase">Crystal</span>
+						<span class="font-mono text-sm font-bold text-blue-100"
+							>{Math.floor(data.resources.crystal || 0).toLocaleString()}</span
+						>
+					</div>
+				</div>
+
+				<div class="resource-pill" data-tooltip="Deuterium Extraction">
+					<span class="text-lg">🧪</span>
+					<div class="flex flex-col">
+						<span class="text-[9px] font-bold text-purple-400 uppercase">Gas</span>
+						<span class="font-mono text-sm font-bold text-purple-100"
+							>{Math.floor(data.resources.gas || 0).toLocaleString()}</span
+						>
+					</div>
+				</div>
+
+				<div class="resource-pill {data.resources.energy < 0 ? 'border-red-500/50 bg-red-500/5' : ''}" data-tooltip="Energy Balance">
+					<span class="text-lg {data.resources.energy < 0 ? 'animate-pulse' : ''}">{data.resources.energy < 0 ? '⚠️' : '⚡'}</span>
+					<div class="flex flex-col">
+						<span class="text-[9px] font-bold {data.resources.energy < 0 ? 'text-red-400' : 'text-yellow-400'} uppercase">Energy</span>
+						<span class="font-mono text-sm font-bold {data.resources.energy < 0 ? 'text-red-400 glow-red' : 'text-yellow-100'}"
+							>{data.resources.energy || 0}</span
+						>
+					</div>
+				</div>
+
+				<div class="resource-pill" data-tooltip="Premium Currency">
+					<span class="text-lg">🌌</span>
+					<div class="flex flex-col">
+						<span class="text-[9px] font-bold text-fuchsia-400 uppercase">Dark Matter</span>
+						<span class="font-mono text-sm font-bold text-fuchsia-100"
+							>{data.user.darkMatter.toLocaleString()}</span
+						>
+					</div>
+				</div>
+			{/if}
+		</div>
 	</div>
 
 	<!-- Main Viewport -->
-	<main
-		class="relative flex-1 overflow-auto bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-gray-900 to-black"
-	>
-		<!-- Background overlay for better text readability if needed -->
-		<div class="pointer-events-none absolute inset-0 bg-black/30"></div>
-
-		<div class="relative z-10 h-full">
+	<main class="relative flex-1 overflow-y-auto">
+		<div class="mx-auto h-full w-full max-w-7xl relative z-10 transition-all duration-500">
 			{@render children()}
 		</div>
 	</main>
@@ -232,14 +257,18 @@
 	<!-- Chat Overlay -->
 	{#if isChatOpen}
 		<div
-			class="absolute right-0 bottom-16 left-0 z-30 flex h-64 flex-col border-t border-gray-700 bg-black/90 backdrop-blur-md"
+			class="absolute right-6 bottom-24 left-6 z-40 flex h-80 flex-col overflow-hidden rounded-2xl border border-white/10 bg-black/95 shadow-2xl backdrop-blur-2xl transition-all sm:right-6 sm:bottom-24 sm:left-auto sm:w-96"
 		>
-			<div class="flex items-center justify-between border-b border-gray-700 bg-gray-800 p-2">
+			<div class="flex items-center justify-between border-b border-white/10 bg-white/5 p-4">
+				<div class="flex items-center space-x-2">
+					<span class="text-xl">💬</span>
+					<h3 class="font-bold tracking-tight">Hyperspace Comms</h3>
+				</div>
 				<div class="flex space-x-2">
 					<button
 						onclick={() => switchChannel('global')}
-						class="rounded px-2 py-1 text-sm transition {chatChannel === 'global'
-							? 'bg-blue-600 text-white'
+						class="rounded-full px-3 py-1 text-xs font-bold transition {chatChannel === 'global'
+							? 'bg-blue-600 text-white shadow-lg'
 							: 'text-gray-400 hover:text-white'}"
 					>
 						Global
@@ -247,173 +276,119 @@
 					{#if data.user.allianceId}
 						<button
 							onclick={() => switchChannel('alliance')}
-							class="rounded px-2 py-1 text-sm transition {chatChannel === 'alliance'
-								? 'bg-blue-600 text-white'
+							class="rounded-full px-3 py-1 text-xs font-bold transition {chatChannel === 'alliance'
+								? 'bg-emerald-600 text-white shadow-lg'
 								: 'text-gray-400 hover:text-white'}"
 						>
 							Alliance
 						</button>
 					{/if}
+					<button
+						onclick={() => (isChatOpen = false)}
+						class="ml-2 text-gray-500 hover:text-white transition-colors">✕</button
+					>
 				</div>
-				<button
-					onclick={() => (isChatOpen = false)}
-					class="text-gray-400 transition-transform hover:text-white active:scale-95">▼</button
-				>
 			</div>
 
-			<div class="flex flex-1 flex-col-reverse space-y-1 overflow-y-auto p-2">
+			<div class="flex flex-1 flex-col-reverse space-y-3 overflow-y-auto p-4 custom-scrollbar">
 				{#each chatMessages as msg (msg.id || msg.createdAt)}
-					<div class="text-sm">
-						<span class="text-xs text-gray-500"
-							>[{new Date(msg.createdAt).toLocaleTimeString()}]</span
-						>
-						{#if msg.allianceTag}
-							<span class="font-bold text-blue-400">[{msg.allianceTag}]</span>
-						{/if}
-						<span class="font-bold text-yellow-500">{msg.username}:</span>
-						<span class="text-gray-300">{msg.content}</span>
+					<div class="group flex flex-col space-y-1">
+						<div class="flex items-baseline space-x-2">
+							{#if msg.allianceTag}
+								<span class="text-[10px] font-black text-blue-400 tracking-tighter">[{msg.allianceTag}]</span>
+							{/if}
+							<span class="text-xs font-bold text-yellow-500">{msg.username}</span>
+							<span class="text-[9px] text-gray-600">{new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+						</div>
+						<div class="rounded-lg rounded-tl-none bg-white/5 p-2 text-sm text-gray-300">
+							{msg.content}
+						</div>
 					</div>
 				{/each}
 			</div>
 
-			<div class="flex border-t border-gray-700 bg-gray-800 p-2">
-				<label for="chat-input" class="sr-only">Chat message</label>
-				<input
-					id="chat-input"
-					type="text"
-					bind:value={newMessage}
-					onkeydown={(e) => e.key === 'Enter' && sendChat()}
-					placeholder="Type a message..."
-					aria-label="Type a chat message"
-					class="flex-1 rounded-l border border-gray-600 bg-gray-700 px-2 py-1 text-white focus:border-blue-500 focus:outline-none"
-				/>
-				<button
-					onclick={sendChat}
-					aria-label="Send chat message"
-					class="rounded-r bg-blue-600 px-4 py-1 font-bold text-white transition-transform hover:bg-blue-500 active:scale-95"
-					>Send</button
-				>
+			<div class="border-t border-white/10 bg-white/5 p-4">
+				<div class="flex items-center space-x-2 rounded-full border border-white/10 bg-black/50 px-4 py-1 focus-within:border-blue-500/50">
+					<input
+						type="text"
+						bind:value={newMessage}
+						onkeydown={(e) => e.key === 'Enter' && sendChat()}
+						placeholder="Transmit message..."
+						class="flex-1 bg-transparent py-2 text-sm text-white focus:outline-none"
+					/>
+					<button
+						onclick={sendChat}
+						class="text-blue-500 transition-transform hover:scale-110 active:scale-95"
+					>
+						▶
+					</button>
+				</div>
 			</div>
 		</div>
 	{:else}
 		<button
 			onclick={() => (isChatOpen = true)}
-			class="z-30 w-full shrink-0 cursor-pointer truncate border-t border-gray-700 bg-black/60 p-2 text-left text-sm text-gray-300 backdrop-blur-sm transition hover:bg-black/80 active:bg-black/90"
+			class="fixed bottom-24 right-6 z-40 flex items-center space-x-3 rounded-full border border-white/10 bg-black/80 px-4 py-2 text-sm text-gray-300 shadow-xl backdrop-blur-md transition-all hover:bg-black hover:border-blue-500/50 active:scale-95"
 		>
+			<span class="relative flex h-3 w-3">
+				<span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></span>
+				<span class="relative inline-flex h-3 w-3 rounded-full bg-blue-500"></span>
+			</span>
+			<span class="font-bold tracking-tight">Open Comms</span>
 			{#if chatMessages.length > 0}
-				{@const lastMsg = chatMessages[0]}
-				<span class="font-bold text-blue-400"
-					>[{chatChannel === 'alliance' ? 'Alliance' : 'Global'}]</span
-				>
-				<span class="text-yellow-500">{lastMsg.username}:</span>
-				{lastMsg.content}
-			{:else}
-				<span class="text-gray-500 italic">Click to open chat...</span>
+				<div class="h-4 w-px bg-white/20"></div>
+				<span class="truncate max-w-[150px] italic text-gray-500 text-xs">
+					{chatMessages[0].username}: {chatMessages[0].content}
+				</span>
 			{/if}
 		</button>
 	{/if}
 
 	<!-- Bottom Navigation Bar (Dock) -->
-	<nav
-		class="no-scrollbar z-20 flex min-h-[4rem] shrink-0 items-center overflow-x-auto border-t border-gray-700 bg-gray-800 px-2 pb-8 md:pb-safe"
-	>
-		<a
-			href="/game"
-			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
-		>
-			<span class="mb-1 text-xl">🪐</span>
-			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Base</span>
-		</a>
-		<a
-			href="/game/planet"
-			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
-		>
-			<span class="mb-1 text-xl">🌍</span>
-			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Planets</span>
-		</a>
-		<a
-			href="/game/research"
-			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
-		>
-			<span class="mb-1 text-xl">🔬</span>
-			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Research</span>
-		</a>
-		<a
-			href="/game/shipyard"
-			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
-		>
-			<span class="mb-1 text-xl">🛠️</span>
-			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Shipyard</span>
-		</a>
-		<a
-			href="/game/fleet"
-			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
-		>
-			<span class="mb-1 text-xl">🚀</span>
-			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Fleet</span>
-		</a>
-		<a
-			href="/game/fleet/movements"
-			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
-		>
-			<span class="mb-1 text-xl">📡</span>
-			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Movements</span>
-		</a>
-		<a
-			href="/game/galaxy"
-			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
-		>
-			<span class="mb-1 text-xl">🌌</span>
-			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Galaxy</span>
-		</a>
-		<a
-			href="/game/system"
-			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
-		>
-			<span class="mb-1 text-xl">☀️</span>
-			<span class="text-[10px] tracking-wide text-gray-300 uppercase">System</span>
-		</a>
-		<a
-			href="/game/alliance"
-			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
-		>
-			<span class="mb-1 text-xl">🤝</span>
-			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Alliance</span>
-		</a>
-		<a
-			href="/game/commanders"
-			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
-		>
-			<span class="mb-1 text-xl">👨‍✈️</span>
-			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Officers</span>
-		</a>
-		<a
-			href="/game/shop"
-			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
-		>
-			<span class="mb-1 text-xl">🛒</span>
-			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Shop</span>
-		</a>
-		<a
-			href="/game/transactions"
-			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
-		>
-			<span class="mb-1 text-xl">💰</span>
-			<span class="text-[10px] tracking-wide text-gray-300 uppercase">History</span>
-		</a>
-		<a
-			href="/game/highscore"
-			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
-		>
-			<span class="mb-1 text-xl">🏆</span>
-			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Rank</span>
-		</a>
-		<a
-			href="/game/achievements"
-			class="flex min-w-[4rem] transform flex-col items-center rounded-lg p-2 transition hover:bg-gray-700 active:scale-95"
-		>
-			<span class="mb-1 text-xl">🎖️</span>
-			<span class="text-[10px] tracking-wide text-gray-300 uppercase">Achievements</span>
-		</a>
+	<nav class="dock z-30 flex h-20 shrink-0 items-center justify-center px-4 pb-safe border-t border-white/5 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+		<div class="flex items-center justify-center gap-1 sm:gap-4 lg:gap-8">
+			{#each navGroups as group}
+				<div class="flex items-center">
+					<div class="flex flex-col items-center">
+						<div class="flex gap-1">
+							{#each group.items as item}
+								<a
+									href={item.href}
+									class="nav-item flex min-w-[3.5rem] flex-col items-center rounded-xl p-2 transition-all {$page.url.pathname === item.href ? 'active bg-white/5' : ''}"
+									title={item.label}
+								>
+									<span class="text-2xl transition-transform group-hover:scale-110">{item.icon}</span>
+									<span class="text-[9px] font-black tracking-tighter text-gray-500 uppercase">{item.label}</span>
+								</a>
+							{/each}
+						</div>
+					</div>
+					{#if group.title !== 'Empire'}
+						<div class="mx-2 h-10 w-px bg-white/5 hidden sm:block"></div>
+					{/if}
+				</div>
+			{/each}
+		</div>
 	</nav>
 </div>
+
+<style>
+	:global(.no-scrollbar::-webkit-scrollbar) {
+		display: none;
+	}
+	:global(.no-scrollbar) {
+		-ms-overflow-style: none;
+		scrollbar-width: none;
+	}
+
+	.custom-scrollbar::-webkit-scrollbar {
+		width: 4px;
+	}
+	.custom-scrollbar::-webkit-scrollbar-track {
+		background: transparent;
+	}
+	.custom-scrollbar::-webkit-scrollbar-thumb {
+		background: rgba(255, 255, 255, 0.1);
+		border-radius: 10px;
+	}
+</style>
