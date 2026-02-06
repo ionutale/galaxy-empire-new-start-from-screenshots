@@ -11,6 +11,10 @@ BEGIN
         -- Unschedule existing job to avoid duplicates
         -- We use unschedule with the job name to remove the old entry
         PERFORM cron.unschedule('game-tick');
+        
+        -- ALSO Unschedule the old loop-based job from migration 0031
+        -- This prevents double-execution (one from the loop, one from the new schedule)
+        PERFORM cron.unschedule('game-tick-loop');
 
         -- Schedule using pg_cron 1.6+ interval syntax ('1 seconds')
         PERFORM cron.schedule(
