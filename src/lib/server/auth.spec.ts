@@ -37,7 +37,7 @@ interface MockDb {
 
 // Mock the database with proper chaining support
 vi.mock('./db', () => {
-	const mockDb = {
+	const mockDb: any = {
 		select: vi.fn(() => mockDb),
 		from: vi.fn(() => mockDb),
 		innerJoin: vi.fn(() => mockDb),
@@ -52,7 +52,9 @@ vi.mock('./db', () => {
 	};
 
 	return {
-		db: mockDb
+		db: mockDb,
+		sessions: { id: { name: 'id' } },
+		users: { id: { name: 'id' } }
 	};
 });
 

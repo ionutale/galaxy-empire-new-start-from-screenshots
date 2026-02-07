@@ -14,15 +14,32 @@ interface MockDb {
 }
 
 // Mock the database for testing
-vi.mock('./db', () => ({
-	db: {
-		select: vi.fn(),
-		insert: vi.fn(),
-		update: vi.fn(),
-		execute: vi.fn(),
-		delete: vi.fn()
-	}
-}));
+vi.mock('./db', () => {
+	const mockQuery = {
+		values: vi.fn().mockReturnThis(),
+		onConflictDoNothing: vi.fn().mockResolvedValue({}),
+		returning: vi.fn().mockReturnThis(),
+		where: vi.fn().mockReturnThis(),
+		execute: vi.fn().mockResolvedValue([])
+	};
+	
+	return {
+		db: {
+			select: vi.fn(() => ({
+				from: vi.fn(() => ({
+					where: vi.fn().mockResolvedValue([])
+				}))
+			})),
+			insert: vi.fn(() => mockQuery),
+			update: vi.fn(() => mockQuery),
+			delete: vi.fn(() => mockQuery),
+			execute: vi.fn().mockResolvedValue([])
+		},
+		achievements: { name: 'achievements' },
+		users: { name: 'users' },
+		userAchievements: { name: 'user_achievements' }
+	};
+});
 
 describe('AchievementService', () => {
 	beforeAll(async () => {

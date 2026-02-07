@@ -2,8 +2,9 @@ import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { transactions } from '$lib/server/db/schema';
 import { eq, desc } from 'drizzle-orm';
+import type { RequestHandler } from './$types';
 
-export async function GET({ locals }) {
+export const GET: RequestHandler = async ({ locals }) => {
 	if (!locals.user) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
 	}

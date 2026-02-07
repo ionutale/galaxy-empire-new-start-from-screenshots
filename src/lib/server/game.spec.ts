@@ -4,6 +4,28 @@ import { db } from './db';
 import { sql } from 'drizzle-orm';
 
 // Mock the database
+const { mockDb } = vi.hoisted(() => {
+	const mock: any = {
+		select: vi.fn().mockReturnThis(),
+		from: vi.fn().mockReturnThis(),
+		where: vi.fn().mockReturnThis(),
+		insert: vi.fn().mockReturnThis(),
+		update: vi.fn().mockReturnThis(),
+		execute: vi.fn().mockReturnThis(),
+		delete: vi.fn().mockReturnThis(),
+		transaction: vi.fn().mockImplementation(async (cb) => cb(mock)),
+		then: (onFulfilled: any) => Promise.resolve({ rows: [] }).then(onFulfilled)
+	};
+	return { mockDb: mock };
+});
+
+vi.mock('./db', () => ({
+	db: mockDb,
+	planets: { name: 'planets' },
+	planetResources: { name: 'planet_resources' },
+	planetBuildings: { name: 'planet_buildings' }
+}));
+
 interface MockDb {
 	select: ReturnType<typeof vi.fn>;
 	insert: ReturnType<typeof vi.fn>;
@@ -13,30 +35,21 @@ interface MockDb {
 	transaction: ReturnType<typeof vi.fn>;
 }
 
-vi.mock('./db', () => ({
-	db: {
-		select: vi.fn(),
-		insert: vi.fn(),
-		update: vi.fn(),
-		execute: vi.fn(),
-		delete: vi.fn(),
-		transaction: vi.fn()
-	}
-}));
-
 // Mock other services
-const mockCommanderBonus = vi.fn().mockReturnValue(10);
-const mockBoosterMultipliers = vi.fn().mockReturnValue({
-	metal: 1.0,
-	crystal: 1.0,
-	gas: 1.0,
-	energy: 1.0
-});
-const mockStorageCapacity = vi.fn().mockReturnValue({
-	metal: 10000,
-	crystal: 10000,
-	gas: 10000
-});
+const { mockCommanderBonus, mockBoosterMultipliers, mockStorageCapacity } = vi.hoisted(() => ({
+	mockCommanderBonus: vi.fn().mockReturnValue(10),
+	mockBoosterMultipliers: vi.fn().mockReturnValue({
+		metal: 1.0,
+		crystal: 1.0,
+		gas: 1.0,
+		energy: 1.0
+	}),
+	mockStorageCapacity: vi.fn().mockReturnValue({
+		metal: 10000,
+		crystal: 10000,
+		gas: 10000
+	})
+}));
 
 vi.mock('./commanders', () => ({
 	getCommanderBonus: mockCommanderBonus

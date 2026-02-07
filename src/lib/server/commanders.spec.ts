@@ -39,7 +39,9 @@ vi.mock('./db', () => {
 	(mockDb as any).__mockQuery = mockQuery;
 
 	return {
-		db: mockDb
+		db: mockDb,
+		users: { id: { name: 'id' } },
+		userCommanders: { id: { name: 'id' } }
 	};
 });
 

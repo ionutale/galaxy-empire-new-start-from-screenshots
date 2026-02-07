@@ -3,8 +3,9 @@ import { db } from '$lib/server/db';
 import { passwordResets, users } from '$lib/server/db/schema';
 import { eq, and, gt } from 'drizzle-orm';
 import { hashPassword } from '$lib/server/auth';
+import type { PageServerLoad } from './$types';
 
-export const load = async ({ url }) => {
+export const load: PageServerLoad = async ({ url }) => {
 	const token = url.searchParams.get('token');
 
 	if (!token) {

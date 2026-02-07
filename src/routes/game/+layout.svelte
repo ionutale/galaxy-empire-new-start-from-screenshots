@@ -130,17 +130,23 @@
 	<header class="hud-bar z-30 flex h-14 shrink-0 items-center justify-between px-6 backdrop-blur-md">
 		<div class="flex items-center space-x-6">
 			<div class="flex flex-col">
-				<div class="text-xs font-bold tracking-widest text-blue-400 uppercase">Commander</div>
-				<div class="text-lg font-bold tracking-tight glow-blue">{data.user.username}</div>
+				<div class="text-[8px] font-black tracking-[0.2em] text-blue-500/60 uppercase">Sector</div>
+				<div class="flex items-center space-x-2">
+					<span class="text-xs font-black text-white uppercase tracking-tight">
+						{data.currentPlanet?.name}
+					</span>
+					<span class="font-mono text-xs font-bold text-blue-400">
+						[{data.currentPlanet?.galaxyId}:{data.currentPlanet?.systemId}:{data.currentPlanet?.planetNumber}]
+					</span>
+				</div>
 			</div>
 
-			<div class="h-8 w-px bg-white/10"></div>
+			<div class="h-6 w-px bg-white/10"></div>
 
-			<!-- Planet Selector -->
-			<div class="relative flex flex-col">
-				<span class="text-[10px] tracking-widest text-gray-500 uppercase">Sector</span>
+			<!-- Planet Selector Dropdown -->
+			<div class="group relative">
 				<select
-					class="cursor-pointer border-none bg-transparent p-0 text-sm font-bold text-gray-200 focus:ring-0"
+					class="cursor-pointer appearance-none border-none bg-transparent p-0 pr-6 text-[10px] font-black text-gray-500 uppercase tracking-widest focus:ring-0 group-hover:text-blue-400 transition-colors"
 					value={data.currentPlanet?.id}
 					onchange={(e) => {
 						const newId = e.currentTarget.value;
@@ -151,28 +157,31 @@
 				>
 					{#each data.planets as planet (planet.id)}
 						<option value={planet.id} class="bg-gray-900">
-							{planet.name} [{planet.galaxyId}:{planet.systemId}:{planet.planetNumber}]
+							Switch to: {planet.name}
 						</option>
 					{/each}
 				</select>
+				<div class="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 text-gray-600 group-hover:text-blue-400">
+					<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+				</div>
 			</div>
 		</div>
 
-		<div class="flex items-center space-x-6">
-			<div class="hidden flex-col items-end sm:flex text-right">
-				<div class="text-xs font-bold tracking-widest text-emerald-400 uppercase">Rank 1</div>
-				<div class="text-[10px] text-emerald-500/80">Imperial Vanguard</div>
+		<div class="flex items-center space-x-8">
+			<div class="flex flex-col items-end">
+				<div class="text-[8px] font-black tracking-[0.2em] text-emerald-500/60 uppercase text-right">Rank</div>
+				<div class="text-xs font-black text-white uppercase tracking-tight">Imperial Vanguard</div>
 			</div>
 			
-			<div class="flex space-x-3">
+			<div class="flex items-center space-x-3">
 				<a
 					href="/game/messages"
-					class="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 transition-all hover:bg-white/10 hover:border-blue-500/50 active:scale-95"
+					class="relative flex h-9 w-9 items-center justify-center rounded-xl border border-white/5 bg-white/[0.02] transition-all hover:bg-white/10 hover:border-blue-500/50 active:scale-95"
 				>
-					<span class="text-xl">✉️</span>
+					<span class="text-lg">✉️</span>
 					{#if data.unreadMessages > 0}
 						<span
-							class="absolute -top-1 -right-1 flex h-5 w-5 animate-pulse items-center justify-center rounded-full bg-red-600 text-[10px] font-bold shadow-[0_0_10px_rgba(220,38,38,0.5)]"
+							class="absolute -top-1 -right-1 flex h-4 w-4 animate-pulse items-center justify-center rounded-full bg-red-600 text-[8px] font-black text-white shadow-[0_0_10px_rgba(220,38,38,0.5)]"
 						>
 							{data.unreadMessages}
 						</span>
@@ -180,9 +189,9 @@
 				</a>
 				<a
 					href="/game/settings"
-					class="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 transition-all hover:bg-white/10 hover:border-blue-500/50 active:scale-95"
+					class="flex h-9 w-9 items-center justify-center rounded-xl border border-white/5 bg-white/[0.02] transition-all hover:bg-white/10 hover:border-blue-500/50 active:scale-95"
 				>
-					<span class="text-xl">⚙️</span>
+					<span class="text-lg">⚙️</span>
 				</a>
 			</div>
 		</div>
@@ -190,55 +199,57 @@
 
 	<!-- Resource HUD -->
 	<div
-		class="z-20 flex h-16 shrink-0 items-center justify-center border-b border-white/5 bg-black/40 backdrop-blur-sm px-4"
+		class="z-20 flex h-20 shrink-0 items-center justify-center border-b border-white/5 bg-black/60 backdrop-blur-md px-4"
 	>
-		<div class="flex w-full max-w-5xl items-center justify-around gap-2 px-2">
+		<div class="flex w-full max-w-6xl items-center justify-around gap-4 px-2">
 			{#if data.resources}
-				<div class="resource-pill" data-tooltip="Metal Production">
-					<span class="text-lg">⚙️</span>
+				<div class="resource-pill" data-tooltip="Metal Infrastructure">
+					<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-500/10 text-xl shadow-inner">⚙️</div>
 					<div class="flex flex-col">
-						<span class="text-[9px] font-bold text-gray-400 uppercase">Metal</span>
-						<span class="font-mono text-sm font-bold text-gray-100"
+						<span class="text-[7px] font-black text-gray-500 uppercase tracking-[0.2em]">Metal</span>
+						<span class="font-mono text-sm font-black text-white"
 							>{Math.floor(data.resources.metal || 0).toLocaleString()}</span
 						>
 					</div>
 				</div>
 
-				<div class="resource-pill" data-tooltip="Crystal Production">
-					<span class="text-lg">💎</span>
+				<div class="resource-pill" data-tooltip="Crystal Reserves">
+					<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 text-xl shadow-inner">💎</div>
 					<div class="flex flex-col">
-						<span class="text-[9px] font-bold text-blue-400 uppercase">Crystal</span>
-						<span class="font-mono text-sm font-bold text-blue-100"
+						<span class="text-[7px] font-black text-blue-500/60 uppercase tracking-[0.2em]">Crystal</span>
+						<span class="font-mono text-sm font-black text-white"
 							>{Math.floor(data.resources.crystal || 0).toLocaleString()}</span
 						>
 					</div>
 				</div>
 
-				<div class="resource-pill" data-tooltip="Deuterium Extraction">
-					<span class="text-lg">🧪</span>
+				<div class="resource-pill" data-tooltip="Deuterium Fuel">
+					<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/10 text-xl shadow-inner">🧪</div>
 					<div class="flex flex-col">
-						<span class="text-[9px] font-bold text-purple-400 uppercase">Gas</span>
-						<span class="font-mono text-sm font-bold text-purple-100"
+						<span class="text-[7px] font-black text-purple-500/60 uppercase tracking-[0.2em]">Gas</span>
+						<span class="font-mono text-sm font-black text-white"
 							>{Math.floor(data.resources.gas || 0).toLocaleString()}</span
 						>
 					</div>
 				</div>
 
-				<div class="resource-pill {(data.resources?.energy ?? 0) < 0 ? 'border-red-500/50 bg-red-500/5' : ''}" data-tooltip="Energy Balance">
-					<span class="text-lg {(data.resources?.energy ?? 0) < 0 ? 'animate-pulse' : ''}">{(data.resources?.energy ?? 0) < 0 ? '⚠️' : '⚡'}</span>
+				<div class="resource-pill {(data.resources?.energy ?? 0) < 0 ? 'border-red-500/50 bg-red-500/10 shadow-[inner_0_0_15px_rgba(239,68,68,0.1)]' : ''}" data-tooltip="Energy Grid Status">
+					<div class="flex h-8 w-8 items-center justify-center rounded-lg {(data.resources?.energy ?? 0) < 0 ? 'bg-red-500/20 animate-pulse' : 'bg-yellow-500/10'} text-xl shadow-inner">
+						{(data.resources?.energy ?? 0) < 0 ? '⚠️' : '⚡'}
+					</div>
 					<div class="flex flex-col">
-						<span class="text-[9px] font-bold {(data.resources?.energy ?? 0) < 0 ? 'text-red-400' : 'text-yellow-400'} uppercase">Energy</span>
-						<span class="font-mono text-sm font-bold {(data.resources?.energy ?? 0) < 0 ? 'text-red-400 glow-red' : 'text-yellow-100'}"
+						<span class="text-[7px] font-black {(data.resources?.energy ?? 0) < 0 ? 'text-red-500' : 'text-yellow-500/60'} uppercase tracking-[0.2em]">Energy</span>
+						<span class="font-mono text-sm font-black {(data.resources?.energy ?? 0) < 0 ? 'text-red-400' : 'text-white'}"
 							>{data.resources?.energy ?? 0}</span
 						>
 					</div>
 				</div>
 
-				<div class="resource-pill" data-tooltip="Premium Currency">
-					<span class="text-lg">🌌</span>
+				<div class="resource-pill" data-tooltip="Dark Matter (Premium)">
+					<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-fuchsia-500/10 text-xl shadow-inner">🌌</div>
 					<div class="flex flex-col">
-						<span class="text-[9px] font-bold text-fuchsia-400 uppercase">Dark Matter</span>
-						<span class="font-mono text-sm font-bold text-fuchsia-100"
+						<span class="text-[7px] font-black text-fuchsia-500/60 uppercase tracking-[0.2em]">Dark Matter</span>
+						<span class="font-mono text-sm font-black text-white"
 							>{data.user.darkMatter.toLocaleString()}</span
 						>
 					</div>

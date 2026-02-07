@@ -18,29 +18,32 @@ interface MockDb {
 }
 
 // Mock the database with proper chaining support
-vi.mock('./db', () => {
-	const mockQuery = {
-		from: vi.fn(() => mockQuery),
-		where: vi.fn(),
-		values: vi.fn(() => Promise.resolve()),
-		set: vi.fn(() => mockQuery),
-		limit: vi.fn(() => mockQuery)
-	};
-	
-	const mockDb = {
-		select: vi.fn(() => mockQuery),
-		insert: vi.fn(() => mockQuery),
-		update: vi.fn(() => mockQuery),
-		transaction: vi.fn()
-	};
+const mockDb: any = {
+	select: vi.fn().mockReturnThis(),
+	from: vi.fn().mockReturnThis(),
+	where: vi.fn().mockReturnThis(),
+	insert: vi.fn().mockReturnThis(),
+	values: vi.fn().mockReturnThis(),
+	set: vi.fn().mockReturnThis(),
+	update: vi.fn().mockReturnThis(),
+	delete: vi.fn().mockReturnThis(),
+	limit: vi.fn().mockReturnThis(),
+	transaction: vi.fn().mockImplementation(async (cb) => cb(mockDb)),
+	execute: vi.fn().mockResolvedValue({ rows: [] }),
+	// Add then to make it awaitable
+	then: (onFulfilled: any) => Promise.resolve([]).then(onFulfilled)
+};
 
-	// Expose mockQuery for tests
-	(mockDb as any).__mockQuery = mockQuery;
-
-	return {
-		db: mockDb
-	};
-});
+vi.mock('./db', () => ({
+	db: mockDb,
+	planets: { name: 'planets' },
+	planetBuildings: { name: 'planet_buildings' },
+	planetShips: { name: 'planet_ships' },
+	planetDefenses: { name: 'planet_defenses' },
+	userResearch: { name: 'user_research' },
+	fleets: { name: 'fleets' },
+	users: { name: 'users' }
+}));
 
 describe('Points Calculator', () => {
 	beforeAll(() => {

@@ -5,6 +5,29 @@ import { sql } from 'drizzle-orm';
 import { SHIPS } from '$lib/game-config';
 
 // Mock the database
+const { mockDb } = vi.hoisted(() => {
+	const mock: any = {
+		select: vi.fn().mockReturnThis(),
+		from: vi.fn().mockReturnThis(),
+		where: vi.fn().mockReturnThis(),
+		insert: vi.fn().mockReturnThis(),
+		update: vi.fn().mockReturnThis(),
+		execute: vi.fn().mockReturnThis(),
+		delete: vi.fn().mockReturnThis(),
+		transaction: vi.fn().mockImplementation(async (cb) => cb(mock)),
+		then: (onFulfilled: any) => Promise.resolve({ rows: [] }).then(onFulfilled)
+	};
+	return { mockDb: mock };
+});
+
+vi.mock('./db', () => ({
+	db: mockDb,
+	planetShips: { name: 'planet_ships' },
+	planetBuildings: { name: 'planet_buildings' },
+	planetResources: { name: 'planet_resources' },
+	shipyardQueue: { name: 'shipyard_queue' }
+}));
+
 interface MockDb {
 	select: ReturnType<typeof vi.fn>;
 	insert: ReturnType<typeof vi.fn>;
@@ -13,17 +36,6 @@ interface MockDb {
 	delete: ReturnType<typeof vi.fn>;
 	transaction: ReturnType<typeof vi.fn>;
 }
-
-vi.mock('./db', () => ({
-	db: {
-		select: vi.fn(),
-		insert: vi.fn(),
-		update: vi.fn(),
-		execute: vi.fn(),
-		delete: vi.fn(),
-		transaction: vi.fn()
-	}
-}));
 
 describe('Shipyard Service', () => {
 	beforeAll(() => {

@@ -63,87 +63,89 @@
 		<!-- Navigation Header -->
 		<header class="mb-12 flex flex-col items-center justify-between gap-8 md:flex-row">
 			<div class="text-center md:text-left">
-				<h1 class="text-4xl font-black tracking-tighter text-white glow-blue uppercase">
-					Universe <span class="text-blue-500">Visualizer</span>
+				<h1 class="text-5xl font-black tracking-tighter text-white uppercase italic">
+					Universe <span class="text-blue-500 not-italic">Visualizer</span>
 				</h1>
-				<p class="mt-1 text-[10px] font-black tracking-[0.4em] text-gray-500 uppercase">Astro-navigation Interface • Mark IV</p>
+				<p class="mt-2 text-[10px] font-black tracking-[0.5em] text-gray-500 uppercase">Astro-navigation Interface • Mark IV</p>
 			</div>
 
-			<div class="glass-panel group flex items-center gap-6 rounded-3xl border border-white/10 p-2 px-8">
+			<div class="glass-panel flex items-center bg-black/40 p-2 rounded-2xl border border-white/10">
 				<a
 					href={prevGalaxy()}
 					aria-label="Previous Galaxy"
-					class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 text-xl transition-all hover:bg-blue-600 hover:text-white disabled:opacity-20 {data.galaxy <= 1 ? 'pointer-events-none opacity-20' : ''}"
+					class="flex h-12 w-14 items-center justify-center rounded-xl bg-white/5 text-xl transition-all hover:bg-blue-600 hover:text-white disabled:opacity-20 {data.galaxy <= 1 ? 'pointer-events-none opacity-20' : ''}"
 				>
-					<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
 				</a>
 				
-				<div class="text-center">
-					<div class="text-[9px] font-black uppercase tracking-[0.3em] text-blue-500/60">Galaxy Designation</div>
-					<div class="font-mono text-3xl font-black text-white">{data.galaxy}</div>
+				<div class="px-10 text-center">
+					<div class="text-[8px] font-black uppercase tracking-[0.3em] text-blue-500/60 mb-1">Galaxy Designation</div>
+					<div class="font-mono text-4xl font-black text-white leading-none">{data.galaxy}</div>
 				</div>
 
 				<a
 					href={nextGalaxy()}
 					aria-label="Next Galaxy"
-					class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 text-xl transition-all hover:bg-blue-600 hover:text-white disabled:opacity-20 {data.galaxy >= 9 ? 'pointer-events-none opacity-20' : ''}"
+					class="flex h-12 w-14 items-center justify-center rounded-xl bg-white/5 text-xl transition-all hover:bg-blue-600 hover:text-white disabled:opacity-20 {data.galaxy >= 9 ? 'pointer-events-none opacity-20' : ''}"
 				>
-					<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
 				</a>
 			</div>
 		</header>
 
 		<!-- Sub-Sector Navigation -->
-		<div class="mb-8 flex flex-wrap justify-center gap-4">
+		<div class="mb-12 flex flex-wrap justify-center gap-3">
 			{#each Array(10) as _, i}
 				<button
 					onclick={() => activeSector = i}
-					class="rounded-xl border px-5 py-2 text-[10px] font-black uppercase tracking-widest transition-all {activeSector === i ? 'border-blue-500 bg-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 'border-white/5 bg-white/5 text-gray-500 hover:border-white/20 hover:text-white'}"
+					class="group relative overflow-hidden rounded-xl border px-6 py-3 text-[10px] font-black uppercase tracking-widest transition-all {activeSector === i ? 'border-blue-500 bg-blue-600 text-white shadow-[0_0_20px_rgba(59,130,246,0.4)]' : 'border-white/5 bg-white/5 text-gray-500 hover:border-white/20 hover:text-white'}"
 				>
-					Sector {i * 50 + 1}-{Math.min((i + 1) * 50, 499)}
+					<span class="relative z-10 text-xs">Sector {i * 50 + 1}-{Math.min((i + 1) * 50, 499)}</span>
+					{#if activeSector === i}
+						<div class="absolute inset-x-0 bottom-0 h-1 bg-white/40"></div>
+					{/if}
 				</button>
 			{/each}
 		</div>
 
 		<!-- Galaxy Grid Interface -->
-		<div in:fade={{ duration: 400 }} class="glass-panel overflow-hidden rounded-[3rem] border border-white/5 p-8 shadow-2xl">
-			<div class="mb-10 flex items-center justify-between border-b border-white/5 pb-8">
+		<div in:fade={{ duration: 450 }} class="glass-panel relative overflow-hidden rounded-[3.5rem] border border-white/5 bg-black/20 p-12 shadow-[0_0_100px_rgba(0,0,0,0.8)]">
+			<div class="mb-12 flex items-center justify-between border-b border-white/5 pb-10">
 				<div class="flex items-center space-x-4">
-					<div class="h-2 w-2 rounded-full bg-blue-500 shadow-[0_0_10px_#3b82f6] animate-pulse"></div>
-					<h2 class="text-xl font-black tracking-tight text-white uppercase">Sector Analysis: <span class="text-blue-500">{sectorStart} - {sectorEnd}</span></h2>
+					<div class="h-3 w-3 rounded-full bg-blue-500 shadow-[0_0_15px_#3b82f6] animate-pulse"></div>
+					<h2 class="text-2xl font-black tracking-tight text-white uppercase italic">Sector Analysis: <span class="text-blue-500 not-italic">{sectorStart.toString().padStart(1, '0')} - {sectorEnd.toString().padStart(1, '0')}</span></h2>
 				</div>
 
 				<!-- Legend -->
-				<div class="hidden items-center space-x-6 lg:flex">
+				<div class="hidden items-center space-x-8 lg:flex">
 					{#each ['empty', 'low', 'medium', 'high'] as status}
-						<div class="flex items-center space-x-2 opacity-60 transition-opacity hover:opacity-100">
-							<div class="h-1.5 w-1.5 rounded-full {getStatusGlow(status)}"></div>
-							<span class="text-[9px] font-black uppercase tracking-widest text-gray-400">{status} activity</span>
+						<div class="flex items-center space-x-3 opacity-40 transition-all hover:opacity-100">
+							<div class="h-2 w-2 rounded-full {getStatusGlow(status)}"></div>
+							<span class="text-[9px] font-black uppercase tracking-[0.2em] text-white italic">{status} activity</span>
 						</div>
 					{/each}
 				</div>
 			</div>
 
-			<div class="grid grid-cols-5 gap-3 sm:grid-cols-10 lg:grid-cols-10">
+			<div class="grid grid-cols-5 gap-6 sm:grid-cols-10 lg:grid-cols-10">
 				{#each filteredSystems as system (system.systemId)}
 					<a
 						href="/game/system?galaxy={data.galaxy}&system={system.systemId}"
 						class="group relative aspect-square"
-						title="System {system.systemId}: {system.planetCount} planets"
 					>
 						<!-- Star Node -->
 						<div class="absolute inset-0 flex items-center justify-center">
-							<div class="h-12 w-12 rounded-full border border-white/5 bg-white/[0.02] transition-all duration-500 group-hover:scale-125 group-hover:border-blue-500/50 group-hover:bg-blue-500/10"></div>
+							<div class="h-16 w-16 rounded-full border border-white/5 bg-white/[0.01] transition-all duration-700 group-hover:scale-125 group-hover:border-blue-500/30 group-hover:bg-blue-500/5 group-hover:shadow-[0_0_30px_rgba(59,130,246,0.1)]"></div>
 							
 							<!-- Core Particle -->
-							<div class="absolute h-2 w-2 rounded-full transition-all duration-500 group-hover:scale-150 {getStatusGlow(getSystemStatus(system))}"></div>
+							<div class="absolute h-3 w-3 rounded-full transition-all duration-700 group-hover:scale-150 {getStatusGlow(getSystemStatus(system))}"></div>
 						</div>
 
 						<!-- Telemetry Label -->
-						<div class="absolute inset-x-0 bottom-1 flex flex-col items-center">
-							<span class="font-mono text-[9px] font-black text-gray-600 transition-colors group-hover:text-white">{system.systemId.toString().padStart(3, '0')}</span>
+						<div class="absolute inset-x-0 bottom-0 flex flex-col items-center">
+							<span class="font-mono text-[10px] font-black text-gray-700 transition-colors group-hover:text-white leading-none tracking-tighter">{system.systemId.toString().padStart(3, '0')}</span>
 							{#if system.playerCount > 0}
-								<div class="mt-0.5 h-0.5 w-4 rounded-full bg-blue-500/30"></div>
+								<div class="mt-1 h-0.5 w-6 rounded-full bg-blue-500 shadow-[0_0_10px_#3b82f6] animate-pulse"></div>
 							{/if}
 						</div>
 
@@ -178,7 +180,11 @@
 	}
 	
 	.glow-blue {
-		text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+		text-shadow: 0 0 30px rgba(59, 130, 246, 0.7);
+	}
+	
+	.glow-text {
+		text-shadow: 0 0 10px currentColor;
 	}
 
 	.stars-container {

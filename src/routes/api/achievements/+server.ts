@@ -1,7 +1,8 @@
 import { json } from '@sveltejs/kit';
 import { AchievementService } from '$lib/server/achievement-service';
+import type { RequestHandler } from './$types';
 
-export async function GET({ locals }) {
+export const GET: RequestHandler = async ({ locals }) => {
 	if (!locals.user) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
 	}
@@ -24,9 +25,9 @@ export async function GET({ locals }) {
 		console.error('Error fetching achievements:', error);
 		return json({ error: 'Failed to fetch achievements' }, { status: 500 });
 	}
-}
+};
 
-export async function POST({ locals, request }) {
+export const POST: RequestHandler = async ({ locals, request }) => {
 	if (!locals.user) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
 	}
