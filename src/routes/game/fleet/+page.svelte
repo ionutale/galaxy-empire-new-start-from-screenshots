@@ -4,6 +4,15 @@
 	import Spinner from '$lib/components/Spinner.svelte';
 	import { fade, fly, slide } from 'svelte/transition';
 
+	function getShipImage(shipType: string) {
+		const shipMap: Record<string, string> = {
+			'light_fighter': '/assets/generated/light_fighter_1770456225939.png',
+			'cruiser': '/assets/generated/cruiser_ship_1770456243978.png',
+			'battleship': '/assets/generated/battleship_ship_1770456260256.png'
+		};
+		return shipMap[shipType.toLowerCase()] || '';
+	}
+
 	let { data } = $props();
 
 	const shipTypes = [
@@ -314,18 +323,30 @@
 							{@const available = ships[shipKey] || 0}
 							{#if available > 0}
 								<div class="glass-panel group relative overflow-hidden rounded-3xl border border-white/5 p-5 transition-all hover:border-blue-500/20 {shipCounts[ship.id] > 0 ? 'ring-1 ring-blue-500/50' : ''}">
-									<div class="mb-4 flex items-start justify-between">
-										<div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 text-2xl group-hover:scale-110 transition-transform">
+								<div class="relative h-24 w-full overflow-hidden rounded-2xl bg-[#0a0f18] mb-4">
+									{#if getShipImage(ship.id)}
+										<img 
+											src={getShipImage(ship.id)} 
+											alt={ship.name} 
+											class="h-full w-full object-contain p-2 transition-transform duration-700 group-hover:scale-110" 
+										/>
+									{:else}
+										<div class="flex h-full w-full items-center justify-center text-3xl">
 											{ship.icon}
 										</div>
-										<button 
-											onclick={() => setMax(ship.id)}
-											class="text-[9px] font-black text-blue-500 uppercase tracking-widest hover:text-white transition-colors"
-										>
-											Max: {available}
-										</button>
-									</div>
+									{/if}
+									<div class="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[#0a0f18] to-transparent opacity-60"></div>
+								</div>
+								
+								<div class="mb-2 flex items-center justify-between">
 									<h4 class="text-lg font-black text-white uppercase tracking-tighter leading-none">{ship.name}</h4>
+									<button 
+										onclick={() => setMax(ship.id)}
+										class="text-[9px] font-black text-blue-500 uppercase tracking-widest hover:text-white transition-colors"
+									>
+										Max: {available}
+									</button>
+								</div>
 									<div class="mt-6 flex items-center space-x-3">
 										<input
 											type="number"
