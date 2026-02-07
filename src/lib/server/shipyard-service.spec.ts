@@ -4,18 +4,29 @@ import { db } from './db';
 import { sql } from 'drizzle-orm';
 import { SHIPS } from '$lib/game-config';
 
-// Mock the database
+// Mock the database with proper chaining support
 const { mockDb } = vi.hoisted(() => {
 	const mock: any = {
 		select: vi.fn().mockReturnThis(),
 		from: vi.fn().mockReturnThis(),
 		where: vi.fn().mockReturnThis(),
+		innerJoin: vi.fn().mockReturnThis(),
+		leftJoin: vi.fn().mockReturnThis(),
+		limit: vi.fn().mockReturnThis(),
+		orderBy: vi.fn().mockReturnThis(),
 		insert: vi.fn().mockReturnThis(),
+		values: vi.fn().mockReturnThis(),
 		update: vi.fn().mockReturnThis(),
-		execute: vi.fn().mockReturnThis(),
+		set: vi.fn().mockReturnThis(),
 		delete: vi.fn().mockReturnThis(),
+		execute: vi.fn().mockReturnThis(),
+		returning: vi.fn().mockReturnThis(),
 		transaction: vi.fn().mockImplementation(async (cb) => cb(mock)),
-		then: (onFulfilled: any) => Promise.resolve({ rows: [] }).then(onFulfilled)
+		// Result handling
+		_results: [] as any[],
+		then: function(this: any, resolve: any) {
+			return Promise.resolve(this._results).then(resolve);
+		}
 	};
 	return { mockDb: mock };
 });

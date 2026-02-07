@@ -4,46 +4,45 @@ import { db } from './db';
 import { achievements, users } from './db/schema';
 import { eq, sql } from 'drizzle-orm';
 
-// Mock database interface
-interface MockDb {
-	select: ReturnType<typeof vi.fn>;
-	insert: ReturnType<typeof vi.fn>;
-	update: ReturnType<typeof vi.fn>;
-	execute: ReturnType<typeof vi.fn>;
-	delete: ReturnType<typeof vi.fn>;
-}
-
-// Mock the database for testing
-vi.mock('./db', () => {
-	const mockQuery = {
-		values: vi.fn().mockReturnThis(),
-		onConflictDoNothing: vi.fn().mockResolvedValue({}),
-		returning: vi.fn().mockReturnThis(),
+// Mock the database with proper chaining support
+const { mockDb } = vi.hoisted(() => {
+	const mock: any = {
+		select: vi.fn().mockReturnThis(),
+		from: vi.fn().mockReturnThis(),
 		where: vi.fn().mockReturnThis(),
-		execute: vi.fn().mockResolvedValue([])
+		innerJoin: vi.fn().mockReturnThis(),
+		leftJoin: vi.fn().mockReturnThis(),
+		limit: vi.fn().mockReturnThis(),
+		orderBy: vi.fn().mockReturnThis(),
+		insert: vi.fn().mockReturnThis(),
+		values: vi.fn().mockReturnThis(),
+		update: vi.fn().mockReturnThis(),
+		set: vi.fn().mockReturnThis(),
+		delete: vi.fn().mockReturnThis(),
+		execute: vi.fn().mockReturnThis(),
+		returning: vi.fn().mockReturnThis(),
+		onConflictDoNothing: vi.fn().mockReturnThis(),
+		transaction: vi.fn().mockImplementation(async (cb) => cb(mock)),
+		// Result handling
+		_results: [] as any[],
+		then: function(this: any, resolve: any) {
+			return Promise.resolve(this._results).then(resolve);
+		}
 	};
-	
-	return {
-		db: {
-			select: vi.fn(() => ({
-				from: vi.fn(() => ({
-					where: vi.fn().mockResolvedValue([])
-				}))
-			})),
-			insert: vi.fn(() => mockQuery),
-			update: vi.fn(() => mockQuery),
-			delete: vi.fn(() => mockQuery),
-			execute: vi.fn().mockResolvedValue([])
-		},
-		achievements: { name: 'achievements' },
-		users: { name: 'users' },
-		userAchievements: { name: 'user_achievements' }
-	};
+	return { mockDb: mock };
 });
+
+vi.mock('./db', () => ({
+	db: mockDb,
+	achievements: { name: 'achievements' },
+	users: { name: 'users' },
+	userAchievements: { name: 'user_achievements' }
+}));
 
 describe('AchievementService', () => {
 	beforeAll(async () => {
 		// Initialize achievements in test database
+		mockDb._results = [];
 		await AchievementService.initializeAchievements();
 	});
 
