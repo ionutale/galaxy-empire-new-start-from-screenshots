@@ -72,6 +72,7 @@
 			<div class="glass-panel group flex items-center gap-6 rounded-3xl border border-white/10 p-2 px-8">
 				<a
 					href={prevGalaxy()}
+					aria-label="Previous Galaxy"
 					class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 text-xl transition-all hover:bg-blue-600 hover:text-white disabled:opacity-20 {data.galaxy <= 1 ? 'pointer-events-none opacity-20' : ''}"
 				>
 					<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
@@ -84,6 +85,7 @@
 
 				<a
 					href={nextGalaxy()}
+					aria-label="Next Galaxy"
 					class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 text-xl transition-all hover:bg-blue-600 hover:text-white disabled:opacity-20 {data.galaxy >= 9 ? 'pointer-events-none opacity-20' : ''}"
 				>
 					<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>

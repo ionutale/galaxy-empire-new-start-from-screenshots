@@ -84,13 +84,13 @@
 	let intelligenceResearch = $derived(research.filter((r) => r.category === 'intelligence'));
 	let expansionResearch = $derived(research.filter((r) => r.category === 'expansion'));
 
-	const categories = [
+	let categories = $derived([
 		{ name: 'Energy Technologies', items: energyResearch, color: 'blue' },
 		{ name: 'Combat Technologies', items: combatResearch, color: 'red' },
 		{ name: 'Propulsion Technologies', items: propulsionResearch, color: 'purple' },
 		{ name: 'Intelligence Technologies', items: intelligenceResearch, color: 'green' },
 		{ name: 'Expansion Technologies', items: expansionResearch, color: 'gold' }
-	];
+	]);
 
 	function formatTimeRemaining(completionAt: Date | string) {
 		const end = new Date(completionAt).getTime();

@@ -230,7 +230,6 @@
 						value={data.currentPlanet.name}
 						class="rounded-xl border border-blue-500 bg-blue-500/10 backdrop-blur-md px-4 py-2 text-2xl font-black text-white focus:outline-none focus:ring-2 ring-blue-500/50"
 						maxlength="20"
-						autoFocus
 					/>
 					<button
 						type="submit"
@@ -605,8 +604,6 @@
 	}
 
 	.bg-gold-400 { background-color: #ffb800; }
-	.text-gold-400 { color: #ffb800; }
-	.border-gold-500\/30 { border-color: rgba(255, 184, 0, 0.3); }
 	.hover\:border-gold-500\/40:hover { border-color: rgba(255, 184, 0, 0.4); }
 	.hover\:text-gold-400:hover { color: #ffb800; }
 	.hover\:bg-gold-500\/20:hover { background-color: rgba(255, 184, 0, 0.2); }

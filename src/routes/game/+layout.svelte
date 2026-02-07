@@ -224,12 +224,12 @@
 					</div>
 				</div>
 
-				<div class="resource-pill {data.resources.energy < 0 ? 'border-red-500/50 bg-red-500/5' : ''}" data-tooltip="Energy Balance">
-					<span class="text-lg {data.resources.energy < 0 ? 'animate-pulse' : ''}">{data.resources.energy < 0 ? '⚠️' : '⚡'}</span>
+				<div class="resource-pill {(data.resources?.energy ?? 0) < 0 ? 'border-red-500/50 bg-red-500/5' : ''}" data-tooltip="Energy Balance">
+					<span class="text-lg {(data.resources?.energy ?? 0) < 0 ? 'animate-pulse' : ''}">{(data.resources?.energy ?? 0) < 0 ? '⚠️' : '⚡'}</span>
 					<div class="flex flex-col">
-						<span class="text-[9px] font-bold {data.resources.energy < 0 ? 'text-red-400' : 'text-yellow-400'} uppercase">Energy</span>
-						<span class="font-mono text-sm font-bold {data.resources.energy < 0 ? 'text-red-400 glow-red' : 'text-yellow-100'}"
-							>{data.resources.energy || 0}</span
+						<span class="text-[9px] font-bold {(data.resources?.energy ?? 0) < 0 ? 'text-red-400' : 'text-yellow-400'} uppercase">Energy</span>
+						<span class="font-mono text-sm font-bold {(data.resources?.energy ?? 0) < 0 ? 'text-red-400 glow-red' : 'text-yellow-100'}"
+							>{data.resources?.energy ?? 0}</span
 						>
 					</div>
 				</div>

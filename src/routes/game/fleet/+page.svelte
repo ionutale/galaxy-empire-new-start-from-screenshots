@@ -402,24 +402,27 @@
 
 							<div class="grid grid-cols-3 gap-6">
 								<div class="space-y-2">
-									<label class="text-[9px] font-black text-gray-500 uppercase tracking-widest">Galaxy</label>
+									<label for="galaxy-input" class="text-[9px] font-black text-gray-500 uppercase tracking-widest">Galaxy</label>
 									<input
+										id="galaxy-input"
 										type="number"
 										bind:value={targetGalaxy}
 										class="w-full rounded-2xl border border-white/10 bg-white/5 p-5 text-center font-mono text-2xl font-black text-white outline-none focus:border-blue-500 transition-all"
 									/>
 								</div>
 								<div class="space-y-2">
-									<label class="text-[9px] font-black text-gray-500 uppercase tracking-widest">System</label>
+									<label for="system-input" class="text-[9px] font-black text-gray-500 uppercase tracking-widest">System</label>
 									<input
+										id="system-input"
 										type="number"
 										bind:value={targetSystem}
 										class="w-full rounded-2xl border border-white/10 bg-white/5 p-5 text-center font-mono text-2xl font-black text-white outline-none focus:border-blue-500 transition-all"
 									/>
 								</div>
 								<div class="space-y-2">
-									<label class="text-[9px] font-black text-gray-500 uppercase tracking-widest">Planet</label>
+									<label for="planet-input" class="text-[9px] font-black text-gray-500 uppercase tracking-widest">Planet</label>
 									<input
+										id="planet-input"
 										type="number"
 										bind:value={targetPlanet}
 										placeholder="1-15"
@@ -681,5 +684,6 @@
 	}
 	input[type='number'] {
 		-moz-appearance: textfield;
+		appearance: textfield;
 	}
 </style>
