@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { fade, fly, slide } from 'svelte/transition';
+	import { fade, fly, scale } from 'svelte/transition';
 	import { onMount } from 'svelte';
 
 	let { data } = $props();
@@ -16,198 +16,188 @@
 	}
 
 	let mounted = $state(false);
-	let mouseX = $state(0);
-	let mouseY = $state(0);
-
 	onMount(() => {
 		mounted = true;
-		const handleMouseMove = (e: MouseEvent) => {
-			mouseX = (e.clientX / window.innerWidth - 0.5) * 20;
-			mouseY = (e.clientY / window.innerHeight - 0.5) * 20;
-		};
-		window.addEventListener('mousemove', handleMouseMove);
-		return () => window.removeEventListener('mousemove', handleMouseMove);
 	});
 
-	const telemetryStrings = [
-		"CORE: OPTIMAL", "SIG: STABLE", "ANOMALY: 0.04%", "WARP: READY",
-		"SCAN: ACTIVE", "BIO: TRACE", "HEAT: LOW", "FLUX: STABLE"
-	];
+	function getPlanetColor(slot: any) {
+		if (slot.isNebula) return 'rgb(192, 38, 211)';
+		if (slot.broodTarget) return 'rgb(239, 68, 68)';
+		if (slot.planet) return 'rgb(59, 130, 246)';
+		return 'rgb(71, 85, 105)';
+	}
 </script>
 
-<!-- SVG Filters for Living Holograms -->
-<svg class="pointer-events-none fixed h-0 w-0 overflow-hidden" aria-hidden="true">
-	<filter id="hologram-distortion">
-		<feTurbulence type="fractalNoise" baseFrequency="0.01 0.1" numOctaves="3" result="noise" seed="1">
-			<animate attributeName="seed" from="1" to="100" dur="10s" repeatCount="indefinite" />
-		</feTurbulence>
-		<feDisplacementMap in="SourceGraphic" in2="noise" scale="2" />
-	</filter>
-	<filter id="glow-edge">
-		<feGaussianBlur stdDeviation="1" result="blur" />
-		<feComposite in="SourceGraphic" in2="blur" operator="over" />
-	</filter>
-</svg>
-
-<div class="imperium-bridge relative min-h-screen overflow-hidden bg-[#010204] text-white selection:bg-blue-500/50">
-	<!-- PARALLAX LAYERS -->
-	<div class="parallax-floor fixed inset-0 z-0 pointer-events-none">
-		<!-- Layer 0: Deep Space -->
-		<div class="absolute inset-0 bg-[#010204]"></div>
-		<!-- Layer 1: Nebula Drift -->
-		<div class="nebula-layer absolute inset-[-10%] opacity-40" style="transform: translate({mouseX * 0.5}px, {mouseY * 0.5}px)"></div>
-		<!-- Layer 2: Grid Projection -->
-		<div class="tactical-mesh absolute inset-[-20%] opacity-15" style="transform: perspective(1000px) rotateX(60deg) translate({mouseX}px, {mouseY}px)"></div>
+<div class="zenith-shell relative min-h-screen bg-[#020408] text-white selection:bg-blue-500/30">
+	<!-- STAR-CHART BACKGROUND -->
+	<div class="fixed inset-0 z-0 opacity-20 pointer-events-none">
+		<div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,#0a1435_0%,transparent_70%)]"></div>
+		<div class="star-grid absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10"></div>
 	</div>
 
-	<!-- SCANLINE OVERLAY -->
-	<div class="pointer-events-none fixed inset-0 z-50 bg-[linear-gradient(rgba(18,16,45,0)_50%,rgba(0,0,0,0.1)_50%)] bg-[size:100%_4px] opacity-20"></div>
-
-	<div class="relative z-10 mx-auto max-w-[1600px] px-6 py-12 pb-40">
-		<!-- WARP CORE HEADER -->
+	<div class="relative z-10 mx-auto max-w-[1800px] px-8 py-12 pb-44">
+		<!-- PRECISION COMMAND RAIL -->
 		{#if mounted}
-		<header in:fade={{ duration: 1000 }} class="relative mb-24 flex flex-col items-center justify-between gap-12 lg:flex-row">
-			<div class="flex items-center gap-8">
-				<div class="relative h-24 w-1 bg-blue-500/40 shadow-[0_0_20px_#3b82f6]">
-					<div class="absolute inset-x-0 h-1/3 bg-blue-400 animate-warp-pulse"></div>
-				</div>
+		<header in:fade={{ duration: 1000 }} class="mb-24 flex flex-col items-center justify-between border-b border-white/5 pb-12 lg:flex-row">
+			<div class="flex items-center gap-12">
+				<div class="h-16 w-1 bg-blue-600 shadow-[0_0_20px_#2563eb]"></div>
 				<div>
-					<h1 class="text-7xl font-black italic tracking-tighter uppercase text-white drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]">
-						EMPEROR'S <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">EYE</span>
+					<h1 class="text-5xl font-light tracking-[0.3em] uppercase text-white/90">
+						ZENITH <span class="font-black text-blue-500">COMMAND</span>
 					</h1>
-					<div class="mt-2 flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.8em] text-blue-500/80">
-						<span>Bridge Command Console</span>
-						<span class="h-1 w-1 rounded-full bg-blue-500 animate-flicker"></span>
-						<span>Sector Analysis</span>
-					</div>
+					<p class="mt-2 text-[10px] font-bold uppercase tracking-[0.8em] text-white/20">Tactical Sector Matrix • V.4.0</p>
 				</div>
 			</div>
 
-			<nav class="group relative flex items-center gap-12 px-12 py-4 rounded-full border border-white/5 bg-white/[0.01] backdrop-blur-3xl">
-				<div class="absolute inset-0 rounded-full bg-gradient-to-r from-blue-600/10 via-transparent to-blue-600/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-				
-				<a href={prevSystem()} aria-label="Previous System" class="nav-trigger group/nav {data.system <= 1 ? 'pointer-events-none opacity-10' : ''}">
-					<svg class="h-12 w-12 text-blue-500 transition-all group-hover/nav:scale-125 group-hover/nav:-translate-x-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+			<nav class="flex items-center gap-8 rounded-2xl bg-white/[0.02] p-2 ring-1 ring-white/5">
+				<a href={prevSystem()} aria-label="Previous Sector" class="group flex h-14 w-14 items-center justify-center rounded-xl bg-white/5 transition-all hover:bg-blue-600 hover:shadow-[0_0_20px_rgba(37,99,235,0.4)] {data.system <= 1 ? 'pointer-events-none opacity-10' : ''}">
+					<svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
 				</a>
 
-				<div class="relative text-center">
-					<span class="text-[9px] font-black uppercase tracking-[0.4em] text-blue-400/60 block mb-1">Target Coordinates</span>
-					<span class="font-mono text-5xl font-black italic text-white glow-text">[{data.galaxy}:{data.system.toString().padStart(3, '0')}]</span>
+				<div class="flex flex-col items-center px-10">
+					<span class="text-[9px] font-black uppercase tracking-[0.4em] text-white/30">Sector.Scan</span>
+					<span class="font-mono text-4xl font-light tracking-tighter text-white">[{data.galaxy}:{data.system.toString().padStart(3, '0')}]</span>
 				</div>
 
-				<a href={nextSystem()} aria-label="Next System" class="nav-trigger group/nav {data.system >= 499 ? 'pointer-events-none opacity-10' : ''}">
-					<svg class="h-12 w-12 text-blue-500 transition-all group-hover/nav:scale-125 group-hover/nav:translate-x-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+				<a href={nextSystem()} aria-label="Next Sector" class="group flex h-14 w-14 items-center justify-center rounded-xl bg-white/5 transition-all hover:bg-blue-600 hover:shadow-[0_0_20px_rgba(37,99,235,0.4)] {data.system >= 499 ? 'pointer-events-none opacity-10' : ''}">
+					<svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
 				</a>
 			</nav>
+
+			<div class="hidden lg:flex items-center gap-8 text-right">
+				<div class="space-y-1">
+					<div class="text-[8px] font-black uppercase tracking-widest text-blue-500">Signal Integrity</div>
+					<div class="h-1 w-32 bg-white/5 rounded-full overflow-hidden">
+						<div class="h-full bg-blue-500 animate-pulse w-[94%]"></div>
+					</div>
+				</div>
+				<div class="h-12 w-[1px] bg-white/10"></div>
+				<div class="text-blue-500/40 font-mono text-xs">UTC: {new Date().toISOString().split('T')[1].slice(0, 8)}</div>
+			</div>
 		</header>
 		{/if}
 
-		<!-- 3D TACTICAL FLOOR -->
-		<div class="tactical-grid-perspective grid gap-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+		<!-- OBSIDIAN TACTICAL GRID -->
+		<div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 			{#each data.slots as slot (slot.number)}
 				<div
-					in:fly={{ y: 50, duration: 800, delay: slot.number * 50 }}
-					class="diagnostic-well group relative flex flex-col justify-between overflow-hidden rounded-[4rem] border border-white/5 p-12 transition-all hover:border-blue-500/30"
+					in:fly={{ y: 30, duration: 600, delay: slot.number * 40 }}
+					class="obsidian-card group relative flex flex-col overflow-hidden rounded-3xl border border-white/5 bg-gradient-to-br from-white/[0.04] to-transparent p-1 transition-all duration-500 hover:border-blue-500/50 hover:shadow-[0_30px_60px_-12px_rgba(0,0,0,0.8)]"
 				>
-					<!-- LIVING HOLOGRAM INTERFACE -->
-					<div class="hologram-layer absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
-						<div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-blue-500/20 to-transparent"></div>
-						<div class="absolute bottom-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-blue-500/20 to-transparent"></div>
-					</div>
-
-					<!-- Visual Projection -->
-					<div class="relative mb-12 flex aspect-square items-center justify-center">
-						<!-- Orbital Telemetry Rings -->
-						<div class="absolute inset-0 rounded-full border border-blue-500/5 scale-[1.2] animate-spin-veryslow"></div>
-						<div class="absolute inset-0 rounded-full border border-blue-500/10 scale-[1.1] animate-reverse-spin"></div>
+					<div class="relative flex h-full flex-col bg-[#040810] p-10 rounded-[1.4rem]">
+						<!-- Precision Rim Lighting -->
+						<div class="absolute inset-0 rounded-[1.4rem] ring-1 ring-inset ring-white/5 group-hover:ring-blue-500/30 transition-all"></div>
 						
-						<!-- High-End 3D Visualizer -->
-						<div class="relative h-48 w-48 transition-transform duration-700 group-hover:scale-110">
+						<!-- DIAGNOSTIC HUD LAYER -->
+						<div class="mb-10 flex items-center justify-between border-b border-white/5 pb-6">
+							<div class="flex items-center gap-3">
+								<div class="h-2 w-2 rounded-full" style="background: {getPlanetColor(slot)}; box-shadow: 0 0 10px {getPlanetColor(slot)}"></div>
+								<span class="font-mono text-[10px] font-bold tracking-[0.2em] text-white/30 uppercase">Node.{slot.number.toString().padStart(2, '0')}</span>
+							</div>
+							<div class="flex gap-1">
+								<div class="h-3 w-[2px] bg-white/10"></div>
+								<div class="h-3 w-[2px] bg-white/10 group-hover:bg-blue-500 transition-colors"></div>
+								<div class="h-3 w-[2px] bg-white/10"></div>
+							</div>
+						</div>
+
+						<!-- ENTITY VISUALIZER -->
+						<div class="relative mb-12 flex aspect-square items-center justify-center p-8">
+							<div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.03)_0%,transparent_70%)] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+							
+							<div class="relative h-full w-full">
+								{#if slot.isNebula}
+									<div class="h-full w-full rounded-full bg-gradient-to-br from-purple-500/40 to-transparent blur-2xl animate-pulse"></div>
+									<div class="absolute inset-0 flex items-center justify-center">
+										<svg class="h-32 w-32 text-purple-400 opacity-40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20M2 12a10 10 0 0 1 20 0"/></svg>
+									</div>
+								{:else if slot.broodTarget}
+									<div class="h-full w-full rounded-full bg-gradient-to-br from-red-600/40 to-black blur-xl shadow-[inset_0_0_40px_rgba(239,68,68,0.2)]"></div>
+									<div class="absolute inset-0 flex items-center justify-center">
+										<div class="h-24 w-24 border border-red-500/40 rounded-full animate-ping"></div>
+									</div>
+								{:else}
+									<div class="relative h-full w-full rounded-full border border-white/10 shadow-[inset_-20px_-20px_40px_rgba(0,0,0,0.8)] overflow-hidden {slot.planet ? '' : 'opacity-10 bg-white/5'}">
+										{#if slot.planet}
+											<div class="absolute inset-0 bg-gradient-to-br from-blue-500/30 via-transparent to-black"></div>
+											<div class="absolute top-4 left-4 h-full w-full rounded-full bg-blue-400/5 blur-3xl"></div>
+										{/if}
+									</div>
+								{/if}
+							</div>
+						</div>
+
+						<!-- SENSOR DATA -->
+						<div class="flex-1 space-y-6">
 							{#if slot.isNebula}
-								<div class="immersion-nebula h-full w-full rounded-full"></div>
-								<div class="absolute inset-0 rounded-full border-2 border-purple-500/10 blur-xl animate-pulse"></div>
+								<h3 class="text-2xl font-light tracking-widest text-white uppercase">Flux Anomaly</h3>
+								<div class="flex items-center gap-4 text-[10px] font-mono text-purple-400/60 uppercase">
+									<span>Magnitude: 0.84</span>
+									<span class="h-1 w-1 rounded-full bg-white/20"></span>
+									<span>Class: Nebular</span>
+								</div>
 							{:else if slot.broodTarget}
-								<div class="immersion-brood h-full w-full rounded-full border-4 border-red-500/10 shadow-[0_0_60px_rgba(239,68,68,0.2)]"></div>
-								<div class="absolute -inset-4 flex items-center justify-center rotate-45">
-									<div class="h-full w-full border-[2px] border-red-500/20 rounded-[45%] animate-spin-fast"></div>
+								<h3 class="text-2xl font-black tracking-widest text-red-500 uppercase">Hive.Signature</h3>
+								<div class="flex items-center gap-4 text-[10px] font-mono text-red-400/60 uppercase">
+									<span class="animate-pulse">Active Threat Detected</span>
+								</div>
+							{:else if slot.planet}
+								<h3 class="text-2xl font-bold tracking-widest text-white uppercase">{slot.planet.name}</h3>
+								<div class="flex flex-col gap-2">
+									<div class="flex items-center gap-4 text-[10px] font-mono text-blue-400/60 uppercase">
+										<span>Type: Terrestrial</span>
+										<span class="h-1 w-1 rounded-full bg-white/20"></span>
+										<span>Sync: Stable</span>
+									</div>
+									<p class="text-[11px] font-medium text-white/30 uppercase tracking-[0.3em]">{slot.planet.username || 'System Scanned'}</p>
 								</div>
 							{:else}
-								<!-- Imperial-Class 3D Sphere -->
-								<div class="imperial-sphere h-full w-full rounded-full {slot.planet ? 'opacity-100' : 'opacity-5 grayscale'}">
-									{#if slot.planet}
-										<div class="sphere-cloud absolute inset-0 rounded-full opacity-30 animate-drift"></div>
-										<div class="absolute inset-0 rounded-full shadow-[inset_-30px_-30px_70px_rgba(0,0,0,0.9),0_0_20px_rgba(59,130,246,0.1)]"></div>
-									{/if}
-								</div>
+								<h3 class="text-2xl font-light tracking-widest text-white/10 uppercase">Void Slot</h3>
+								<p class="text-[10px] font-mono text-white/5 uppercase">No Signal detected</p>
 							{/if}
-						</div>
 
-						<!-- Tactical Tag -->
-						<div class="absolute -bottom-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full border border-blue-500/20 bg-blue-500/5 backdrop-blur-xl">
-							<span class="font-mono text-[9px] font-black text-blue-400 uppercase tracking-widest">OBJ {slot.number.toString().padStart(2, '0')}</span>
-						</div>
-					</div>
-
-					<!-- SENSOR DATA STRIP -->
-					<div class="relative z-10">
-						{#if slot.isNebula}
-							<h3 class="text-3xl font-black italic tracking-tighter text-white uppercase mb-1 lining-nums">Cosmic Anomaly</h3>
-							<p class="text-[10px] font-black text-purple-400 uppercase tracking-[0.4em] font-mono distortion-text">SIG: UNSTABLE</p>
-						{:else if slot.broodTarget}
-							<h3 class="text-3xl font-black italic tracking-tighter text-white uppercase mb-1 lining-nums">Hostile Hive L{slot.broodTarget.level}</h3>
-							<p class="text-[10px] font-black text-red-500 uppercase tracking-[0.4em] font-mono animate-pulse">Threat Level: MAX</p>
-						{:else if slot.planet}
-							<h3 class="text-3xl font-black italic tracking-tighter text-white uppercase mb-1 lining-nums">{slot.planet.name}</h3>
-							<div class="flex items-center gap-2">
-								<span class="h-1.5 w-1.5 rounded-full bg-blue-500 animate-ping"></span>
-								<p class="text-[10px] font-black text-blue-300/60 uppercase tracking-[0.4em] font-mono">{slot.planet.username || 'Scanning...'}</p>
-							</div>
-						{:else}
-							<h3 class="text-3xl font-black italic tracking-tighter text-gray-800 uppercase mb-1 lining-nums">Silent Abyss</h3>
-							<p class="text-[10px] font-black text-gray-900 uppercase tracking-[0.4em] font-mono">Vacuum Detected</p>
-						{/if}
-
-						<!-- ADVANCED TELEMETRY -->
-						<div class="mt-8 grid grid-cols-2 gap-4 border-t border-white/5 pt-6 opacity-30 group-hover:opacity-100 transition-opacity duration-500">
-							<div class="flex flex-col">
-								<span class="text-[7px] font-black uppercase text-gray-500 tracking-tighter">Diagnostic</span>
-								<span class="text-[9px] font-black text-blue-200 uppercase font-mono">{telemetryStrings[slot.number % 8]}</span>
-							</div>
-							<div class="flex flex-col text-right">
-								<span class="text-[7px] font-black uppercase text-gray-500 tracking-tighter">Coord-Hex</span>
-								<span class="text-[9px] font-black text-blue-200 uppercase font-mono">0x{slot.number.toString(16).padStart(2, '0')}</span>
+							<!-- PRECISION TELEMETRY -->
+							<div class="mt-8 grid grid-cols-2 gap-4 border-t border-white/5 pt-6 group-hover:border-blue-500/20 transition-colors">
+								<div class="space-y-1">
+									<p class="text-[7px] font-bold uppercase tracking-widest text-white/20">Coordinates</p>
+									<p class="font-mono text-[9px] text-white/40">0x{slot.number.toString(16).toUpperCase().padStart(2, '0')}</p>
+								</div>
+								<div class="space-y-1 text-right">
+									<p class="text-[7px] font-bold uppercase tracking-widest text-white/20">Diagnostic</p>
+									<p class="font-mono text-[9px] text-blue-500/40">READY</p>
+								</div>
 							</div>
 						</div>
-					</div>
 
-					<!-- ACTION INTERFACE -->
-					<div class="mt-10 flex gap-4">
-						{#if slot.isNebula}
-							<a href="/game/fleet?galaxy={data.galaxy}&system={data.system}&planet=16&mission=expedition" class="action-btn-god flex-1 bg-purple-600/20 text-purple-400 border-purple-500/20 hover:bg-purple-600 hover:text-white">
-								<span>INITIATE EXPEDITION</span>
-							</a>
-						{:else if slot.broodTarget}
-							<a href="/game/fleet?galaxy={data.galaxy}&system={data.system}&planet={slot.number}&mission=brood_raid" class="action-btn-god flex-1 bg-red-600 border-red-500/30 text-white hover:bg-red-500 shadow-[0_0_20px_rgba(239,68,68,0.3)]">
-								<span>ERADICATE HIVE</span>
-							</a>
-						{:else if slot.planet}
-							{#if slot.planet.userId !== $page.data.user.id}
-								<a href="/game/fleet?galaxy={data.galaxy}&system={data.system}&planet={slot.number}&mission=attack" class="action-btn-sq bg-red-600/10 text-red-500 hover:bg-red-600 hover:text-white" title="Siege">
-									<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m14.5 4 20 9.5c.6.6.6 1.4 0 2L10.5 21H4v-6.5L14.5 4Z"/></svg>
+						<!-- COMMAND INTERFACE RAIL -->
+						<div class="mt-10 flex border-t border-white/5 pt-8 gap-4">
+							{#if slot.isNebula}
+								<a href="/game/fleet?galaxy={data.galaxy}&system={data.system}&planet=16&mission=expedition" class="zenith-btn flex-1 bg-purple-600/10 text-purple-400 border border-purple-500/20 hover:bg-purple-600 hover:text-white">
+									EXPEDITION.EXE
 								</a>
-								<a href="/game/fleet?galaxy={data.galaxy}&system={data.system}&planet={slot.number}&mission=espionage" class="action-btn-sq bg-blue-600/10 text-blue-400 hover:bg-blue-600 hover:text-white" title="Intel">
-									<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+							{:else if slot.broodTarget}
+								<a href="/game/fleet?galaxy={data.galaxy}&system={data.system}&planet={slot.number}&mission=brood_raid" class="zenith-btn flex-1 bg-red-600/20 text-red-500 border border-red-500/30 hover:bg-red-600 hover:text-white">
+									TERMINATE.EXE
 								</a>
+							{:else if slot.planet}
+								{#if slot.planet.userId !== $page.data.user.id}
+									<a href="/game/fleet?galaxy={data.galaxy}&system={data.system}&planet={slot.number}&mission=attack" class="zenith-btn-sq flex-1 bg-red-600/5 text-red-500 border border-red-500/10 hover:bg-red-600 hover:text-white" title="Siege">
+										<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+									</a>
+									<a href="/game/fleet?galaxy={data.galaxy}&system={data.system}&planet={slot.number}&mission=espionage" class="zenith-btn-sq flex-1 bg-blue-600/5 text-blue-400 border border-blue-500/10 hover:bg-blue-600 hover:text-white" title="Intel">
+										<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+									</a>
+								{:else}
+									<div class="flex-1 rounded-xl border border-blue-600/20 bg-blue-600/5 py-4 text-center">
+										<span class="text-[9px] font-black uppercase tracking-[0.4em] text-blue-500/60">Imperial Domain</span>
+									</div>
+								{/if}
 							{:else}
-								<div class="owned-tag flex-1 flex items-center justify-center rounded-3xl border border-blue-500/30 bg-blue-500/5">
-									<span class="text-[9px] font-black uppercase tracking-[0.3em] text-blue-500 animate-flicker">Imperial Stronghold</span>
-								</div>
+								<a href="/game/fleet?galaxy={data.galaxy}&system={data.system}&planet={slot.number}&mission=colonize" class="zenith-btn flex-1 bg-blue-600 text-white shadow-[0_10px_30px_rgba(37,99,235,0.3)] hover:scale-105 active:scale-95">
+									COLONIZE.EXE
+								</a>
 							{/if}
-						{:else}
-							<a href="/game/fleet?galaxy={data.galaxy}&system={data.system}&planet={slot.number}&mission=colonize" class="action-btn-god flex-1 bg-blue-600 border-blue-500/30 text-white hover:bg-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.3)]">
-								<span>ESTABLISH COLONY</span>
-							</a>
-						{/if}
+						</div>
 					</div>
 				</div>
 			{/each}
@@ -216,97 +206,25 @@
 </div>
 
 <style>
-	/* EMPIRE BRIDGE STYLING */
-	.parallax-floor { background: #010204; }
-	
-	.nebula-layer {
-		background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 60%);
-		filter: blur(100px);
-		animation: nebula-float 40s linear infinite;
-	}
+	.zenith-shell { scroll-behavior: smooth; }
+	.star-grid { background-size: 400px; }
 
-	.tactical-mesh {
-		background: 
-			linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px),
-			linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
-		background-size: 80px 80px;
-	}
-
-	@keyframes nebula-float { 
-		0%, 100% { transform: scale(1) translate(0,0); }
-		50% { transform: scale(1.2) translate(5%, 5%); }
-	}
-
-	.tactical-grid-perspective {
-		perspective: 2000px;
+	.obsidian-card {
 		transform-style: preserve-3d;
+		perspective: 1000px;
 	}
 
-	.diagnostic-well {
-		background: rgba(4, 6, 12, 0.8);
-		backdrop-filter: blur(40px);
-		transform: rotateX(5deg);
-		transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-	}
-	.diagnostic-well:hover {
-		transform: rotateX(0deg) scale(1.05) translateY(-20px);
-		background: rgba(8, 12, 24, 0.9);
-	}
-
-	/* GOD-TIER SPHERES */
-	.imperial-sphere {
-		background: radial-gradient(circle at 30% 30%, #4facfe, #00f2fe, #2e1065, black);
-		transform-style: preserve-3d;
-	}
-	.sphere-cloud {
-		background: url('https://www.transparenttextures.com/patterns/clouds-flat.png');
-		filter: brightness(2) contrast(1.5) opacity(0.3);
-		mix-blend-mode: soft-light;
-	}
-
-	.immersion-nebula {
-		background: radial-gradient(circle at 40% 40%, rgba(217, 70, 239, 0.8), #701a75, transparent);
-		filter: blur(15px);
-		animation: morph 6s infinite alternate;
-	}
-
-	.immersion-brood {
-		background: radial-gradient(circle at 50% 50%, #f43f5e, #9f1239, black);
-		filter: url('#hologram-distortion') blur(1px);
-	}
-
-	.distortion-text { filter: url('#hologram-distortion'); }
-
-	/* COMMAND INTERFACE */
-	.action-btn-god {
-		display: flex; height: 64px; align-items: center; justify-content: center; 
-		border-radius: 2rem; border-width: 2px;
-		font-size: 10px; font-weight: 900; letter-spacing: 0.2em;
+	.zenith-btn {
+		display: flex; height: 56px; align-items: center; justify-content: center;
+		border-radius: 0.75rem; font-size: 10px; font-weight: 800; letter-spacing: 0.2em;
 		transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 	}
-	.action-btn-sq {
-		display: flex; height: 64px; width: 64px; align-items: center; justify-content: center;
-		border-radius: 2rem; border-width: 2px; border-color: transparent;
+	.zenith-btn-sq {
+		display: flex; height: 56px; align-items: center; justify-content: center;
+		border-radius: 0.75rem; border-width: 1px;
 		transition: all 0.4s;
 	}
 
-	.glow-text { text-shadow: 0 0 20px rgba(59, 130, 246, 0.6); }
-
-	@keyframes warp-pulse {
-		0%, 100% { transform: translateY(-100%) scaleY(0.5); opacity: 0; }
-		50% { transform: translateY(100%) scaleY(1); opacity: 1; }
-	}
-	.animate-warp-pulse { animation: warp-pulse 2s infinite linear; }
-
-	@keyframes drift { from { background-position: 0 0; } to { background-position: 200% 200%; } }
-	.animate-drift { animation: drift 120s linear infinite; }
-
-	@keyframes spin-fast { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-	.animate-spin-fast { animation: spin-fast 1s linear infinite; }
-
-	.animate-flicker { animation: flicker 0.15s infinite; }
-	@keyframes flicker { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
-
-	.animate-reverse-spin { animation: spin 20s linear infinite reverse; }
-	@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+	@keyframes pulse-slow { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.6; } }
+	.animate-pulse-slow { animation: pulse-slow 3s infinite; }
 </style>
