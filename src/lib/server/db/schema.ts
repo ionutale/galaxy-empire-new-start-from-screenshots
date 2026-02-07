@@ -201,7 +201,8 @@ export const researchQueue = pgTable(
 		level: integer('level').notNull(),
 		startedAt: timestamp('started_at').defaultNow(),
 		completionAt: timestamp('completion_at').notNull(),
-		planetId: integer('planet_id').references(() => planets.id)
+		planetId: integer('planet_id').references(() => planets.id),
+		resourcesReserved: jsonb('resources_reserved')
 	},
 	(t) => ({
 		userQueueIdx: index('research_queue_user_idx').on(t.userId),

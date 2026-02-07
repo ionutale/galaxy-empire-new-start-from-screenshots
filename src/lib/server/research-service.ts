@@ -143,18 +143,15 @@ export class ResearchService {
 
 		// Start transaction
 		await db.transaction(async (tx) => {
-			// Deduct resources from planet
+			// Deduct resources from planet_resources table
 			await tx.execute(sql`
-			UPDATE planets
-			SET resources = jsonb_set(
-				jsonb_set(
-					jsonb_set(resources, '{metal}', (COALESCE(resources->>'metal', '0')::int - ${validation.cost!.metal})::text::jsonb),
-					'{crystal}', (COALESCE(resources->>'crystal', '0')::int - ${validation.cost!.crystal})::text::jsonb
-				),
-				'{gas}', (COALESCE(resources->>'gas', '0')::int - ${validation.cost!.gas})::text::jsonb
-			)
-			WHERE id = ${planetId}
-		`);
+				UPDATE planet_resources
+				SET 
+					metal = metal - ${validation.cost!.metal},
+					crystal = crystal - ${validation.cost!.crystal},
+					gas = gas - ${validation.cost!.gas}
+				WHERE planet_id = ${planetId}
+			`);
 
 			// Update or insert user research level
 			await tx.execute(sql`

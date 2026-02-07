@@ -4,6 +4,7 @@
 	import { DEFENSES } from '$lib/game-config';
 	import { invalidateAll } from '$app/navigation';
 	import { fly, fade } from 'svelte/transition';
+	import { onMount } from 'svelte';
 
 	let { data } = $props();
 	let loading = $state<Record<string, boolean>>({});
@@ -17,6 +18,51 @@
 
 	let buildings = $derived(data.buildings || []) as BuildingInfo[];
 	let defenses = $derived(data.defenses || {}) as Record<string, number>;
+	let queue = $derived(data.queue || []);
+
+	// Real-time timer for queue updates
+	let currentTime = $state(new Date());
+
+	onMount(() => {
+		const interval = setInterval(() => {
+			currentTime = new Date();
+		}, 1000);
+
+		return () => clearInterval(interval);
+	});
+
+	function formatTimeRemaining(completionAt: Date | string) {
+		const compDate = new Date(completionAt);
+		const diff = compDate.getTime() - currentTime.getTime();
+		if (diff <= 0) return 'Analyzing...';
+
+		const seconds = Math.floor(diff / 1000);
+		const minutes = Math.floor(seconds / 60);
+		const hours = Math.floor(minutes / 60);
+
+		if (hours > 0) {
+			return `${hours}h ${minutes % 60}m ${seconds % 60}s`;
+		} else if (minutes > 0) {
+			return `${minutes}m ${seconds % 60}s`;
+		} else {
+			return `${seconds}s`;
+		}
+	}
+
+	function calculateProgress(startedAt: Date | string | null, completionAt: Date | string) {
+		if (!startedAt) return 0;
+
+		const now = currentTime.getTime();
+		const start = new Date(startedAt).getTime();
+		const end = new Date(completionAt).getTime();
+
+		if (now >= end) return 100;
+		if (now <= start) return 0;
+
+		const total = end - start;
+		const elapsed = now - start;
+		return Math.round((elapsed / total) * 100);
+	}
 
 	// Group buildings by category
 	let resourceBuildings = $derived(buildings.filter((b) => b.category === 'resource'));
@@ -36,7 +82,55 @@
 	// Defense amounts
 	let defenseAmounts = $state<Record<string, number>>({});
 
+	async function handleCancel(queueId: number) {
+		if (!confirm('Abort project synchronization and recoup partial materials?')) return;
+		loading[queueId] = true;
+
+		try {
+			const response = await fetch('/api/buildings/cancel', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					queueId,
+					planetId: data.currentPlanet.id
+				})
+			});
+
+			if (response.ok) {
+				await invalidateAll();
+			}
+		} catch (error) {
+			console.error('Cancel failed', error);
+		} finally {
+			loading[queueId] = false;
+		}
+	}
+
+	async function handleAbandon() {
+		if (!confirm('WARNING: De-establishing orbital presence will result in total loss of sector assets. Proceed with abandonment?')) return;
+		loading['abandon'] = true;
+
+		try {
+			const response = await fetch('/api/planets/abandon', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					planetId: data.currentPlanet.id
+				})
+			});
+
+			if (response.ok) {
+				window.location.href = '/game';
+			}
+		} catch (error) {
+			console.error('Abandon failed', error);
+		} finally {
+			loading['abandon'] = false;
+		}
+	}
+
 	async function handleRename(e: SubmitEvent) {
+		// ... existing code ...
 		e.preventDefault();
 		if (!data.currentPlanet) return;
 
@@ -158,17 +252,26 @@
 					</button>
 				</form>
 			{:else}
-				<div class="flex items-baseline space-x-4">
-					<h1 class="text-5xl font-black tracking-tighter text-white glow-blue uppercase">
-						{data.currentPlanet.name}
-						<button
-							onclick={() => (isRenaming = true)}
-							class="text-sm text-gray-600 opacity-0 transition-all group-hover:opacity-100 hover:text-blue-400 ml-4 align-middle"
-						>✎</button>
-					</h1>
-					<p class="text-sm font-black tracking-[0.3em] text-blue-500/60 uppercase">
-						[{data.currentPlanet.galaxyId}:{data.currentPlanet.systemId}:{data.currentPlanet.planetNumber}]
-					</p>
+				<div class="flex items-baseline justify-between">
+					<div class="flex items-baseline space-x-4">
+						<h1 class="text-5xl font-black tracking-tighter text-white glow-blue uppercase">
+							{data.currentPlanet.name}
+							<button
+								onclick={() => (isRenaming = true)}
+								class="text-sm text-gray-600 opacity-0 transition-all group-hover:opacity-100 hover:text-blue-400 ml-4 align-middle"
+							>✎</button>
+						</h1>
+						<p class="text-sm font-black tracking-[0.3em] text-blue-500/60 uppercase">
+							[{data.currentPlanet.galaxyId}:{data.currentPlanet.systemId}:{data.currentPlanet.planetNumber}]
+						</p>
+					</div>
+					<button
+						onclick={handleAbandon}
+						disabled={loading['abandon']}
+						class="rounded-xl border border-red-500/30 bg-red-500/10 px-6 py-2 text-[10px] font-black tracking-widest text-red-500 hover:bg-red-500 hover:text-white transition-all uppercase"
+					>
+						{#if loading['abandon']}<Spinner size="sm" />{:else}Abandon Sector{/if}
+					</button>
 				</div>
 				<div class="mt-2 flex items-center space-x-6">
 					<a
@@ -184,6 +287,69 @@
 		</div>
 
 		<div class="space-y-16">
+			<!-- Construction Queue -->
+			{#if queue.length > 0}
+				<section class="space-y-6" in:fly={{ y: 20, duration: 600 }}>
+					<div class="flex items-center space-x-4">
+						<div class="h-2 w-2 rounded-full bg-yellow-500 shadow-[0_0_10px_#eab308]"></div>
+						<h2 class="text-xl font-black tracking-tight text-white uppercase">Construction Queue</h2>
+						<div class="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent"></div>
+					</div>
+
+					<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+						{#each queue as item (item.id)}
+							<div class="glass-panel group relative overflow-hidden rounded-3xl p-6 transition-all border border-yellow-500/20 shadow-[0_0_30px_rgba(234,179,8,0.05)]">
+								<div class="mb-4 flex items-start justify-between">
+									<div class="flex items-center space-x-4">
+										<div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-yellow-500/10 text-2xl group-hover:scale-110 transition-transform">
+											{#if item.name.includes('Metal')}⛏️
+											{:else if item.name.includes('Crystal')}💎
+											{:else if item.name.includes('Gas')}⛽
+											{:else if item.name.includes('Solar')}☀️
+											{:else if item.name.includes('Shipyard')}🚀
+											{:else if item.name.includes('Lab')}🔬
+											{:else}🏭
+											{/if}
+										</div>
+										<div>
+											<h4 class="font-black text-white uppercase leading-tight">{item.name}</h4>
+											<div class="flex items-center space-x-2">
+												<span class="text-[10px] font-black text-yellow-500 uppercase tracking-widest">Mark {item.targetLevel}</span>
+												<span class="text-[10px] font-black text-gray-500 uppercase tracking-tighter">
+													{formatTimeRemaining(item.completionAt)}
+												</span>
+											</div>
+										</div>
+									</div>
+									<button
+										onclick={() => handleCancel(item.id)}
+										disabled={loading[item.id]}
+										class="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-gray-500 hover:bg-red-500/20 hover:text-red-400 transition-all"
+									>
+										{#if loading[item.id]}<Spinner size="sm" />{:else}✕{/if}
+									</button>
+								</div>
+
+								<!-- Progress Bar -->
+								<div class="space-y-2">
+									<div class="h-1.5 w-full overflow-hidden rounded-full bg-white/5">
+										<div
+											class="h-full rounded-full bg-gradient-to-r from-yellow-600 to-amber-400 shadow-[0_0_15px_rgba(234,179,8,0.4)] transition-all duration-1000"
+											style="width: {calculateProgress(item.startedAt, item.completionAt)}%"
+										></div>
+									</div>
+									<div class="flex justify-end">
+										<span class="text-[9px] font-black text-yellow-500/60 uppercase tracking-widest leading-none">
+											{calculateProgress(item.startedAt, item.completionAt)}% Synchronized
+										</span>
+									</div>
+								</div>
+							</div>
+						{/each}
+					</div>
+				</section>
+			{/if}
+
 			<!-- Resources Section -->
 			<section class="space-y-6">
 				<div class="flex items-center space-x-4">

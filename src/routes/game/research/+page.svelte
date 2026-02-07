@@ -92,8 +92,9 @@
 		{ name: 'Expansion Technologies', items: expansionResearch, color: 'gold' }
 	];
 
-	function formatTimeRemaining(completionAt: Date) {
-		const diff = completionAt.getTime() - currentTime.getTime();
+	function formatTimeRemaining(completionAt: Date | string) {
+		const end = new Date(completionAt).getTime();
+		const diff = end - currentTime.getTime();
 		if (diff <= 0) return 'Complete';
 
 		const seconds = Math.floor(diff / 1000);
@@ -109,12 +110,12 @@
 		}
 	}
 
-	function calculateProgress(startedAt: Date | null, completionAt: Date) {
+	function calculateProgress(startedAt: Date | string | null, completionAt: Date | string) {
 		if (!startedAt) return 0;
 
 		const now = currentTime.getTime();
-		const start = startedAt.getTime();
-		const end = completionAt.getTime();
+		const start = new Date(startedAt).getTime();
+		const end = new Date(completionAt).getTime();
 
 		if (now >= end) return 100;
 		if (now <= start) return 0;
@@ -192,7 +193,7 @@
 								<div>
 									<h4 class="font-bold text-white leading-tight">Level {item.level} Promotion</h4>
 									<p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">
-										{formatTimeRemaining(new Date(item.completionAt))}
+										{formatTimeRemaining(item.completionAt)}
 									</p>
 								</div>
 							</div>
@@ -208,12 +209,12 @@
 						<div class="mt-4 space-y-2">
 							<div class="flex justify-between text-[10px] font-black text-gray-500 uppercase tracking-tighter">
 								<span>Completion</span>
-								<span class="text-blue-400">{calculateProgress(item.startedAt, new Date(item.completionAt))}%</span>
+								<span class="text-blue-400">{calculateProgress(item.startedAt, item.completionAt)}%</span>
 							</div>
 							<div class="h-1.5 w-full overflow-hidden rounded-full bg-white/5">
 								<div
 									class="h-full rounded-full bg-gradient-to-r from-blue-600 to-cyan-400 shadow-[0_0_10px_rgba(37,99,235,0.5)] transition-all duration-1000"
-									style="width: {calculateProgress(item.startedAt, new Date(item.completionAt))}%"
+									style="width: {calculateProgress(item.startedAt, item.completionAt)}%"
 								></div>
 							</div>
 						</div>
