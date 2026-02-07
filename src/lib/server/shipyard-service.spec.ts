@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ShipyardService } from './shipyard-service';
 import { db } from './db';
 import { sql } from 'drizzle-orm';
@@ -25,7 +25,8 @@ const { mockDb } = vi.hoisted(() => {
 		// Result handling
 		_results: [] as any[],
 		then: function(this: any, resolve: any) {
-			return Promise.resolve(this._results).then(resolve);
+			const result = this._results.length > 0 ? this._results.shift() : [];
+			return Promise.resolve(result).then(resolve);
 		}
 	};
 	return { mockDb: mock };
@@ -39,28 +40,20 @@ vi.mock('./db', () => ({
 	shipyardQueue: { name: 'shipyard_queue' }
 }));
 
-interface MockDb {
-	select: ReturnType<typeof vi.fn>;
-	insert: ReturnType<typeof vi.fn>;
-	update: ReturnType<typeof vi.fn>;
-	execute: ReturnType<typeof vi.fn>;
-	delete: ReturnType<typeof vi.fn>;
-	transaction: ReturnType<typeof vi.fn>;
-}
-
 describe('Shipyard Service', () => {
-	beforeAll(() => {
+	beforeEach(() => {
 		vi.clearAllMocks();
+		mockDb._results = [];
 	});
 
 	describe('getShipyardInfo', () => {
 		it('should return complete shipyard information', async () => {
-			const mockDb = db as unknown as MockDb;
-			mockDb.select
-				.mockResolvedValueOnce([{ small_transporter: 5, destroyer: 2 }]) // ships
-				.mockResolvedValueOnce([{ shipyard: 3 }]) // shipyard level
-				.mockResolvedValueOnce([{ metal: 1000, crystal: 500, gas: 200, energy: 100 }]) // resources
-				.mockResolvedValueOnce([]); // queue
+			mockDb._results = [
+				[{ small_transporter: 5, destroyer: 2 }], // ships
+				[{ level: 3 }], // shipyard level
+				[{ metal: 1000, crystal: 500, gas: 200, energy: 100 }], // resources
+				[] // queue
+			];
 
 			const result = await ShipyardService.getShipyardInfo(1, 1);
 
@@ -81,12 +74,12 @@ describe('Shipyard Service', () => {
 		});
 
 		it('should return default values when no data found', async () => {
-			const mockDb = db as unknown as MockDb;
-			mockDb.select
-				.mockResolvedValueOnce([]) // no ships
-				.mockResolvedValueOnce([]) // no shipyard
-				.mockResolvedValueOnce([]) // no resources
-				.mockResolvedValueOnce([]); // no queue
+			mockDb._results = [
+				[], // no ships
+				[], // no shipyard
+				[], // no resources
+				[]  // no queue
+			];
 
 			const result = await ShipyardService.getShipyardInfo(1, 1);
 
@@ -105,12 +98,12 @@ describe('Shipyard Service', () => {
 		});
 
 		it('should mark ships as not buildable when shipyard level is 0', async () => {
-			const mockDb = db as unknown as MockDb;
-			mockDb.select
-				.mockResolvedValueOnce([]) // no ships
-				.mockResolvedValueOnce([{ shipyard: 0 }]) // no shipyard
-				.mockResolvedValueOnce([{ metal: 10000, crystal: 10000, gas: 10000, energy: 100 }]) // plenty resources
-				.mockResolvedValueOnce([]); // no queue
+			mockDb._results = [
+				[], // no ships
+				[{ level: 0 }], // no shipyard
+				[{ metal: 10000, crystal: 10000, gas: 10000, energy: 100 }], // plenty resources
+				[] // no queue
+			];
 
 			const result = await ShipyardService.getShipyardInfo(1, 1);
 
@@ -121,12 +114,12 @@ describe('Shipyard Service', () => {
 		});
 
 		it('should mark ships as not buildable when insufficient resources', async () => {
-			const mockDb = db as unknown as MockDb;
-			mockDb.select
-				.mockResolvedValueOnce([]) // no ships
-				.mockResolvedValueOnce([{ shipyard: 3 }]) // shipyard level 3
-				.mockResolvedValueOnce([{ metal: 10, crystal: 5, gas: 2, energy: 100 }]) // low resources
-				.mockResolvedValueOnce([]); // no queue
+			mockDb._results = [
+				[], // no ships
+				[{ level: 3 }], // shipyard level 3
+				[{ metal: 10, crystal: 5, gas: 2, energy: 100 }], // low resources
+				[] // no queue
+			];
 
 			const result = await ShipyardService.getShipyardInfo(1, 1);
 
@@ -138,8 +131,9 @@ describe('Shipyard Service', () => {
 
 	describe('startShipConstruction', () => {
 		it('should successfully start ship construction', async () => {
-			const mockDb = db as unknown as MockDb;
-			mockDb.execute.mockResolvedValue({});
+			mockDb._results = [
+				{} // execute result
+			];
 
 			const result = await ShipyardService.startShipConstruction(1, 1, 'small_transporter', 5);
 
@@ -150,9 +144,8 @@ describe('Shipyard Service', () => {
 		});
 
 		it('should handle construction errors', async () => {
-			const mockDb = db as unknown as MockDb;
 			const error = new Error('Invalid ship type');
-			mockDb.execute.mockRejectedValue(error);
+			mockDb.execute.mockRejectedValueOnce(error);
 
 			const result = await ShipyardService.startShipConstruction(1, 1, 'invalid_ship', 1);
 
@@ -165,8 +158,7 @@ describe('Shipyard Service', () => {
 
 	describe('processCompletedShipConstruction', () => {
 		it('should process completed ship construction', async () => {
-			const mockDb = db as unknown as MockDb;
-			mockDb.execute.mockResolvedValue({});
+			mockDb._results = [ {} ];
 
 			await ShipyardService.processCompletedShipConstruction();
 
@@ -174,10 +166,9 @@ describe('Shipyard Service', () => {
 		});
 
 		it('should handle processing errors gracefully', async () => {
-			const mockDb = db as unknown as MockDb;
 			const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 			const error = new Error('Database error');
-			mockDb.execute.mockRejectedValue(error);
+			mockDb.execute.mockRejectedValueOnce(error);
 
 			await ShipyardService.processCompletedShipConstruction();
 
@@ -192,10 +183,9 @@ describe('Shipyard Service', () => {
 
 	describe('cancelShipConstruction', () => {
 		it('should successfully cancel ship construction', async () => {
-			const mockDb = db as unknown as MockDb;
-			mockDb.execute.mockResolvedValue({
-				rows: [{ result: { success: true } }]
-			});
+			mockDb._results = [
+				{ rows: [{ result: { success: true } }] }
+			];
 
 			const result = await ShipyardService.cancelShipConstruction(1, 1);
 
@@ -206,10 +196,9 @@ describe('Shipyard Service', () => {
 		});
 
 		it('should handle cancellation errors', async () => {
-			const mockDb = db as unknown as MockDb;
-			mockDb.execute.mockResolvedValue({
-				rows: [{ result: { success: false, error: 'Queue item not found' } }]
-			});
+			mockDb._results = [
+				{ rows: [{ result: { success: false, error: 'Queue item not found' } }] }
+			];
 
 			const result = await ShipyardService.cancelShipConstruction(1, 1);
 
@@ -220,9 +209,8 @@ describe('Shipyard Service', () => {
 		});
 
 		it('should handle database errors', async () => {
-			const mockDb = db as unknown as MockDb;
 			const error = new Error('Database connection failed');
-			mockDb.execute.mockRejectedValue(error);
+			mockDb.execute.mockRejectedValueOnce(error);
 
 			const result = await ShipyardService.cancelShipConstruction(1, 1);
 
@@ -233,10 +221,9 @@ describe('Shipyard Service', () => {
 		});
 
 		it('should handle missing result data', async () => {
-			const mockDb = db as unknown as MockDb;
-			mockDb.execute.mockResolvedValue({
-				rows: [{}]
-			});
+			mockDb._results = [
+				{ rows: [{}] }
+			];
 
 			const result = await ShipyardService.cancelShipConstruction(1, 1);
 

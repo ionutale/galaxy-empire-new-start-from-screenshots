@@ -177,13 +177,18 @@ export async function getCommanderBonus(userId: number, bonusType: string): Prom
 
 // Experience and leveling functions
 export function getExperienceForLevel(level: number): number {
-	// Experience required = 100 * level^2
-	return 100 * level * level;
+	// Experience required = 50 * level * (level - 1)
+	// Level 1: 0
+	// Level 2: 100
+	// Level 3: 300
+	return 50 * level * (level - 1);
 }
 
 export function getLevelFromExperience(experience: number): number {
-	// Level = floor(sqrt(experience / 100))
-	return Math.floor(Math.sqrt(experience / 100)) + 1;
+	// Inverse of getExperienceForLevel
+	// E = 50 * (L^2 - L)
+	// L = (1 + sqrt(1 + 0.08 * E)) / 2
+	return Math.floor((1 + Math.sqrt(1 + 0.08 * experience)) / 2);
 }
 
 export async function addCommanderExperience(

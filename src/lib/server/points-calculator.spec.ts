@@ -1,12 +1,11 @@
-import { describe, it, expect, beforeAll, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
 	updateUserPoints,
 	updateAllUserPoints,
 	calculateBuildingPoints,
 	calculateResearchPoints
 } from './points-calculator';
-import { db } from './db';
-import { users } from './db/schema';
+import { db, users } from './db';
 import { SHIPS } from '$lib/game-config';
 
 // Mock database interface
@@ -57,8 +56,9 @@ vi.mock('./db', () => ({
 }));
 
 describe('Points Calculator', () => {
-	beforeAll(() => {
+	beforeEach(() => {
 		vi.clearAllMocks();
+		mockDb._results = [];
 	});
 
 	describe('calculateBuildingPoints', () => {
@@ -91,7 +91,7 @@ describe('Points Calculator', () => {
 
 	describe('calculateResearchPoints', () => {
 		it('should calculate points for research levels', () => {
-			const points = calculateResearchPoints('energy_technology', 2);
+			const points = calculateResearchPoints('energy_tech', 2);
 
 			expect(points).toBeGreaterThan(0);
 			expect(typeof points).toBe('number');
@@ -104,14 +104,14 @@ describe('Points Calculator', () => {
 		});
 
 		it('should return 0 for level 0', () => {
-			const points = calculateResearchPoints('energy_technology', 0);
+			const points = calculateResearchPoints('energy_tech', 0);
 
 			expect(points).toBe(0);
 		});
 
 		it('should increase points with higher levels', () => {
-			const level1 = calculateResearchPoints('energy_technology', 1);
-			const level2 = calculateResearchPoints('energy_technology', 2);
+			const level1 = calculateResearchPoints('energy_tech', 1);
+			const level2 = calculateResearchPoints('energy_tech', 2);
 
 			expect(level2).toBeGreaterThan(level1);
 		});
@@ -127,7 +127,7 @@ describe('Points Calculator', () => {
 				[{ metal_mine: 3, crystal_mine: 2 }], // buildings for planet 1
 				[{ small_transporter: 5, destroyer: 2 }], // ships for planet 1
 				[{ rocket_launcher: 10 }], // defenses for planet 1
-				[{ energy_technology: 2, laser_technology: 1 }], // research
+				[{ energyTech: 2, laserTech: 1 }], // research
 				[{ ships: { small_transporter: 3 } }, { ships: { destroyer: 1 } }], // fleets
 				[] // update result
 			];

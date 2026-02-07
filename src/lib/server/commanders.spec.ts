@@ -95,7 +95,7 @@ describe('Commander Service', () => {
 			const result = await getActiveCommanders(1);
 
 			expect(result).toHaveLength(1);
-			expect(result[0].id).toBe('geologist');
+			expect(result[0].commanderId).toBe('geologist');
 		});
 	});
 
